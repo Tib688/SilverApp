@@ -399,21 +399,69 @@ class MainApp(ctk.CTk):
                 btn.pack(padx=8, fill="x", pady=1)
                 self.nav_buttons[key] = btn
 
-        # Content wrapper with welcome banner
+        # Status bar bottom of sidebar
+        sb_bottom = ctk.CTkFrame(self.sidebar, fg_color="#12121a", corner_radius=0, height=40)
+        sb_bottom.pack(side="bottom", fill="x"); sb_bottom.pack_propagate(False)
+        self._sb_status = ctk.CTkLabel(sb_bottom, text="Connecte", font=("Segoe UI", 9), text_color=GREEN)
+        self._sb_status.pack(side="left", padx=12, pady=8)
+        self._sb_ping = ctk.CTkLabel(sb_bottom, text="", font=("Segoe UI", 9), text_color=DIM)
+        self._sb_ping.pack(side="right", padx=12, pady=8)
+
+        # Content wrapper
         self.content_wrapper = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         self.content_wrapper.pack(side="right", fill="both", expand=True)
 
-        self._welcome_banner = ctk.CTkFrame(self.content_wrapper, fg_color=CARD, corner_radius=0, height=50)
+        # Welcome banner
+        self._welcome_banner = ctk.CTkFrame(self.content_wrapper, fg_color="#161620", corner_radius=0, height=56)
         self._welcome_banner.pack(fill="x"); self._welcome_banner.pack_propagate(False)
         wi = ctk.CTkFrame(self._welcome_banner, fg_color="transparent"); wi.pack(fill="both", expand=True, padx=20)
-        self._admin_welcome = ctk.CTkLabel(wi, text="Welcome !", font=("Segoe UI", 15, "bold"), text_color=BRIGHT)
-        self._admin_welcome.pack(side="left")
-        self._admin_welcome_sub = ctk.CTkLabel(wi, text="Owner  |  Silver Bot", font=("Segoe UI", 11), text_color=DIM)
-        self._admin_welcome_sub.pack(side="right")
+
+        # Left: welcome text
+        wl = ctk.CTkFrame(wi, fg_color="transparent"); wl.pack(side="left")
+        self._admin_welcome = ctk.CTkLabel(wl, text="Welcome, Tib !", font=("Segoe UI", 16, "bold"), text_color=BRIGHT)
+        self._admin_welcome.pack(anchor="w")
+        self._admin_welcome_sub = ctk.CTkLabel(wl, text="Owner  |  Silver Bot", font=("Segoe UI", 10), text_color=DIM)
+        self._admin_welcome_sub.pack(anchor="w")
+
+        # Right: quick stats in banner
+        wr = ctk.CTkFrame(wi, fg_color="transparent"); wr.pack(side="right")
+        self._banner_stats = []
+        for label in ["Serveurs", "Warns", "Tickets"]:
+            sf = ctk.CTkFrame(wr, fg_color="transparent", width=80); sf.pack(side="left", padx=10)
+            ctk.CTkLabel(sf, text=label, font=("Segoe UI", 8), text_color=DIM).pack()
+            lbl = ctk.CTkLabel(sf, text="-", font=("Segoe UI", 16, "bold"), text_color=ACCENT)
+            lbl.pack()
+            self._banner_stats.append(lbl)
 
         self.content = ctk.CTkFrame(self.content_wrapper, fg_color=BG, corner_radius=0)
         self.content.pack(fill="both", expand=True)
+
+        # Bottom status bar
+        self._statusbar = ctk.CTkFrame(self.content_wrapper, fg_color="#0e0e14", corner_radius=0, height=24)
+        self._statusbar.pack(side="bottom", fill="x"); self._statusbar.pack_propagate(False)
+        self._statusbar_text = ctk.CTkLabel(self._statusbar, text="Silver App v1.1  |  MySQL connecte  |  Pret", font=("Segoe UI", 9), text_color=DIM)
+        self._statusbar_text.pack(side="left", padx=10)
+        self._statusbar_time = ctk.CTkLabel(self._statusbar, text="", font=("Segoe UI", 9), text_color=DIM)
+        self._statusbar_time.pack(side="right", padx=10)
+        self._update_clock()
+
         self.show_page("overview")
+        threading.Thread(target=self._load_banner_stats, daemon=True).start()
+
+    def _update_clock(self):
+        try:
+            self._statusbar_time.configure(text=datetime.now().strftime("%H:%M:%S"))
+            self.after(1000, self._update_clock)
+        except: pass
+
+    def _load_banner_stats(self):
+        guilds = discord_get("/users/@me/guilds", self.token) if self.token else []
+        gc = len(guilds) if isinstance(guilds, list) else 0
+        wc = db_scalar("SELECT COUNT(*) FROM warnings")
+        tc = db_scalar("SELECT COUNT(*) FROM tickets")
+        vals = [str(gc), str(wc), str(tc)]
+        for i, v in enumerate(vals):
+            self.after(0, lambda lbl=self._banner_stats[i], val=v: lbl.configure(text=val))
 
     def _setup_bot_identity(self):
         if not self.token:
@@ -495,7 +543,7 @@ class MainApp(ctk.CTk):
     # ── OVERVIEW ──────────────────────────────────────────────────────────────
 
     def page_overview(self):
-        self._header("Vue d'ensemble", "Donnees en temps reel depuis MySQL")
+        self._header("Vue d'ensemble", "Donnees en temps reel")
         scroll = self._scrollable()
         spinner = LoadingSpinner(scroll)
         spinner.pack(fill="x")
@@ -505,32 +553,103 @@ class MainApp(ctk.CTk):
             guilds = discord_get("/users/@me/guilds", self.token) if self.token else []
             guild_count = len(guilds) if isinstance(guilds, list) else 0
             stats = [
-                ("Serveurs", guild_count),
-                ("Utilisateurs", db_scalar("SELECT COUNT(DISTINCT user_id) FROM user_xp")),
-                ("XP Total", db_scalar("SELECT COALESCE(SUM(xp),0) FROM user_xp")),
-                ("Messages", db_scalar("SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats")),
-                ("Warns", db_scalar("SELECT COUNT(*) FROM warnings")),
-                ("Tickets", db_scalar("SELECT COUNT(*) FROM tickets")),
-                ("Ouverts", db_scalar("SELECT COUNT(*) FROM tickets WHERE status='open'")),
-                ("Suggestions", db_scalar("SELECT COUNT(*) FROM suggestions")),
+                ("Serveurs", guild_count, "#60a5fa", "Connectes"),
+                ("Utilisateurs", db_scalar("SELECT COUNT(DISTINCT user_id) FROM user_xp"), ACCENT, "Trackes"),
+                ("XP Total", db_scalar("SELECT COALESCE(SUM(xp),0) FROM user_xp"), "#a78bfa", "Accumule"),
+                ("Messages", db_scalar("SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats"), "#22d3ee", "Envoyes"),
+                ("Warns", db_scalar("SELECT COUNT(*) FROM warnings"), "#fbbf24", "Total"),
+                ("Tickets", db_scalar("SELECT COUNT(*) FROM tickets"), RED, "Total"),
+                ("Ouverts", db_scalar("SELECT COUNT(*) FROM tickets WHERE status='open'"), GREEN, "En cours"),
+                ("Suggestions", db_scalar("SELECT COUNT(*) FROM suggestions"), "#c084fc", "Recues"),
             ]
+            recent_warns = db_query("SELECT reason, created_at FROM warnings ORDER BY created_at DESC LIMIT 5")
+            recent_tickets = db_query("SELECT status, created_at FROM tickets ORDER BY created_at DESC LIMIT 5")
 
             def _render():
                 spinner.stop()
+
+                # Stats grid
                 sf = ctk.CTkFrame(scroll, fg_color="transparent")
-                sf.pack(fill="x", padx=20, pady=(0, 15))
+                sf.pack(fill="x", padx=16, pady=(0, 12))
                 for i in range(4): sf.grid_columnconfigure(i, weight=1)
-                for i, (label, val) in enumerate(stats):
-                    self._stat_card(sf, label, str(val), i // 4, i % 4)
+                for i, (label, val, color, sub) in enumerate(stats):
+                    card = ctk.CTkFrame(sf, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER, height=90)
+                    card.grid(row=i//4, column=i%4, padx=4, pady=4, sticky="ew"); card.pack_propagate(False)
+                    # Color top bar
+                    ctk.CTkFrame(card, height=3, fg_color=color, corner_radius=0).pack(fill="x")
+                    ctk.CTkLabel(card, text=label.upper(), font=("Segoe UI", 9, "bold"), text_color=DIM).pack(padx=12, pady=(8, 0), anchor="w")
+                    val_label = ctk.CTkLabel(card, text="0", font=("Segoe UI", 24, "bold"), text_color=BRIGHT)
+                    val_label.pack(padx=12, anchor="w")
+                    ctk.CTkLabel(card, text=sub, font=("Segoe UI", 9), text_color=DIM).pack(padx=12, anchor="w")
+                    # Animate counter
+                    self._animate_counter(val_label, int(val), 0)
 
-                if isinstance(guilds, list):
-                    self._section(scroll, "Bot Discord - Live")
-                    f = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
-                    f.pack(fill="x", padx=20, pady=(0, 10))
-                    ctk.CTkLabel(f, text=f"{me.get('username', '?')}  |  {len(guilds)} serveur(s)  |  ID: {me.get('id', '?')}", font=("Segoe UI", 13), text_color=BRIGHT).pack(padx=15, pady=12)
-            return _render
+                # Bot info + servers
+                if isinstance(guilds, list) and guilds:
+                    self._section(scroll, f"Silver Bot  —  {guild_count} serveur(s)")
+                    for g in guilds[:6]:
+                        gf = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=8, border_width=1, border_color=BORDER)
+                        gf.pack(fill="x", padx=16, pady=2)
+                        gi = ctk.CTkFrame(gf, fg_color="transparent"); gi.pack(fill="x", padx=12, pady=8)
+                        # Server icon placeholder
+                        sav = ctk.CTkFrame(gi, width=32, height=32, corner_radius=8, fg_color="#22223a")
+                        sav.pack(side="left", padx=(0, 10)); sav.pack_propagate(False)
+                        ctk.CTkLabel(sav, text=g['name'][0].upper(), font=("Segoe UI", 14, "bold"), text_color=ACCENT).pack(expand=True)
+                        ctk.CTkLabel(gi, text=g['name'], font=("Segoe UI", 13, "bold"), text_color=BRIGHT).pack(side="left")
+                        ctk.CTkLabel(gi, text=str(g['id']), font=("Segoe UI", 10), text_color=DIM).pack(side="right")
 
-        threading.Thread(target=lambda: self.after(0, _load()), daemon=True).start()
+                # Recent activity
+                if recent_warns or recent_tickets:
+                    self._section(scroll, "Activite recente")
+                    act_grid = ctk.CTkFrame(scroll, fg_color="transparent")
+                    act_grid.pack(fill="x", padx=16, pady=(0, 10))
+                    act_grid.grid_columnconfigure(0, weight=1)
+                    act_grid.grid_columnconfigure(1, weight=1)
+
+                    # Recent warns
+                    wf = ctk.CTkFrame(act_grid, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
+                    wf.grid(row=0, column=0, padx=(0, 4), sticky="nsew")
+                    ctk.CTkLabel(wf, text="DERNIERS WARNS", font=("Segoe UI", 9, "bold"), text_color=DIM).pack(padx=12, pady=(10, 5), anchor="w")
+                    if recent_warns:
+                        for w in recent_warns:
+                            wr = ctk.CTkFrame(wf, fg_color="transparent"); wr.pack(fill="x", padx=12, pady=1)
+                            ctk.CTkLabel(wr, text=f"• {(w.get('reason','?'))[:30]}", font=("Segoe UI", 11), text_color=TEXT, anchor="w").pack(side="left")
+                            ts = str(w.get('created_at', '')); ts = ts[11:16] if len(ts) > 11 else ts[:10]
+                            ctk.CTkLabel(wr, text=ts, font=("Segoe UI", 9), text_color=DIM).pack(side="right")
+                    else:
+                        ctk.CTkLabel(wf, text="Aucun warn", text_color=DIM, font=("Segoe UI", 11)).pack(padx=12, pady=5)
+                    ctk.CTkFrame(wf, height=8, fg_color="transparent").pack()
+
+                    # Recent tickets
+                    tf = ctk.CTkFrame(act_grid, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
+                    tf.grid(row=0, column=1, padx=(4, 0), sticky="nsew")
+                    ctk.CTkLabel(tf, text="DERNIERS TICKETS", font=("Segoe UI", 9, "bold"), text_color=DIM).pack(padx=12, pady=(10, 5), anchor="w")
+                    if recent_tickets:
+                        for t in recent_tickets:
+                            tr = ctk.CTkFrame(tf, fg_color="transparent"); tr.pack(fill="x", padx=12, pady=1)
+                            st = t.get('status', '?')
+                            sc = GREEN if st == 'open' else RED
+                            ctk.CTkLabel(tr, text=f"• {st}", font=("Segoe UI", 11), text_color=sc, anchor="w").pack(side="left")
+                            ts = str(t.get('created_at', '')); ts = ts[11:16] if len(ts) > 11 else ts[:10]
+                            ctk.CTkLabel(tr, text=ts, font=("Segoe UI", 9), text_color=DIM).pack(side="right")
+                    else:
+                        ctk.CTkLabel(tf, text="Aucun ticket", text_color=DIM, font=("Segoe UI", 11)).pack(padx=12, pady=5)
+                    ctk.CTkFrame(tf, height=8, fg_color="transparent").pack()
+
+            self.after(0, _render)
+
+        threading.Thread(target=_load, daemon=True).start()
+
+    def _animate_counter(self, label, target, current, step=0):
+        if target == 0:
+            label.configure(text="0"); return
+        steps = 12
+        if step <= steps:
+            val = int(target * (step / steps))
+            label.configure(text=str(val))
+            self.after(30, lambda: self._animate_counter(label, target, val, step + 1))
+        else:
+            label.configure(text=str(target))
 
     # ── MODERATION ────────────────────────────────────────────────────────────
 
