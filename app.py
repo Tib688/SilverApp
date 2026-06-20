@@ -945,15 +945,27 @@ class MainApp(ctk.CTk):
 
     def _render_msg(self, parent, m):
         is_owner = m['sender_type'] in ('admin', 'owner')
-        color = "#1a2a1a" if is_owner else "#1a1a2a"
-        mf = ctk.CTkFrame(parent, fg_color=color, corner_radius=8, border_width=1, border_color=BORDER)
-        mf.pack(fill="x", pady=2)
-        hdr = ctk.CTkFrame(mf, fg_color="transparent"); hdr.pack(fill="x", padx=10, pady=(6, 0))
+        mf = ctk.CTkFrame(parent, fg_color="transparent")
+        mf.pack(fill="x", pady=3)
+
+        # Avatar
+        av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a3a1a" if is_owner else "#1a1a3a")
+        av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
+        initial = m['sender'][0].upper() if m.get('sender') else "?"
+        ctk.CTkLabel(av, text=initial, font=("Segoe UI", 14, "bold"), text_color=GREEN if is_owner else ACCENT).pack(expand=True)
+
+        body = ctk.CTkFrame(mf, fg_color="transparent")
+        body.pack(side="left", fill="x", expand=True)
+
+        hdr = ctk.CTkFrame(body, fg_color="transparent"); hdr.pack(fill="x")
         tag = "OWNER" if is_owner else "TESTEUR"
-        ctk.CTkLabel(hdr, text=f"{m['sender']}  [{tag}]", font=("Segoe UI", 10, "bold"), text_color=GREEN if is_owner else ACCENT).pack(side="left")
+        ctk.CTkLabel(hdr, text=m.get('sender', '?'), font=("Segoe UI", 12, "bold"), text_color=GREEN if is_owner else BRIGHT).pack(side="left")
+        if is_owner:
+            t = ctk.CTkFrame(hdr, fg_color="#2a4a2a", corner_radius=3, width=45, height=15); t.pack(side="left", padx=4); t.pack_propagate(False)
+            ctk.CTkLabel(t, text="OWNER", font=("Segoe UI", 7, "bold"), text_color=GREEN).pack(expand=True)
         time_str = str(m.get('created_at', ''))
         if len(time_str) > 10: time_str = time_str[11:16]
-        ctk.CTkLabel(hdr, text=time_str, font=("Segoe UI", 9), text_color=DIM).pack(side="right")
+        ctk.CTkLabel(hdr, text=time_str, font=("Segoe UI", 9), text_color=DIM).pack(side="left", padx=5)
         if m.get('message'):
             ctk.CTkLabel(mf, text=m['message'], font=("Segoe UI", 12), text_color=TEXT, wraplength=500, anchor="w", justify="left").pack(padx=10, pady=(2, 4), anchor="w")
         if m.get('file_name'):
@@ -1231,18 +1243,16 @@ Pour accéder à l'app :
                     hdr = ctk.CTkFrame(f, fg_color="transparent"); hdr.pack(fill="x", padx=12, pady=(10, 4))
                     ctk.CTkLabel(hdr, text=f"{r['username']}", font=("Segoe UI", 14, "bold"), text_color=BRIGHT).pack(side="left")
                     ctk.CTkLabel(hdr, text=r['status'].upper(), font=("Segoe UI", 9, "bold"), text_color=GREEN if r['status'] == 'done' else "#fbbf24" if is_pending else DIM).pack(side="right")
-
                     info = ctk.CTkFrame(f, fg_color="transparent"); info.pack(fill="x", padx=12, pady=(0, 4))
                     ctk.CTkLabel(info, text=f"Discord ID: {r['discord_id']}  |  {str(r.get('created_at',''))[:16]}", font=("Segoe UI", 11), text_color=DIM).pack(side="left")
-
                     if is_pending:
                         btns = ctk.CTkFrame(f, fg_color="transparent"); btns.pack(fill="x", padx=12, pady=(0, 10))
                         ctk.CTkButton(btns, text="Generer nouveau code", height=28, corner_radius=6, fg_color="#1a2a1a", hover_color="#2a3a2a", text_color=GREEN, font=("Segoe UI", 11), width=160,
                             command=lambda rid=r['id'], did=r['discord_id'], uname=r['username']: self._resolve_forgot(rid, did, uname)).pack(side="left", padx=(0, 5))
                         ctk.CTkButton(btns, text="Ignorer", height=28, corner_radius=6, fg_color="#2a1a1a", hover_color="#3a2a2a", text_color=RED, font=("Segoe UI", 11), width=80,
                             command=lambda rid=r['id']: self._dismiss_forgot(rid)).pack(side="left")
-            return _render
-        threading.Thread(target=lambda: self.after(0, _load()), daemon=True).start()
+            self.after(0, _render)
+        threading.Thread(target=_load, daemon=True).start()
 
     def _resolve_forgot(self, request_id, discord_id, username):
         import random, string
@@ -1274,35 +1284,27 @@ Telecharge l'app ici si besoin : https://github.com/IZIUKAA/SilverApp/releases/d
         except: pass
 
     def page_testlab(self):
-        self._build_testlab("Tib", OWNER_ID, "owner")
+        self._tl_user = "Tib"
+        self._tl_uid = OWNER_ID
+        self._tl_type = "owner"
 
-    def _build_testlab(self, username, user_id, user_type):
-        self._tl_user = username
-        self._tl_uid = user_id
-        self._tl_type = user_type
-
-        # Header
         hf = ctk.CTkFrame(self.content, fg_color="transparent"); hf.pack(fill="x", padx=24, pady=(15, 0))
         ctk.CTkLabel(hf, text="# test-lab", font=("Segoe UI", 20, "bold"), text_color=BRIGHT).pack(side="left")
-        ctk.CTkButton(hf, text="Effacer le chat", height=28, corner_radius=6, fg_color="#2a1a1a", hover_color="#3a2a2a", text_color=RED, font=("Segoe UI", 10), width=100, command=self._testlab_clear).pack(side="right")
+        ctk.CTkButton(hf, text="Effacer", height=28, corner_radius=6, fg_color="#2a1a1a", hover_color="#3a2a2a", text_color=RED, font=("Segoe UI", 10), width=80, command=self._testlab_clear).pack(side="right")
 
-        # Quick commands
         cmds_f = ctk.CTkFrame(self.content, fg_color=CARD, corner_radius=0)
-        cmds_f.pack(fill="x", padx=0, pady=(8, 0))
+        cmds_f.pack(fill="x", pady=(8, 0))
         cmds_inner = ctk.CTkFrame(cmds_f, fg_color="transparent"); cmds_inner.pack(padx=15, pady=6)
-        for label, cmd in [("/ping", "/ping"), ("/serverinfo", "/serverinfo"), ("/botinfo", "/botinfo"), ("/leaderboard", "/leaderboard"), ("/warn", "/warn @user raison"), ("/xp", "/xp"), ("/level", "/level"), ("hello", "hello")]:
+        for label, cmd in [("/ping", "/ping"), ("/serverinfo", "/serverinfo"), ("/botinfo", "/botinfo"), ("/leaderboard", "/leaderboard"), ("/warn", "/warn @user test"), ("/xp", "/xp"), ("hello", "hello")]:
             ctk.CTkButton(cmds_inner, text=label, font=("Segoe UI", 10), height=26, corner_radius=12, fg_color="#1e1e2a", hover_color="#28283a", text_color=ACCENT, border_width=1, border_color="#2a2a3a",
                 command=lambda c=cmd: self._testlab_send(c)).pack(side="left", padx=2)
 
-        # Chat area (Discord-like)
         self._tl_chat = ctk.CTkScrollableFrame(self.content, fg_color="#0f0f16", corner_radius=0)
-        self._tl_chat.pack(fill="both", expand=True, padx=0, pady=0)
+        self._tl_chat.pack(fill="both", expand=True)
 
-        # Input bar
         input_bar = ctk.CTkFrame(self.content, fg_color="#1a1a24", corner_radius=0, height=56)
         input_bar.pack(fill="x"); input_bar.pack_propagate(False)
         inner = ctk.CTkFrame(input_bar, fg_color="transparent"); inner.pack(fill="both", expand=True, padx=12, pady=8)
-
         self._tl_input = ctk.CTkEntry(inner, placeholder_text="Envoyer un message dans #test-lab", fg_color="#2a2a36", border_width=0, text_color=BRIGHT, height=38, corner_radius=8, font=("Segoe UI", 13))
         self._tl_input.pack(side="left", fill="x", expand=True, padx=(0, 8))
         self._tl_input.bind("<Return>", lambda e: self._testlab_send())
@@ -1505,10 +1507,8 @@ class LoginScreen(ctk.CTk):
 
         outer = ctk.CTkFrame(self, fg_color="transparent")
         outer.pack(expand=True)
-        main = ctk.CTkFrame(outer, fg_color="transparent", width=460)
+        main = ctk.CTkScrollableFrame(outer, fg_color="transparent", width=460, height=620)
         main.pack(expand=True)
-        main.pack_propagate(False)
-        main.configure(height=640)
 
         # Bot avatar
         self._avatar_frame = ctk.CTkFrame(main, fg_color="transparent", height=90)
@@ -1901,15 +1901,25 @@ class TesterApp(ctk.CTk):
 
     def _tester_render_msg(self, parent, m):
         is_owner = m['sender_type'] in ('admin', 'owner')
-        color = "#1a2a1a" if is_owner else "#1a1a2a"
-        mf = ctk.CTkFrame(parent, fg_color=color, corner_radius=8, border_width=1, border_color=BORDER)
-        mf.pack(fill="x", pady=2)
-        hdr = ctk.CTkFrame(mf, fg_color="transparent"); hdr.pack(fill="x", padx=10, pady=(6, 0))
-        tag = "OWNER" if is_owner else "TESTEUR"
-        ctk.CTkLabel(hdr, text=f"{m['sender']}  [{tag}]", font=("Segoe UI", 10, "bold"), text_color=GREEN if is_owner else ACCENT).pack(side="left")
+        mf = ctk.CTkFrame(parent, fg_color="transparent")
+        mf.pack(fill="x", pady=3)
+
+        av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a3a1a" if is_owner else "#1a1a3a")
+        av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
+        initial = m['sender'][0].upper() if m.get('sender') else "?"
+        ctk.CTkLabel(av, text=initial, font=("Segoe UI", 14, "bold"), text_color=GREEN if is_owner else ACCENT).pack(expand=True)
+
+        body = ctk.CTkFrame(mf, fg_color="transparent")
+        body.pack(side="left", fill="x", expand=True)
+
+        hdr = ctk.CTkFrame(body, fg_color="transparent"); hdr.pack(fill="x")
+        ctk.CTkLabel(hdr, text=m.get('sender', '?'), font=("Segoe UI", 12, "bold"), text_color=GREEN if is_owner else BRIGHT).pack(side="left")
+        if is_owner:
+            t = ctk.CTkFrame(hdr, fg_color="#2a4a2a", corner_radius=3, width=45, height=15); t.pack(side="left", padx=4); t.pack_propagate(False)
+            ctk.CTkLabel(t, text="OWNER", font=("Segoe UI", 7, "bold"), text_color=GREEN).pack(expand=True)
         time_str = str(m.get('created_at', ''))
         if len(time_str) > 10: time_str = time_str[11:16]
-        ctk.CTkLabel(hdr, text=time_str, font=("Segoe UI", 9), text_color=DIM).pack(side="right")
+        ctk.CTkLabel(hdr, text=time_str, font=("Segoe UI", 9), text_color=DIM).pack(side="left", padx=5)
         if m.get('message'):
             ctk.CTkLabel(mf, text=m['message'], font=("Segoe UI", 12), text_color=TEXT, wraplength=500, anchor="w", justify="left").pack(padx=10, pady=(2, 4), anchor="w")
         if m.get('file_name'):
