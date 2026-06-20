@@ -364,7 +364,7 @@ class MainApp(ctk.CTk):
             ("main", [("overview", "Vue d'ensemble"), ("moderation", "Moderation"), ("tickets", "Tickets")]),
             ("engagement", [("leaderboard", "Leaderboard"), ("members", "Membres"), ("suggestions", "Suggestions")]),
             ("controle", [("control", "Controle Bot"), ("botinfo", "Bot Info")]),
-            ("testeurs", [("tchat", "Chat Testeurs"), ("tbugs", "Bugs Reports"), ("testlab", "Test Lab")]),
+            ("testeurs", [("tchat", "Chat Testeurs"), ("tbugs", "Bugs Reports"), ("testlab", "Test Lab"), ("forgot", "Codes oublies")]),
             ("systeme", [("database", "Base de donnees"), ("settings", "Parametres")]),
         ]
 
@@ -1214,6 +1214,65 @@ Pour accéder à l'app :
         save_config(self.cfg); self.token = self.cfg["token"]
         self.set_status.configure(text="Sauvegarde - redemarre l'app", text_color=GREEN)
 
+    def page_forgot(self):
+        self._header("Codes oublies", "Demandes de nouveaux codes")
+        scroll = self._scrollable()
+        spinner = LoadingSpinner(scroll); spinner.pack(fill="x")
+        def _load():
+            rows = db_query("SELECT id, discord_id, username, status, created_at FROM forgot_code_requests ORDER BY created_at DESC LIMIT 30")
+            def _render():
+                spinner.stop()
+                if not rows:
+                    self._empty(scroll, "Aucune demande"); return
+                for r in rows:
+                    is_pending = r['status'] == 'pending'
+                    f = ctk.CTkFrame(scroll, fg_color=CARD if is_pending else BG, corner_radius=10, border_width=1, border_color="#3a3a4a" if is_pending else BORDER)
+                    f.pack(fill="x", pady=3)
+                    hdr = ctk.CTkFrame(f, fg_color="transparent"); hdr.pack(fill="x", padx=12, pady=(10, 4))
+                    ctk.CTkLabel(hdr, text=f"{r['username']}", font=("Segoe UI", 14, "bold"), text_color=BRIGHT).pack(side="left")
+                    ctk.CTkLabel(hdr, text=r['status'].upper(), font=("Segoe UI", 9, "bold"), text_color=GREEN if r['status'] == 'done' else "#fbbf24" if is_pending else DIM).pack(side="right")
+
+                    info = ctk.CTkFrame(f, fg_color="transparent"); info.pack(fill="x", padx=12, pady=(0, 4))
+                    ctk.CTkLabel(info, text=f"Discord ID: {r['discord_id']}  |  {str(r.get('created_at',''))[:16]}", font=("Segoe UI", 11), text_color=DIM).pack(side="left")
+
+                    if is_pending:
+                        btns = ctk.CTkFrame(f, fg_color="transparent"); btns.pack(fill="x", padx=12, pady=(0, 10))
+                        ctk.CTkButton(btns, text="Generer nouveau code", height=28, corner_radius=6, fg_color="#1a2a1a", hover_color="#2a3a2a", text_color=GREEN, font=("Segoe UI", 11), width=160,
+                            command=lambda rid=r['id'], did=r['discord_id'], uname=r['username']: self._resolve_forgot(rid, did, uname)).pack(side="left", padx=(0, 5))
+                        ctk.CTkButton(btns, text="Ignorer", height=28, corner_radius=6, fg_color="#2a1a1a", hover_color="#3a2a2a", text_color=RED, font=("Segoe UI", 11), width=80,
+                            command=lambda rid=r['id']: self._dismiss_forgot(rid)).pack(side="left")
+            return _render
+        threading.Thread(target=lambda: self.after(0, _load()), daemon=True).start()
+
+    def _resolve_forgot(self, request_id, discord_id, username):
+        import random, string
+        new_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("INSERT INTO tester_codes (code, label) VALUES (%s, %s)", (new_code, username))
+                c.execute("UPDATE forgot_code_requests SET status = 'done' WHERE id = %s", (request_id,))
+            conn.commit(); conn.close()
+            # Copy invite with new code
+            invite = f"""Hey {username} ! Voici ton nouveau code d'acces pour **Silver Bot** :
+
+**Code : {new_code}**
+
+Telecharge l'app ici si besoin : https://github.com/IZIUKAA/SilverApp/releases/download/1.1/SilverApp.exe"""
+            self.clipboard_clear()
+            self.clipboard_append(invite)
+            self.show_page("forgot")
+        except: pass
+
+    def _dismiss_forgot(self, request_id):
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("UPDATE forgot_code_requests SET status = 'ignored' WHERE id = %s", (request_id,))
+            conn.commit(); conn.close()
+            self.show_page("forgot")
+        except: pass
+
     def page_testlab(self):
         self._header("Test Lab", "Tester les commandes du bot en direct")
         scroll = self._scrollable()
@@ -1448,7 +1507,27 @@ class LoginScreen(ctk.CTk):
         self.login_status = ctk.CTkLabel(lf, text="", font=("Segoe UI", 11))
         self.login_status.pack(pady=6)
 
-        ctk.CTkButton(lf, text="Se connecter", font=("Segoe UI", 14, "bold"), height=44, corner_radius=10, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, command=self._login).pack(padx=18, pady=(0, 14), fill="x")
+        btn_row = ctk.CTkFrame(lf, fg_color="transparent")
+        btn_row.pack(fill="x", padx=18, pady=(0, 14))
+        ctk.CTkButton(btn_row, text="Se connecter", font=("Segoe UI", 14, "bold"), height=44, corner_radius=10, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, command=self._login).pack(side="left", fill="x", expand=True, padx=(0, 5))
+        ctk.CTkButton(btn_row, text="Code oublie ?", font=("Segoe UI", 11), height=44, corner_radius=10, fg_color="#22222e", hover_color="#2a2a38", text_color=DIM, width=110, command=self._show_forgot).pack(side="right")
+
+        # Forgot code frame (hidden by default)
+        self._forgot_frame = ctk.CTkFrame(main, fg_color=CARD, corner_radius=12, border_width=1, border_color=BORDER)
+
+        ctk.CTkLabel(self._forgot_frame, text="CODE OUBLIE", font=("Segoe UI", 13, "bold"), text_color=BRIGHT).pack(padx=18, pady=(14, 8), anchor="w")
+        ctk.CTkLabel(self._forgot_frame, text="DISCORD ID", font=("Segoe UI", 9, "bold"), text_color=DIM).pack(padx=18, pady=(0, 3), anchor="w")
+        self._forgot_id = ctk.CTkEntry(self._forgot_frame, placeholder_text="Ton Discord ID", fg_color=BG, border_color=BORDER, text_color=BRIGHT, height=34)
+        self._forgot_id.pack(padx=18, fill="x")
+        ctk.CTkLabel(self._forgot_frame, text="USERNAME DISCORD", font=("Segoe UI", 9, "bold"), text_color=DIM).pack(padx=18, pady=(8, 3), anchor="w")
+        self._forgot_username = ctk.CTkEntry(self._forgot_frame, placeholder_text="Ton pseudo Discord", fg_color=BG, border_color=BORDER, text_color=BRIGHT, height=34)
+        self._forgot_username.pack(padx=18, fill="x")
+        self._forgot_status = ctk.CTkLabel(self._forgot_frame, text="", font=("Segoe UI", 11))
+        self._forgot_status.pack(pady=5)
+        forgot_btns = ctk.CTkFrame(self._forgot_frame, fg_color="transparent")
+        forgot_btns.pack(fill="x", padx=18, pady=(0, 14))
+        ctk.CTkButton(forgot_btns, text="Envoyer la demande", font=("Segoe UI", 12, "bold"), height=38, corner_radius=8, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, command=self._submit_forgot).pack(side="left", fill="x", expand=True, padx=(0, 5))
+        ctk.CTkButton(forgot_btns, text="Retour", font=("Segoe UI", 11), height=38, corner_radius=8, fg_color="#22222e", hover_color="#2a2a38", text_color=DIM, width=80, command=self._hide_forgot).pack(side="right")
 
         # Info
         info_f = ctk.CTkFrame(main, fg_color="transparent")
@@ -1460,6 +1539,28 @@ class LoginScreen(ctk.CTk):
 
         threading.Thread(target=self._load_bot_avatar, daemon=True).start()
         self._animate_welcome()
+
+    def _show_forgot(self):
+        self._forgot_frame.pack(fill="x", pady=(5, 0))
+
+    def _hide_forgot(self):
+        self._forgot_frame.pack_forget()
+
+    def _submit_forgot(self):
+        did = self._forgot_id.get().strip()
+        username = self._forgot_username.get().strip()
+        if not did or not username:
+            self._forgot_status.configure(text="Remplis les deux champs", text_color=RED); return
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("INSERT INTO forgot_code_requests (discord_id, username) VALUES (%s, %s)", (did, username))
+            conn.commit(); conn.close()
+            self._forgot_status.configure(text="Demande envoyee ! L'owner sera notifie.", text_color=GREEN)
+            self._forgot_id.delete(0, "end")
+            self._forgot_username.delete(0, "end")
+        except:
+            self._forgot_status.configure(text="Erreur", text_color=RED)
 
     def _load_bot_avatar(self):
         cfg = load_config()
