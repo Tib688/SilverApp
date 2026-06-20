@@ -44,6 +44,30 @@ DISCORD_API = "https://discord.com/api/v10"
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _user_cache = {}
+_ctk_avatar_cache = {}
+
+def get_ctk_avatar(discord_id, token, size=36):
+    if discord_id in _ctk_avatar_cache:
+        return _ctk_avatar_cache[discord_id]
+    user = fetch_discord_user(discord_id, token)
+    if not user:
+        return None
+    url = get_avatar_url(user, 128)
+    if not url:
+        return None
+    img = download_avatar(url, size)
+    ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=(size, size))
+    _ctk_avatar_cache[discord_id] = ctk_img
+    return ctk_img
+
+def get_name_to_discord_id():
+    """Map tester names to discord IDs from tester_codes table."""
+    rows = db_query("SELECT label, discord_id FROM tester_codes WHERE discord_id IS NOT NULL")
+    mapping = {"Tib": OWNER_ID}
+    for r in rows:
+        if r.get('label') and r.get('discord_id'):
+            mapping[r['label']] = str(r['discord_id'])
+    return mapping
 
 def fetch_discord_user(user_id, token):
     if user_id in _user_cache:
@@ -943,16 +967,26 @@ class MainApp(ctk.CTk):
         self._dm_header_label.configure(text=f"{'# General' if not tester_code else f'DM - {label}'}")
         self._admin_refresh_chat()
 
-    def _render_msg(self, parent, m):
+    def _render_msg(self, parent, m, name_to_id=None):
         is_owner = m['sender_type'] in ('admin', 'owner')
         mf = ctk.CTkFrame(parent, fg_color="transparent")
         mf.pack(fill="x", pady=3)
 
-        # Avatar
-        av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a3a1a" if is_owner else "#1a1a3a")
-        av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
-        initial = m['sender'][0].upper() if m.get('sender') else "?"
-        ctk.CTkLabel(av, text=initial, font=("Segoe UI", 14, "bold"), text_color=GREEN if is_owner else ACCENT).pack(expand=True)
+        # Avatar - try real Discord avatar
+        sender_name = m.get('sender', '?')
+        did = None
+        if name_to_id and sender_name in name_to_id:
+            did = name_to_id[sender_name]
+        avatar_img = get_ctk_avatar(did, self.token, 36) if did else None
+
+        if avatar_img:
+            self._avatar_refs.append(avatar_img)
+            ctk.CTkLabel(mf, image=avatar_img, text="", width=36).pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0))
+        else:
+            av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a3a1a" if is_owner else "#1a1a3a")
+            av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
+            initial = sender_name[0].upper() if sender_name else "?"
+            ctk.CTkLabel(av, text=initial, font=("Segoe UI", 14, "bold"), text_color=GREEN if is_owner else ACCENT).pack(expand=True)
 
         body = ctk.CTkFrame(mf, fg_color="transparent")
         body.pack(side="left", fill="x", expand=True)
@@ -1004,8 +1038,10 @@ class MainApp(ctk.CTk):
         else:
             msgs = db_query("SELECT sender, sender_type, message, file_name, file_data, created_at FROM tester_chat ORDER BY created_at DESC LIMIT 50")
         msgs.reverse()
+        if not hasattr(self, '_name_id_map'):
+            self._name_id_map = get_name_to_discord_id()
         for m in msgs:
-            self._render_msg(self.admin_chat_frame, m)
+            self._render_msg(self.admin_chat_frame, m, self._name_id_map)
 
     def _admin_chat_auto(self):
         if hasattr(self, 'admin_chat_frame') and self.admin_chat_frame.winfo_exists():
@@ -1904,10 +1940,21 @@ class TesterApp(ctk.CTk):
         mf = ctk.CTkFrame(parent, fg_color="transparent")
         mf.pack(fill="x", pady=3)
 
-        av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a3a1a" if is_owner else "#1a1a3a")
-        av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
-        initial = m['sender'][0].upper() if m.get('sender') else "?"
-        ctk.CTkLabel(av, text=initial, font=("Segoe UI", 14, "bold"), text_color=GREEN if is_owner else ACCENT).pack(expand=True)
+        sender_name = m.get('sender', '?')
+        did = None
+        if hasattr(self, '_name_id_map') and sender_name in self._name_id_map:
+            did = self._name_id_map[sender_name]
+        cfg = load_config()
+        avatar_img = get_ctk_avatar(did, cfg.get("token", ""), 36) if did else None
+
+        if avatar_img:
+            self._avatar_refs.append(avatar_img)
+            ctk.CTkLabel(mf, image=avatar_img, text="", width=36).pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0))
+        else:
+            av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a3a1a" if is_owner else "#1a1a3a")
+            av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
+            initial = sender_name[0].upper() if sender_name else "?"
+            ctk.CTkLabel(av, text=initial, font=("Segoe UI", 14, "bold"), text_color=GREEN if is_owner else ACCENT).pack(expand=True)
 
         body = ctk.CTkFrame(mf, fg_color="transparent")
         body.pack(side="left", fill="x", expand=True)
@@ -1952,6 +1999,8 @@ class TesterApp(ctk.CTk):
     def _refresh_chat(self):
         if not hasattr(self, 'chat_frame') or not self.chat_frame.winfo_exists(): return
         for w in self.chat_frame.winfo_children(): w.destroy()
+        if not hasattr(self, '_name_id_map'):
+            self._name_id_map = get_name_to_discord_id()
         if self._chat_mode == "dm":
             msgs = db_query("SELECT sender, sender_type, message, file_name, file_data, created_at FROM tester_dms WHERE tester_code = %s ORDER BY created_at DESC LIMIT 50", (self.code,))
         else:
