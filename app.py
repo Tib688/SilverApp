@@ -1274,145 +1274,180 @@ Telecharge l'app ici si besoin : https://github.com/IZIUKAA/SilverApp/releases/d
         except: pass
 
     def page_testlab(self):
-        self._header("Test Lab", "Tester les commandes du bot en direct")
-        scroll = self._scrollable()
+        self._build_testlab("Tib", OWNER_ID, "owner")
 
-        # Config: test channel
-        cfg_f = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
-        cfg_f.pack(fill="x", pady=(0, 10))
-        cfg_r = ctk.CTkFrame(cfg_f, fg_color="transparent"); cfg_r.pack(fill="x", padx=15, pady=10)
-        ctk.CTkLabel(cfg_r, text="Channel de test :", font=("Segoe UI", 12), text_color=DIM, width=120, anchor="w").pack(side="left")
-        self._testlab_channel = ctk.CTkEntry(cfg_r, placeholder_text="Channel ID", fg_color=BG, border_color=BORDER, text_color=BRIGHT, height=32, width=200)
-        self._testlab_channel.pack(side="left", padx=(0, 8))
-        cfg = load_config()
-        saved_ch = cfg.get("testlab_channel", "")
-        if saved_ch:
-            self._testlab_channel.insert(0, saved_ch)
-        ctk.CTkButton(cfg_r, text="Sauvegarder", height=30, corner_radius=6, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, width=100, command=self._save_testlab_channel).pack(side="left")
-        self._testlab_ch_status = ctk.CTkLabel(cfg_r, text="", font=("Segoe UI", 10))
-        self._testlab_ch_status.pack(side="left", padx=8)
+    def _build_testlab(self, username, user_id, user_type):
+        self._tl_user = username
+        self._tl_uid = user_id
+        self._tl_type = user_type
 
-        # Quick command buttons
-        self._section(scroll, "Commandes rapides")
-        cmds_f = ctk.CTkFrame(scroll, fg_color="transparent")
-        cmds_f.pack(fill="x", pady=(0, 10))
+        # Header
+        hf = ctk.CTkFrame(self.content, fg_color="transparent"); hf.pack(fill="x", padx=24, pady=(15, 0))
+        ctk.CTkLabel(hf, text="# test-lab", font=("Segoe UI", 20, "bold"), text_color=BRIGHT).pack(side="left")
+        ctk.CTkButton(hf, text="Effacer le chat", height=28, corner_radius=6, fg_color="#2a1a1a", hover_color="#3a2a2a", text_color=RED, font=("Segoe UI", 10), width=100, command=self._testlab_clear).pack(side="right")
 
-        quick_cmds = [
-            ("Ping", "/ping"),
-            ("Server Info", "/serverinfo"),
-            ("Bot Info", "/botinfo"),
-            ("Leaderboard", "/leaderboard"),
-            ("Antispam Config", "/antispam config"),
-            ("Test Warn", "!test warn"),
-            ("Test XP", "!test xp"),
-            ("Hello", "Hello Silver Bot !"),
-        ]
-        for i, (label, cmd) in enumerate(quick_cmds):
-            ctk.CTkButton(cmds_f, text=label, font=("Segoe UI", 11), height=30, corner_radius=6, fg_color="#1a1a2a", hover_color="#22223a", text_color=BRIGHT, border_width=1, border_color=BORDER, width=120,
-                command=lambda c=cmd: self._testlab_send(c)).grid(row=i//4, column=i%4, padx=3, pady=3, sticky="ew")
-        for i in range(4): cmds_f.grid_columnconfigure(i, weight=1)
+        # Quick commands
+        cmds_f = ctk.CTkFrame(self.content, fg_color=CARD, corner_radius=0)
+        cmds_f.pack(fill="x", padx=0, pady=(8, 0))
+        cmds_inner = ctk.CTkFrame(cmds_f, fg_color="transparent"); cmds_inner.pack(padx=15, pady=6)
+        for label, cmd in [("/ping", "/ping"), ("/serverinfo", "/serverinfo"), ("/botinfo", "/botinfo"), ("/leaderboard", "/leaderboard"), ("/warn", "/warn @user raison"), ("/xp", "/xp"), ("/level", "/level"), ("hello", "hello")]:
+            ctk.CTkButton(cmds_inner, text=label, font=("Segoe UI", 10), height=26, corner_radius=12, fg_color="#1e1e2a", hover_color="#28283a", text_color=ACCENT, border_width=1, border_color="#2a2a3a",
+                command=lambda c=cmd: self._testlab_send(c)).pack(side="left", padx=2)
 
-        # Messages display
-        self._section(scroll, "Messages du channel")
-        self._testlab_msgs = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
-        self._testlab_msgs.pack(fill="x", pady=(0, 10))
+        # Chat area (Discord-like)
+        self._tl_chat = ctk.CTkScrollableFrame(self.content, fg_color="#0f0f16", corner_radius=0)
+        self._tl_chat.pack(fill="both", expand=True, padx=0, pady=0)
 
-        # Input
-        input_f = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
-        input_f.pack(fill="x")
-        inner = ctk.CTkFrame(input_f, fg_color="transparent"); inner.pack(fill="x", padx=10, pady=8)
-        self._testlab_input = ctk.CTkEntry(inner, placeholder_text="Envoyer un message ou une commande...", fg_color=BG, border_color=BORDER, text_color=BRIGHT, height=36)
-        self._testlab_input.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        self._testlab_input.bind("<Return>", lambda e: self._testlab_send())
-        ctk.CTkButton(inner, text="Envoyer", height=36, corner_radius=6, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, width=80, command=self._testlab_send).pack(side="right")
+        # Input bar
+        input_bar = ctk.CTkFrame(self.content, fg_color="#1a1a24", corner_radius=0, height=56)
+        input_bar.pack(fill="x"); input_bar.pack_propagate(False)
+        inner = ctk.CTkFrame(input_bar, fg_color="transparent"); inner.pack(fill="both", expand=True, padx=12, pady=8)
 
-        # Load messages
+        self._tl_input = ctk.CTkEntry(inner, placeholder_text="Envoyer un message dans #test-lab", fg_color="#2a2a36", border_width=0, text_color=BRIGHT, height=38, corner_radius=8, font=("Segoe UI", 13))
+        self._tl_input.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self._tl_input.bind("<Return>", lambda e: self._testlab_send())
+        ctk.CTkButton(inner, text="Envoyer", height=38, corner_radius=8, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, width=80, font=("Segoe UI", 12, "bold"), command=self._testlab_send).pack(side="right")
+
         self._testlab_refresh()
         self._testlab_auto()
 
-    def _save_testlab_channel(self):
-        ch = self._testlab_channel.get().strip()
-        cfg = load_config()
-        cfg["testlab_channel"] = ch
-        save_config(cfg)
-        self._testlab_ch_status.configure(text="OK", text_color=GREEN)
-        self.after(2000, lambda: self._testlab_ch_status.configure(text=""))
-
-    def _get_testlab_channel(self):
-        if hasattr(self, '_testlab_channel'):
-            ch = self._testlab_channel.get().strip()
-            if ch: return ch
-        cfg = load_config()
-        return cfg.get("testlab_channel", "")
-
     def _testlab_send(self, text=None):
         if text is None:
-            text = self._testlab_input.get().strip()
+            text = self._tl_input.get().strip()
             if not text: return
-            self._testlab_input.delete(0, "end")
-        ch = self._get_testlab_channel()
-        if not ch: return
-        def _do():
-            discord_post(f"/channels/{ch}/messages", self.token, {"content": text})
-            import time as _t; _t.sleep(1.5)
-            self.after(0, self._testlab_refresh)
-        threading.Thread(target=_do, daemon=True).start()
+            self._tl_input.delete(0, "end")
+
+        # Save user message
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("INSERT INTO testlab_messages (sender_id, sender_name, sender_type, content) VALUES (%s,%s,%s,%s)", (self._tl_uid, self._tl_user, self._tl_type, text))
+            conn.commit(); conn.close()
+        except: pass
+
+        # Simulate bot response
+        self.after(300, lambda: self._testlab_bot_respond(text))
+        self.after(100, self._testlab_refresh)
+
+    def _testlab_bot_respond(self, cmd):
+        cmd_lower = cmd.lower().strip()
+        embed_title = None; embed_desc = None; embed_color = 0x3498DB; embed_fields = None; content = None
+
+        if cmd_lower == "/ping":
+            embed_title = "Pong !"; embed_desc = "Latence : 42ms"; embed_color = 0x2ECC71
+        elif cmd_lower == "/serverinfo":
+            embed_title = "Informations du serveur"
+            warns = db_scalar("SELECT COUNT(*) FROM warnings")
+            users = db_scalar("SELECT COUNT(DISTINCT user_id) FROM user_xp")
+            embed_fields = json.dumps([{"name": "Membres", "value": str(users)}, {"name": "Warns", "value": str(warns)}, {"name": "Region", "value": "Europe"}])
+            embed_color = 0x3498DB
+        elif cmd_lower == "/botinfo":
+            embed_title = "Silver Bot"; embed_desc = "Version 1.2\nBy Tib\nPython + discord.py"; embed_color = 0xC0C5D0
+        elif cmd_lower == "/leaderboard":
+            rows = db_query("SELECT user_id, SUM(xp) as xp FROM user_xp GROUP BY user_id ORDER BY xp DESC LIMIT 5")
+            if rows:
+                desc = "\n".join([f"**#{i+1}** User {r['user_id']} — {r['xp']} XP" for i, r in enumerate(rows)])
+            else:
+                desc = "Aucune donnee XP"
+            embed_title = "Leaderboard"; embed_desc = desc; embed_color = 0xFFD700
+        elif cmd_lower.startswith("/warn"):
+            embed_title = "Avertissement"; embed_desc = "Utilisateur averti avec succes.\nRaison : Test warning"; embed_color = 0xE74C3C
+        elif cmd_lower == "/xp" or cmd_lower == "/level":
+            embed_title = "Niveau"; embed_desc = f"**{self._tl_user}**\nNiveau : 5\nXP : 2500 / 3600\nMessages : 342"; embed_color = 0x9B59B6
+        elif cmd_lower == "/antispam config":
+            embed_title = "Anti-Spam Configuration"
+            embed_fields = json.dumps([{"name": "Status", "value": "Active"}, {"name": "Limite", "value": "5 msgs / 5s"}, {"name": "Doublons", "value": "3 max"}, {"name": "Action", "value": "warn"}])
+            embed_color = 0xE67E22
+        elif "hello" in cmd_lower or "salut" in cmd_lower or "hey" in cmd_lower:
+            content = f"Salut {self._tl_user} ! Je suis Silver Bot, comment je peux t'aider ?"
+        else:
+            content = f"Commande inconnue : `{cmd}`. Essaie /ping, /serverinfo, /botinfo, /leaderboard, /warn, /xp"
+
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("INSERT INTO testlab_messages (sender_id, sender_name, sender_type, content, embed_title, embed_desc, embed_color, embed_fields) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                    ("bot", "Silver Bot", "bot", content, embed_title, embed_desc, embed_color, embed_fields))
+            conn.commit(); conn.close()
+        except: pass
+        self.after(100, self._testlab_refresh)
+
+    def _testlab_clear(self):
+        try:
+            conn = get_db()
+            with conn.cursor() as c: c.execute("DELETE FROM testlab_messages")
+            conn.commit(); conn.close()
+            self._testlab_refresh()
+        except: pass
 
     def _testlab_refresh(self):
-        if not hasattr(self, '_testlab_msgs') or not self._testlab_msgs.winfo_exists(): return
-        ch = self._get_testlab_channel()
-        if not ch: return
-        for w in self._testlab_msgs.winfo_children(): w.destroy()
+        if not hasattr(self, '_tl_chat') or not self._tl_chat.winfo_exists(): return
+        for w in self._tl_chat.winfo_children(): w.destroy()
 
-        def _load():
-            msgs = discord_get(f"/channels/{ch}/messages?limit=20", self.token)
-            if not isinstance(msgs, list):
-                self.after(0, lambda: ctk.CTkLabel(self._testlab_msgs, text="Impossible de charger les messages", text_color=RED).pack(padx=15, pady=10))
-                return
-            msgs.reverse()
-            def _render():
-                for w in self._testlab_msgs.winfo_children(): w.destroy()
-                if not msgs:
-                    ctk.CTkLabel(self._testlab_msgs, text="Aucun message", text_color=DIM).pack(padx=15, pady=10)
-                    return
-                for m in msgs:
-                    author = m.get("author", {})
-                    is_bot = author.get("bot", False)
-                    username = author.get("username", "?")
-                    content = m.get("content", "")
-                    embeds = m.get("embeds", [])
-                    timestamp = m.get("timestamp", "")[:16].replace("T", " ")
+        msgs = db_query("SELECT sender_id, sender_name, sender_type, content, embed_title, embed_desc, embed_color, embed_fields, created_at FROM testlab_messages ORDER BY created_at DESC LIMIT 30")
+        msgs.reverse()
 
-                    color = "#1a2a1a" if is_bot else "#1a1a2a"
-                    mf = ctk.CTkFrame(self._testlab_msgs, fg_color=color, corner_radius=6, border_width=1, border_color=BORDER)
-                    mf.pack(fill="x", padx=8, pady=2)
+        for m in msgs:
+            is_bot = m['sender_type'] == 'bot'
+            mf = ctk.CTkFrame(self._tl_chat, fg_color="transparent")
+            mf.pack(fill="x", padx=16, pady=4)
 
-                    hdr = ctk.CTkFrame(mf, fg_color="transparent"); hdr.pack(fill="x", padx=8, pady=(5, 0))
-                    tag = "BOT" if is_bot else "USER"
-                    tag_color = "#60a5fa" if is_bot else ACCENT
-                    ctk.CTkLabel(hdr, text=f"{username}  [{tag}]", font=("Segoe UI", 10, "bold"), text_color=tag_color).pack(side="left")
-                    ctk.CTkLabel(hdr, text=timestamp[11:16] if len(timestamp) > 11 else "", font=("Segoe UI", 8), text_color=DIM).pack(side="right")
+            # Avatar
+            av_frame = ctk.CTkFrame(mf, width=40, height=40, corner_radius=20, fg_color="#2a2a3a" if not is_bot else "#1a2a3a")
+            av_frame.pack(side="left", anchor="n", padx=(0, 10), pady=(2, 0))
+            av_frame.pack_propagate(False)
+            initial = "S" if is_bot else (m['sender_name'][0].upper() if m['sender_name'] else "?")
+            ctk.CTkLabel(av_frame, text=initial, font=("Segoe UI", 16, "bold"), text_color="#60a5fa" if is_bot else ACCENT).pack(expand=True)
 
-                    if content:
-                        ctk.CTkLabel(mf, text=content, font=("Segoe UI", 11), text_color=TEXT, wraplength=500, anchor="w", justify="left").pack(padx=8, pady=(2, 4), anchor="w")
+            # Message body
+            body = ctk.CTkFrame(mf, fg_color="transparent")
+            body.pack(side="left", fill="x", expand=True)
 
-                    for emb in embeds:
-                        ef = ctk.CTkFrame(mf, fg_color="#14142a", corner_radius=4, border_width=1, border_color="#2a2a4a")
-                        ef.pack(padx=8, pady=(2, 4), fill="x")
-                        if emb.get("title"):
-                            ctk.CTkLabel(ef, text=emb["title"], font=("Segoe UI", 11, "bold"), text_color=BRIGHT, wraplength=450, anchor="w").pack(padx=8, pady=(6, 2), anchor="w")
-                        if emb.get("description"):
-                            ctk.CTkLabel(ef, text=emb["description"][:300], font=("Segoe UI", 10), text_color=DIM, wraplength=450, anchor="w", justify="left").pack(padx=8, pady=(0, 6), anchor="w")
-                        for field in emb.get("fields", [])[:6]:
-                            ctk.CTkLabel(ef, text=f"{field.get('name','')}: {field.get('value','')}", font=("Segoe UI", 10), text_color=DIM, anchor="w").pack(padx=8, pady=1, anchor="w")
+            # Name + time
+            name_row = ctk.CTkFrame(body, fg_color="transparent"); name_row.pack(fill="x")
+            name_color = "#60a5fa" if is_bot else GREEN if m['sender_type'] == 'owner' else BRIGHT
+            ctk.CTkLabel(name_row, text=m['sender_name'], font=("Segoe UI", 13, "bold"), text_color=name_color).pack(side="left")
+            if is_bot:
+                tag = ctk.CTkFrame(name_row, fg_color="#404EED", corner_radius=3, width=30, height=16)
+                tag.pack(side="left", padx=5); tag.pack_propagate(False)
+                ctk.CTkLabel(tag, text="BOT", font=("Segoe UI", 8, "bold"), text_color="#fff").pack(expand=True)
+            ts = str(m.get('created_at', ''))
+            if len(ts) > 11:
+                ctk.CTkLabel(name_row, text=ts[11:16], font=("Segoe UI", 10), text_color=DIM).pack(side="left", padx=6)
 
-            self.after(0, _render)
-        threading.Thread(target=_load, daemon=True).start()
+            # Content
+            if m.get('content'):
+                ctk.CTkLabel(body, text=m['content'], font=("Segoe UI", 13), text_color=TEXT, wraplength=550, anchor="w", justify="left").pack(fill="x", pady=(2, 0))
+
+            # Embed
+            if m.get('embed_title') or m.get('embed_desc'):
+                ec = m.get('embed_color', 0x3498DB)
+                hex_color = f"#{ec:06x}" if ec else "#3498DB"
+                ef = ctk.CTkFrame(body, fg_color="#1a1a28", corner_radius=6, border_width=0)
+                ef.pack(fill="x", pady=(4, 0), padx=(0, 40))
+                # Left color bar
+                bar = ctk.CTkFrame(ef, width=4, fg_color=hex_color, corner_radius=2)
+                bar.pack(side="left", fill="y", padx=(0, 0))
+                embed_body = ctk.CTkFrame(ef, fg_color="transparent"); embed_body.pack(side="left", fill="x", expand=True, padx=12, pady=10)
+                if m.get('embed_title'):
+                    ctk.CTkLabel(embed_body, text=m['embed_title'], font=("Segoe UI", 14, "bold"), text_color=BRIGHT, wraplength=450, anchor="w").pack(fill="x")
+                if m.get('embed_desc'):
+                    ctk.CTkLabel(embed_body, text=m['embed_desc'], font=("Segoe UI", 12), text_color="#b0b8c8", wraplength=450, anchor="w", justify="left").pack(fill="x", pady=(4, 0))
+                if m.get('embed_fields'):
+                    try:
+                        fields = json.loads(m['embed_fields'])
+                        fields_f = ctk.CTkFrame(embed_body, fg_color="transparent"); fields_f.pack(fill="x", pady=(6, 0))
+                        for fi, field in enumerate(fields[:8]):
+                            ff = ctk.CTkFrame(fields_f, fg_color="transparent")
+                            ff.pack(side="left" if fi < 3 else "top", padx=(0, 20), anchor="nw")
+                            ctk.CTkLabel(ff, text=field.get('name', ''), font=("Segoe UI", 10, "bold"), text_color=DIM, anchor="w").pack(anchor="w")
+                            ctk.CTkLabel(ff, text=field.get('value', ''), font=("Segoe UI", 11), text_color=TEXT, anchor="w").pack(anchor="w")
+                    except: pass
 
     def _testlab_auto(self):
-        if hasattr(self, '_testlab_msgs') and self._testlab_msgs.winfo_exists():
+        if hasattr(self, '_tl_chat') and self._tl_chat.winfo_exists():
             self._testlab_refresh()
-            self.after(4000, self._testlab_auto)
+            self.after(3000, self._testlab_auto)
 
     def page_empty(self):
         self._header("Page", ""); ctk.CTkLabel(self.content, text="Bientot disponible", text_color=DIM).pack(pady=40)
@@ -2061,100 +2096,115 @@ class TesterApp(ctk.CTk):
     # ── INFO ──────────────────────────────────────────────────────────────────
 
     def _page_testlab(self):
-        self._header("Test Lab", "Teste les commandes du bot")
-        scroll = self._scroll()
+        # Reuse the same _build_testlab from MainApp but adapted for tester
+        self._tl_user = self.discord_username
+        self._tl_uid = self.discord_id
+        self._tl_type = "tester"
 
-        cfg = load_config()
-        ch = cfg.get("testlab_channel", "")
-        if not ch:
-            ctk.CTkLabel(scroll, text="Le Test Lab n'est pas encore configure par l'owner.", text_color=DIM, font=("Segoe UI", 13)).pack(pady=30)
-            return
+        hf = ctk.CTkFrame(self.content, fg_color="transparent"); hf.pack(fill="x", padx=20, pady=(15, 0))
+        ctk.CTkLabel(hf, text="# test-lab", font=("Segoe UI", 18, "bold"), text_color=BRIGHT).pack(side="left")
 
-        self._tester_testlab_ch = ch
+        cmds_f = ctk.CTkFrame(self.content, fg_color=CARD, corner_radius=0)
+        cmds_f.pack(fill="x", padx=0, pady=(8, 0))
+        cmds_inner = ctk.CTkFrame(cmds_f, fg_color="transparent"); cmds_inner.pack(padx=12, pady=6)
+        for label, cmd in [("/ping", "/ping"), ("/serverinfo", "/serverinfo"), ("/botinfo", "/botinfo"), ("/leaderboard", "/leaderboard"), ("/xp", "/xp"), ("hello", "hello")]:
+            ctk.CTkButton(cmds_inner, text=label, font=("Segoe UI", 10), height=26, corner_radius=12, fg_color="#1e1e2a", hover_color="#28283a", text_color=ACCENT, border_width=1, border_color="#2a2a3a",
+                command=lambda c=cmd: self._tester_tl_send(c)).pack(side="left", padx=2)
 
-        # Quick commands
-        cmds_f = ctk.CTkFrame(scroll, fg_color="transparent")
-        cmds_f.pack(fill="x", pady=(0, 10))
-        quick = [("Ping", "/ping"), ("Server Info", "/serverinfo"), ("Bot Info", "/botinfo"), ("Leaderboard", "/leaderboard"), ("Hello", "Hello !")]
-        for i, (label, cmd) in enumerate(quick):
-            ctk.CTkButton(cmds_f, text=label, font=("Segoe UI", 11), height=28, corner_radius=6, fg_color="#1a1a2a", hover_color="#22223a", text_color=BRIGHT, border_width=1, border_color=BORDER, width=100,
-                command=lambda c=cmd: self._tester_testlab_send(c)).grid(row=0, column=i, padx=3, pady=3, sticky="ew")
-        for i in range(len(quick)): cmds_f.grid_columnconfigure(i, weight=1)
+        self._tl_chat = ctk.CTkScrollableFrame(self.content, fg_color="#0f0f16", corner_radius=0)
+        self._tl_chat.pack(fill="both", expand=True, padx=0, pady=0)
 
-        # Messages
-        self._tester_testlab_msgs = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
-        self._tester_testlab_msgs.pack(fill="x", pady=(0, 10))
+        input_bar = ctk.CTkFrame(self.content, fg_color="#1a1a24", corner_radius=0, height=56)
+        input_bar.pack(fill="x"); input_bar.pack_propagate(False)
+        inner = ctk.CTkFrame(input_bar, fg_color="transparent"); inner.pack(fill="both", expand=True, padx=12, pady=8)
+        self._tl_input = ctk.CTkEntry(inner, placeholder_text="Envoyer un message dans #test-lab", fg_color="#2a2a36", border_width=0, text_color=BRIGHT, height=38, corner_radius=8, font=("Segoe UI", 13))
+        self._tl_input.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self._tl_input.bind("<Return>", lambda e: self._tester_tl_send())
+        ctk.CTkButton(inner, text="Envoyer", height=38, corner_radius=8, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, width=80, font=("Segoe UI", 12, "bold"), command=self._tester_tl_send).pack(side="right")
 
-        # Input
-        input_f = ctk.CTkFrame(scroll, fg_color=CARD, corner_radius=10, border_width=1, border_color=BORDER)
-        input_f.pack(fill="x")
-        inner = ctk.CTkFrame(input_f, fg_color="transparent"); inner.pack(fill="x", padx=10, pady=8)
-        self._tester_testlab_input = ctk.CTkEntry(inner, placeholder_text="Teste une commande...", fg_color=BG, border_color=BORDER, text_color=BRIGHT, height=34)
-        self._tester_testlab_input.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        self._tester_testlab_input.bind("<Return>", lambda e: self._tester_testlab_send())
-        ctk.CTkButton(inner, text="Envoyer", height=34, corner_radius=6, fg_color=ACCENT, hover_color="#7a8192", text_color=BG, width=80, command=self._tester_testlab_send).pack(side="right")
+        self._tester_tl_refresh()
+        self._tester_tl_auto()
 
-        self._tester_testlab_refresh()
-        self._tester_testlab_auto()
-
-    def _tester_testlab_send(self, text=None):
+    def _tester_tl_send(self, text=None):
         if text is None:
-            text = self._tester_testlab_input.get().strip()
+            text = self._tl_input.get().strip()
             if not text: return
-            self._tester_testlab_input.delete(0, "end")
-        ch = self._tester_testlab_ch
-        cfg = load_config()
-        token = cfg.get("token", "")
-        def _do():
-            discord_post(f"/channels/{ch}/messages", token, {"content": f"[{self.discord_username}] {text}"})
-            import time as _t; _t.sleep(1.5)
-            self.after(0, self._tester_testlab_refresh)
-        threading.Thread(target=_do, daemon=True).start()
+            self._tl_input.delete(0, "end")
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("INSERT INTO testlab_messages (sender_id, sender_name, sender_type, content) VALUES (%s,%s,%s,%s)", (self._tl_uid, self._tl_user, self._tl_type, text))
+            conn.commit(); conn.close()
+        except: pass
+        # Bot response (same logic as owner)
+        self.after(300, lambda: self._tester_tl_bot(text))
+        self.after(100, self._tester_tl_refresh)
 
-    def _tester_testlab_refresh(self):
-        if not hasattr(self, '_tester_testlab_msgs') or not self._tester_testlab_msgs.winfo_exists(): return
-        ch = self._tester_testlab_ch
-        cfg = load_config()
-        token = cfg.get("token", "")
-        for w in self._tester_testlab_msgs.winfo_children(): w.destroy()
+    def _tester_tl_bot(self, cmd):
+        cmd_lower = cmd.lower().strip()
+        embed_title = None; embed_desc = None; embed_color = 0x3498DB; embed_fields = None; content = None
+        if cmd_lower == "/ping":
+            embed_title = "Pong !"; embed_desc = "Latence : 42ms"; embed_color = 0x2ECC71
+        elif cmd_lower == "/serverinfo":
+            embed_title = "Informations du serveur"
+            embed_fields = json.dumps([{"name": "Membres", "value": str(db_scalar("SELECT COUNT(DISTINCT user_id) FROM user_xp"))}, {"name": "Warns", "value": str(db_scalar("SELECT COUNT(*) FROM warnings"))}])
+        elif cmd_lower == "/botinfo":
+            embed_title = "Silver Bot"; embed_desc = "Version 1.2\nBy Tib"; embed_color = 0xC0C5D0
+        elif cmd_lower == "/leaderboard":
+            rows = db_query("SELECT user_id, SUM(xp) as xp FROM user_xp GROUP BY user_id ORDER BY xp DESC LIMIT 5")
+            embed_title = "Leaderboard"; embed_desc = "\n".join([f"**#{i+1}** User {r['user_id']} - {r['xp']} XP" for i, r in enumerate(rows)]) if rows else "Aucune donnee"; embed_color = 0xFFD700
+        elif cmd_lower == "/xp" or cmd_lower == "/level":
+            embed_title = "Niveau"; embed_desc = f"**{self._tl_user}**\nNiveau : 5\nXP : 2500 / 3600"; embed_color = 0x9B59B6
+        elif "hello" in cmd_lower or "salut" in cmd_lower:
+            content = f"Salut {self._tl_user} !"
+        else:
+            content = f"Commande inconnue : `{cmd}`"
+        try:
+            conn = get_db()
+            with conn.cursor() as c:
+                c.execute("INSERT INTO testlab_messages (sender_id, sender_name, sender_type, content, embed_title, embed_desc, embed_color, embed_fields) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                    ("bot", "Silver Bot", "bot", content, embed_title, embed_desc, embed_color, embed_fields))
+            conn.commit(); conn.close()
+        except: pass
+        self.after(100, self._tester_tl_refresh)
 
-        def _load():
-            msgs = discord_get(f"/channels/{ch}/messages?limit=15", token)
-            if not isinstance(msgs, list): return
-            msgs.reverse()
-            def _render():
-                for w in self._tester_testlab_msgs.winfo_children(): w.destroy()
-                for m in msgs:
-                    author = m.get("author", {})
-                    is_bot = author.get("bot", False)
-                    username = author.get("username", "?")
-                    content = m.get("content", "")
-                    embeds = m.get("embeds", [])
-                    ts = m.get("timestamp", "")
+    def _tester_tl_refresh(self):
+        if not hasattr(self, '_tl_chat') or not self._tl_chat.winfo_exists(): return
+        for w in self._tl_chat.winfo_children(): w.destroy()
+        msgs = db_query("SELECT sender_id, sender_name, sender_type, content, embed_title, embed_desc, embed_color, embed_fields, created_at FROM testlab_messages ORDER BY created_at DESC LIMIT 30")
+        msgs.reverse()
+        for m in msgs:
+            is_bot = m['sender_type'] == 'bot'
+            mf = ctk.CTkFrame(self._tl_chat, fg_color="transparent"); mf.pack(fill="x", padx=14, pady=4)
+            av = ctk.CTkFrame(mf, width=36, height=36, corner_radius=18, fg_color="#1a2a3a" if is_bot else "#2a2a3a")
+            av.pack(side="left", anchor="n", padx=(0, 8), pady=(2, 0)); av.pack_propagate(False)
+            ctk.CTkLabel(av, text="S" if is_bot else (m['sender_name'][0].upper() if m['sender_name'] else "?"), font=("Segoe UI", 14, "bold"), text_color="#60a5fa" if is_bot else ACCENT).pack(expand=True)
+            body = ctk.CTkFrame(mf, fg_color="transparent"); body.pack(side="left", fill="x", expand=True)
+            nr = ctk.CTkFrame(body, fg_color="transparent"); nr.pack(fill="x")
+            ctk.CTkLabel(nr, text=m['sender_name'], font=("Segoe UI", 12, "bold"), text_color="#60a5fa" if is_bot else BRIGHT).pack(side="left")
+            if is_bot:
+                t = ctk.CTkFrame(nr, fg_color="#404EED", corner_radius=3, width=28, height=14); t.pack(side="left", padx=4); t.pack_propagate(False)
+                ctk.CTkLabel(t, text="BOT", font=("Segoe UI", 7, "bold"), text_color="#fff").pack(expand=True)
+            ts = str(m.get('created_at', ''))
+            if len(ts) > 11: ctk.CTkLabel(nr, text=ts[11:16], font=("Segoe UI", 9), text_color=DIM).pack(side="left", padx=5)
+            if m.get('content'): ctk.CTkLabel(body, text=m['content'], font=("Segoe UI", 12), text_color=TEXT, wraplength=450, anchor="w", justify="left").pack(fill="x", pady=(2, 0))
+            if m.get('embed_title') or m.get('embed_desc'):
+                ec = m.get('embed_color', 0x3498DB); hc = f"#{ec:06x}" if ec else "#3498DB"
+                ef = ctk.CTkFrame(body, fg_color="#1a1a28", corner_radius=6); ef.pack(fill="x", pady=(4, 0), padx=(0, 30))
+                ctk.CTkFrame(ef, width=4, fg_color=hc, corner_radius=2).pack(side="left", fill="y")
+                eb = ctk.CTkFrame(ef, fg_color="transparent"); eb.pack(side="left", fill="x", expand=True, padx=10, pady=8)
+                if m.get('embed_title'): ctk.CTkLabel(eb, text=m['embed_title'], font=("Segoe UI", 13, "bold"), text_color=BRIGHT, anchor="w").pack(fill="x")
+                if m.get('embed_desc'): ctk.CTkLabel(eb, text=m['embed_desc'], font=("Segoe UI", 11), text_color="#b0b8c8", wraplength=400, anchor="w", justify="left").pack(fill="x", pady=(3, 0))
+                if m.get('embed_fields'):
+                    try:
+                        for field in json.loads(m['embed_fields'])[:6]:
+                            ctk.CTkLabel(eb, text=f"{field.get('name','')}: {field.get('value','')}", font=("Segoe UI", 10), text_color=DIM, anchor="w").pack(fill="x", pady=1)
+                    except: pass
 
-                    color = "#1a2a1a" if is_bot else "#1a1a2a"
-                    mf = ctk.CTkFrame(self._tester_testlab_msgs, fg_color=color, corner_radius=6, border_width=1, border_color=BORDER)
-                    mf.pack(fill="x", padx=6, pady=2)
-                    hdr = ctk.CTkFrame(mf, fg_color="transparent"); hdr.pack(fill="x", padx=8, pady=(4, 0))
-                    tag = "BOT" if is_bot else "USER"
-                    ctk.CTkLabel(hdr, text=f"{username} [{tag}]", font=("Segoe UI", 9, "bold"), text_color="#60a5fa" if is_bot else ACCENT).pack(side="left")
-                    ctk.CTkLabel(hdr, text=ts[11:16] if len(ts) > 11 else "", font=("Segoe UI", 8), text_color=DIM).pack(side="right")
-                    if content:
-                        ctk.CTkLabel(mf, text=content, font=("Segoe UI", 11), text_color=TEXT, wraplength=450, anchor="w", justify="left").pack(padx=8, pady=(2, 4), anchor="w")
-                    for emb in embeds:
-                        ef = ctk.CTkFrame(mf, fg_color="#14142a", corner_radius=4, border_width=1, border_color="#2a2a4a")
-                        ef.pack(padx=8, pady=(2, 4), fill="x")
-                        if emb.get("title"):
-                            ctk.CTkLabel(ef, text=emb["title"], font=("Segoe UI", 10, "bold"), text_color=BRIGHT, wraplength=400, anchor="w").pack(padx=6, pady=(4, 1), anchor="w")
-                        if emb.get("description"):
-                            ctk.CTkLabel(ef, text=emb["description"][:200], font=("Segoe UI", 9), text_color=DIM, wraplength=400, anchor="w", justify="left").pack(padx=6, pady=(0, 4), anchor="w")
-            self.after(0, _render)
-        threading.Thread(target=_load, daemon=True).start()
-
-    def _tester_testlab_auto(self):
-        if hasattr(self, '_tester_testlab_msgs') and self._tester_testlab_msgs.winfo_exists():
-            self._tester_testlab_refresh()
-            self.after(4000, self._tester_testlab_auto)
+    def _tester_tl_auto(self):
+        if hasattr(self, '_tl_chat') and self._tl_chat.winfo_exists():
+            self._tester_tl_refresh()
+            self.after(3000, self._tester_tl_auto)
 
     def _page_info(self):
         self._header("Infos Bot", "Informations sur Silver Bot")
