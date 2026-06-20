@@ -1163,16 +1163,16 @@ class MainApp(ctk.CTk):
         self.after(2000, lambda: self.tester_gen_status.configure(text=""))
 
     def _copy_invite(self, code, label):
-        invite = f"""Hey ! Tu as ete invite a tester **Silver Bot** !
+        invite = f"""Hey ! Tu as été invité à tester **Silver Bot** !
 
-Pour acceder a l'app :
-1. Telecharge **SilverApp.exe** ici : https://github.com/IZIUKAA/SilverApp/releases/download/1.1/SilverApp.exe
+Pour accéder à l'app :
+1. Télécharge **SilverApp.exe** ici : https://github.com/IZIUKAA/SilverApp/releases/download/1.1/SilverApp.exe
 2. Lance l'app
 3. Entre ton **Discord ID** et ce code d'invitation :
 
 **Code : {code}**
 
-A bientot sur Silver Bot !"""
+À bientôt sur Silver Bot !"""
         self.clipboard_clear()
         self.clipboard_append(invite)
         self.tester_gen_status.configure(text="Invitation copiee !", text_color=GREEN)
