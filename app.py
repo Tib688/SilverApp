@@ -1166,8 +1166,9 @@ class MainApp(ctk.CTk):
         invite = f"""Hey ! Tu as ete invite a tester **Silver Bot** !
 
 Pour acceder a l'app :
-1. Telecharge **SilverApp.exe**
-2. Entre ton **Discord ID** et ce code d'invitation :
+1. Telecharge **SilverApp.exe** ici : https://github.com/IZIUKAA/SilverApp/releases/latest/download/SilverApp.exe
+2. Lance l'app
+3. Entre ton **Discord ID** et ce code d'invitation :
 
 **Code : {code}**
 
