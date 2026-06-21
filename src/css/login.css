@@ -42,15 +42,48 @@
   margin: 4px 0 2px;
 }
 
-.login-welcome {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 24px;
+.login-robot {
+  margin: 12px 0 20px;
+  height: 36px;
+  overflow: hidden;
+  position: relative;
 }
 
-.login-welcome span {
-  animation: pulse 2s ease infinite;
-  display: inline-block;
+.robot-walk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: robotWalk 4s linear infinite;
+  position: absolute;
+}
+
+.robot-body {
+  font-size: 26px;
+  animation: robotBounce .4s ease-in-out infinite;
+}
+
+.robot-shadow {
+  width: 20px;
+  height: 4px;
+  background: rgba(139,149,176,.15);
+  border-radius: 50%;
+  margin-top: -2px;
+  animation: robotShadow .4s ease-in-out infinite;
+}
+
+@keyframes robotWalk {
+  0%   { left: -30px; }
+  100% { left: calc(100% + 30px); }
+}
+
+@keyframes robotBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+@keyframes robotShadow {
+  0%, 100% { transform: scaleX(1); opacity: .6; }
+  50%      { transform: scaleX(.7); opacity: .3; }
 }
 
 /* Form */

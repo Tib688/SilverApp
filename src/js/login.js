@@ -1,12 +1,3 @@
-// Welcome animation
-let welcomeIdx = 0;
-setInterval(() => {
-  const texts = ['Bienvenue', 'Bienvenue .', 'Bienvenue ..', 'Bienvenue ...'];
-  welcomeIdx = (welcomeIdx + 1) % texts.length;
-  const el = document.getElementById('welcomeText');
-  if (el) el.textContent = texts[welcomeIdx];
-}, 600);
-
 // Load bot avatar
 async function loadBotAvatar() {
   const token = getToken();
@@ -57,8 +48,21 @@ async function login() {
   // Owner
   if (discordId === OWNER_ID) {
     if (!cfg.token) {
+      status.className = 'login-status info';
+      status.textContent = 'Import du token...';
+      try {
+        const imported = await fetch(`${BACKEND}/import-config`).then(r => r.json());
+        if (imported.token) {
+          cfg.token = imported.token;
+          saveConfig(cfg);
+          loadBotAvatar();
+          status.className = 'login-status success';
+          status.textContent = 'Token importe ! Reclique sur Se connecter.';
+          return;
+        }
+      } catch {}
       status.className = 'login-status error';
-      status.textContent = 'Token non configure. Lance setup.';
+      status.textContent = 'Token non configure. Verifie ~/.silverapp/config.json';
       return;
     }
 
@@ -173,25 +177,24 @@ async function submitForgot() {
   document.getElementById('forgotUsername').value = '';
 }
 
-// Auto-import old config with retry
-async function importOldConfig() {
+// Auto-import config from backend
+async function importConfig() {
   const cfg = loadConfig();
   if (cfg.token) return;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     try {
       const r = await fetch(`${BACKEND}/import-config`);
       const old = await r.json();
       if (old.token) {
         cfg.token = old.token;
         saveConfig(cfg);
-        console.log('Config imported from old SilverApp');
         loadBotAvatar();
         return;
       }
     } catch {}
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
   }
 }
 
 // Init
-importOldConfig().then(() => checkSession());
+importConfig().then(() => checkSession());

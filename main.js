@@ -23,6 +23,7 @@ function createWindow() {
     icon: path.join(__dirname, 'icon.ico'),
   });
 
+  mainWindow.webContents.session.clearCache();
   mainWindow.loadFile('src/pages/login.html');
   mainWindow.on('closed', () => { mainWindow = null; });
 }
@@ -45,9 +46,28 @@ function startBackend() {
   backendProcess.on('error', () => {});
 }
 
-app.whenReady().then(() => {
+async function waitForBackend(maxRetries = 20) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await new Promise((resolve, reject) => {
+        const req = http.get('http://127.0.0.1:8051/health', res => {
+          res.resume();
+          resolve();
+        });
+        req.on('error', reject);
+        req.setTimeout(500, () => { req.destroy(); reject(); });
+      });
+      return;
+    } catch {
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+}
+
+app.whenReady().then(async () => {
   startBackend();
-  setTimeout(createWindow, 500);
+  await waitForBackend();
+  createWindow();
 });
 
 app.on('window-all-closed', () => {
