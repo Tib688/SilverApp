@@ -1,0 +1,30 @@
+{
+  "name": "silver-app",
+  "version": "2.0.0",
+  "description": "Silver Bot Dashboard",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable"
+  },
+  "author": "Tib",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.tib.silverapp",
+    "productName": "Silver App",
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "backend/**/*"
+    ]
+  }
+}

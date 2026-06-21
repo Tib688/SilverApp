@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+  <div class="titlebar">
+    <button class="titlebar-btn" onclick="silver.minimize()">─</button>
+    <button class="titlebar-btn" onclick="silver.maximize()">□</button>
+    <button class="titlebar-btn close" onclick="silver.close()">✕</button>
+  </div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-avatar" id="sidebarAvatar"></div>
+        <div class="sidebar-brand-text">
+          <h2>Silver App</h2>
+          <span>By Tib · v2.0</span>
+        </div>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a class="nav-item active" onclick="showPage('overview')"><span class="icon">◆</span> Vue d'ensemble</a>
+        <a class="nav-item" onclick="showPage('moderation')"><span class="icon">⚠</span> Moderation</a>
+        <a class="nav-item" onclick="showPage('tickets')"><span class="icon">✉</span> Tickets</a>
+
+        <div class="nav-section">Engagement</div>
+        <a class="nav-item" onclick="showPage('leaderboard')"><span class="icon">★</span> Leaderboard</a>
+        <a class="nav-item" onclick="showPage('members')"><span class="icon">☻</span> Membres</a>
+        <a class="nav-item" onclick="showPage('suggestions')"><span class="icon">✦</span> Suggestions</a>
+
+        <div class="nav-section">Controle</div>
+        <a class="nav-item" onclick="showPage('control')"><span class="icon">⚡</span> Controle Bot</a>
+        <a class="nav-item" onclick="showPage('botinfo')"><span class="icon">●</span> Bot Info</a>
+
+        <div class="nav-section">Testeurs</div>
+        <a class="nav-item" onclick="showPage('chat')"><span class="icon">💬</span> Chat Testeurs</a>
+        <a class="nav-item" onclick="showPage('bugs')"><span class="icon">🐛</span> Bugs Reports</a>
+        <a class="nav-item" onclick="showPage('tasks')"><span class="icon">📋</span> Taches</a>
+        <a class="nav-item" onclick="showPage('announcements')"><span class="icon">📢</span> Annonces</a>
+        <a class="nav-item" onclick="showPage('testlab')"><span class="icon">⚗</span> Test Lab</a>
+        <a class="nav-item" onclick="showPage('forgot')"><span class="icon">🔑</span> Codes oublies</a>
+
+        <div class="nav-section">Systeme</div>
+        <a class="nav-item" onclick="showPage('database')"><span class="icon">⛁</span> Base de donnees</a>
+        <a class="nav-item" onclick="showPage('settings')"><span class="icon">⚙</span> Parametres</a>
+      </div>
+
+      <div class="sidebar-user">
+        <span class="dot dot-green dot-pulse"></span>
+        <span>Tib · Owner</span>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="welcome-banner">
+        <div class="welcome-left">
+          <h2 id="welcomeTitle">Welcome, Tib !</h2>
+          <span id="welcomeSub">Owner · Silver Bot</span>
+        </div>
+        <div class="welcome-pills">
+          <div class="welcome-pill pill-blue"><div class="pill-label">Serveurs</div><div class="pill-value" id="pillServers">-</div></div>
+          <div class="welcome-pill pill-gold"><div class="pill-label">Warns</div><div class="pill-value" id="pillWarns">-</div></div>
+          <div class="welcome-pill pill-red"><div class="pill-label">Tickets</div><div class="pill-value" id="pillTickets">-</div></div>
+        </div>
+      </div>
+
+      <div class="content" id="content">
+        <!-- Pages loaded here -->
+      </div>
+
+      <div class="status-bar">
+        <div class="left">
+          <span class="dot dot-green" style="width:6px;height:6px"></span>
+          Silver App v2.0 · MySQL · Pret
+        </div>
+        <div id="clock"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+</html>

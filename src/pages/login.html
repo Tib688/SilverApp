@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+  <div class="titlebar">
+    <button class="titlebar-btn" onclick="silver.minimize()">─</button>
+    <button class="titlebar-btn" onclick="silver.maximize()">□</button>
+    <button class="titlebar-btn close" onclick="silver.close()">✕</button>
+  </div>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-avatar" id="botAvatar">
+        <img id="botAvatarImg" src="" style="display:none">
+        <div id="botAvatarPlaceholder" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;font-weight:800;color:var(--accent)">S</div>
+      </div>
+
+      <div class="login-title">SILVER BOT</div>
+      <div class="login-by">By Tib</div>
+      <div class="login-welcome"><span id="welcomeText">Bienvenue</span></div>
+
+      <!-- Login form -->
+      <div class="login-form">
+        <h3>CONNEXION</h3>
+        <div class="form-group">
+          <label class="form-label">Discord ID</label>
+          <input type="text" id="discordId" placeholder="Clic droit profil > Copier l'identifiant" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Code</label>
+          <input type="text" id="loginCode" class="login-code-input" placeholder="send pass / code invitation">
+        </div>
+        <div class="login-status" id="loginStatus"></div>
+        <div class="login-buttons">
+          <button class="btn btn-primary" onclick="login()">Se connecter</button>
+          <button class="login-forgot-btn" onclick="toggleForgot()">Code oublie ?</button>
+        </div>
+      </div>
+
+      <!-- Forgot panel -->
+      <div class="forgot-panel" id="forgotPanel">
+        <h3>CODE OUBLIE</h3>
+        <div class="form-group">
+          <label class="form-label">Discord ID</label>
+          <input type="text" id="forgotId" placeholder="Ton Discord ID">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username Discord</label>
+          <input type="text" id="forgotUsername" placeholder="Ton pseudo Discord">
+        </div>
+        <div class="login-status" id="forgotStatus"></div>
+        <div class="login-buttons">
+          <button class="btn btn-primary" onclick="submitForgot()">Envoyer la demande</button>
+          <button class="login-forgot-btn" onclick="toggleForgot()">Retour</button>
+        </div>
+      </div>
+
+      <div class="login-info">Owner : Discord ID + "send pass" · Testeur : Discord ID + code</div>
+      <div class="login-version">v2.0</div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/login.js"></script>
+</body>
+</html>

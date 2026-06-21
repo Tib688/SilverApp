@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+  <div class="titlebar">
+    <button class="titlebar-btn" onclick="silver.minimize()">─</button>
+    <button class="titlebar-btn" onclick="silver.maximize()">□</button>
+    <button class="titlebar-btn close" onclick="silver.close()">✕</button>
+  </div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-avatar" id="sidebarAvatar"></div>
+        <div class="sidebar-brand-text">
+          <h2>Silver App</h2>
+          <span>Testeur · v2.0</span>
+        </div>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a class="nav-item active" onclick="testerShowPage('t-overview')"><span class="icon">◆</span> Accueil</a>
+        <a class="nav-item" onclick="testerShowPage('t-chat')"><span class="icon">💬</span> Chat General</a>
+        <a class="nav-item" onclick="testerShowPage('t-dm')"><span class="icon">✉</span> DM Owner</a>
+
+        <div class="nav-section">Projet</div>
+        <a class="nav-item" onclick="testerShowPage('t-announcements')"><span class="icon">📢</span> Annonces</a>
+        <a class="nav-item" onclick="testerShowPage('t-tasks')"><span class="icon">📋</span> Mes Taches</a>
+        <a class="nav-item" onclick="testerShowPage('t-bugs')"><span class="icon">🐛</span> Bugs Reports</a>
+
+        <div class="nav-section">Outils</div>
+        <a class="nav-item" onclick="testerShowPage('t-testlab')"><span class="icon">⚗</span> Test Lab</a>
+        <a class="nav-item" onclick="testerShowPage('t-botinfo')"><span class="icon">●</span> Bot Info</a>
+      </div>
+
+      <div class="sidebar-user" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="dot dot-green dot-pulse"></span>
+          <span id="testerUserLabel">Testeur</span>
+        </div>
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:9px" onclick="tLogout()">Deconnexion</button>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="welcome-banner">
+        <div class="welcome-left">
+          <h2 id="testerWelcome">Welcome, Testeur !</h2>
+          <span id="testerSub">Testeur · Silver Bot</span>
+        </div>
+        <div class="welcome-pills">
+          <div class="welcome-pill pill-blue"><div class="pill-label">Taches</div><div class="pill-value" id="tPillTasks">-</div></div>
+          <div class="welcome-pill pill-gold"><div class="pill-label">Bugs</div><div class="pill-value" id="tPillBugs">-</div></div>
+          <div class="welcome-pill pill-red"><div class="pill-label">Annonces</div><div class="pill-value" id="tPillAnnounce">-</div></div>
+        </div>
+      </div>
+
+      <div class="content" id="testerContent">
+        <!-- Pages loaded here -->
+      </div>
+
+      <div class="status-bar">
+        <div class="left">
+          <span class="dot dot-green" style="width:6px;height:6px"></span>
+          Silver App v2.0 · Testeur · Pret
+        </div>
+        <div id="testerClock"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/tester.js"></script>
+</body>
+</html>
