@@ -19,7 +19,7 @@ dbQuery("INSERT INTO user_presence (user_id, status, last_seen) VALUES (%s, 'onl
 setInterval(() => dbQuery("UPDATE user_presence SET last_seen=NOW() WHERE user_id=%s", [testerId]), 30000);
 
 // Page system
-let tCurrentPage = 't-overview';
+let tCurrentPage = 't-home';
 let tChatInterval = null;
 
 function testerShowPage(name) {
@@ -30,8 +30,13 @@ function testerShowPage(name) {
     if (n.getAttribute('onclick')?.includes(`'${name}'`)) n.classList.add('active');
   });
   const content = document.getElementById('testerContent');
+  const banner = document.getElementById('tBanner');
+  if (name === 't-home') { if (banner) banner.style.display = 'none'; }
+  else { if (banner) banner.style.display = ''; }
+
   content.innerHTML = '<div class="loading"><div class="spinner"></div> Chargement...</div>';
   const loaders = {
+    't-home': tLoadHome,
     't-overview': tLoadOverview,
     't-chat': tLoadChat,
     't-dm': tLoadDm,
@@ -53,38 +58,98 @@ function fmtDate(d) { if (!d) return '—'; const s = String(d); return s.length
 function fmtDateTime(d) { if (!d) return ''; const dt = new Date(d); if (isNaN(dt)) return String(d).slice(0, 16); return dt.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
 function sectionHeader(text) { return `<div class="section-header"><div class="bar"></div><h3>${text}</h3><div class="line"></div></div>`; }
 
+// ═══ HOME ═══════════════════════════════════════════════════════════════════
+
+async function tLoadHome(el) {
+  const [bot, guilds, testers, openBugs] = await Promise.all([
+    discordGet('/users/@me'),
+    discordGet('/users/@me/guilds'),
+    dbScalar('SELECT COUNT(*) FROM tester_codes'),
+    dbScalar("SELECT COUNT(*) FROM tester_bugs WHERE status='open'"),
+  ]);
+  const b = (bot && !bot.error) ? bot : {};
+  const avatar = b.id ? getBotAvatar(b, 256) : '';
+  const guildCount = Array.isArray(guilds) ? guilds.length : 0;
+
+  if (b.id) {
+    const sbAv = document.getElementById('sidebarAvatar');
+    if (sbAv) sbAv.innerHTML = `<img src="${getBotAvatar(b, 128)}">`;
+  }
+
+  el.innerHTML = `
+    <div class="fade-in" style="display:flex;flex-direction:column;align-items:center;padding-top:30px">
+      <div style="position:relative;margin-bottom:20px">
+        ${avatar ? `<img src="${avatar}" style="width:96px;height:96px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 30px rgba(139,149,176,.15)">` : '<div style="width:96px;height:96px;border-radius:50%;background:var(--card);border:3px solid var(--accent)"></div>'}
+        <span class="dot dot-green dot-pulse" style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border:3px solid var(--bg)"></span>
+      </div>
+      <h1 style="font-size:28px;font-weight:800;color:var(--bright);letter-spacing:-.03em">${esc(b.username || 'Silver Bot')}</h1>
+      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.1</p>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <span class="badge badge-green" style="padding:5px 14px;font-size:11px">En ligne</span>
+        <span class="badge badge-blue" style="padding:5px 14px;font-size:11px">BOT</span>
+        <span class="badge badge-purple" style="padding:5px 14px;font-size:11px">${guildCount} serveur${guildCount > 1 ? 's' : ''}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:500px;margin-top:28px">
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Serveurs</div><div class="stat-value">${guildCount}</div></div>
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Testeurs</div><div class="stat-value">${testers}</div></div>
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Bugs</div><div class="stat-value">${openBugs}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:500px;margin-top:14px">
+        <div class="card" style="text-align:center;cursor:pointer;padding:18px" onclick="testerShowPage('t-overview')">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.5"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></div>
+          <div style="font-size:12px;font-weight:600;color:var(--bright)">Vue d'ensemble</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer;padding:18px" onclick="testerShowPage('t-chat')">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.5"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
+          <div style="font-size:12px;font-weight:600;color:var(--bright)">Chat</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer;padding:18px" onclick="testerShowPage('t-tasks')">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.5"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/></svg></div>
+          <div style="font-size:12px;font-weight:600;color:var(--bright)">Mes Taches</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
+      </div>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.1 · Electron · FastAPI · MySQL</p>
+    </div>`;
+}
+
 // ═══ OVERVIEW ═══════════════════════════════════════════════════════════════
 
 async function tLoadOverview(el) {
-  const [tasks, bugs, announces] = await Promise.all([
+  const [tasks, bugs, announces, guilds] = await Promise.all([
     dbQuery("SELECT status, COUNT(*) as c FROM tester_tasks WHERE assigned_to=%s GROUP BY status", [testerId]),
     dbQuery("SELECT status, COUNT(*) as c FROM tester_bugs WHERE reporter=%s GROUP BY status", [testerId]),
     dbScalar("SELECT COUNT(*) FROM tester_announcements"),
+    discordGet('/users/@me/guilds'),
   ]);
 
   const taskCounts = { todo: 0, in_progress: 0, done: 0 };
   tasks.forEach(r => { if (taskCounts[r.status] !== undefined) taskCounts[r.status] = r.c; });
   const totalTasks = taskCounts.todo + taskCounts.in_progress + taskCounts.done;
   const bugCount = bugs.reduce((s, r) => s + r.c, 0);
+  const guildCount = Array.isArray(guilds) ? guilds.length : 0;
 
   document.getElementById('tPillTasks').textContent = totalTasks;
   document.getElementById('tPillBugs').textContent = bugCount;
   document.getElementById('tPillAnnounce').textContent = announces;
 
   el.innerHTML = `
-    <div class="page-header fade-in"><h2>Tableau de bord</h2><p>Bienvenue ${esc(testerName)}</p></div>
+    <div class="page-header fade-in"><h2>Vue d'ensemble</h2><p>Bienvenue ${esc(testerName)}</p></div>
     <div class="stats-grid fade-in">
-      <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Taches a faire</div><div class="stat-value">${taskCounts.todo}</div></div>
-      <div class="card stat-card slide-in" style="animation-delay:.03s"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">En cours</div><div class="stat-value">${taskCounts.in_progress}</div></div>
-      <div class="card stat-card slide-in" style="animation-delay:.06s"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Terminees</div><div class="stat-value">${taskCounts.done}</div></div>
-      <div class="card stat-card slide-in" style="animation-delay:.09s"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Bugs signales</div><div class="stat-value">${bugCount}</div></div>
+      <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Serveurs</div><div class="stat-value">${guildCount}</div></div>
+      <div class="card stat-card slide-in" style="animation-delay:.03s"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Taches a faire</div><div class="stat-value">${taskCounts.todo}</div></div>
+      <div class="card stat-card slide-in" style="animation-delay:.06s"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">En cours</div><div class="stat-value">${taskCounts.in_progress}</div></div>
+      <div class="card stat-card slide-in" style="animation-delay:.09s"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Terminees</div><div class="stat-value">${taskCounts.done}</div></div>
+      <div class="card stat-card slide-in" style="animation-delay:.12s"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Bugs signales</div><div class="stat-value">${bugCount}</div></div>
+      <div class="card stat-card slide-in" style="animation-delay:.15s"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">Annonces</div><div class="stat-value">${announces}</div></div>
     </div>
     <div id="tOverviewAnnounces"></div>
     <div id="tOverviewTasks"></div>`;
 
-  // Recent announcements
   const recentAnnounces = await dbQuery("SELECT title, content, author AS author_name, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 3");
-  if (recentAnnounces.length) {
+  if (recentAnnounces.length && !recentAnnounces[0]?.error) {
     let h = sectionHeader('Annonces recentes');
     h += recentAnnounces.map(r => `
       <div class="card announce-card slide-in" style="margin-bottom:8px">
@@ -95,9 +160,8 @@ async function tLoadOverview(el) {
     document.getElementById('tOverviewAnnounces').innerHTML = h;
   }
 
-  // My pending tasks
   const myTasks = await dbQuery("SELECT title, priority, status FROM tester_tasks WHERE assigned_to=%s AND status!='done' ORDER BY FIELD(priority,'urgent','high','medium','low') LIMIT 5", [testerId]);
-  if (myTasks.length) {
+  if (myTasks.length && !myTasks[0]?.error) {
     const prioColors = { low: 'var(--blue)', medium: 'var(--gold)', high: 'var(--red)', urgent: '#ff2d55' };
     let h = sectionHeader('Mes taches en cours');
     h += myTasks.map(r => `
@@ -119,10 +183,12 @@ async function tLoadChat(el) {
     <div class="page-header fade-in"><h2>Chat General</h2><p>Discussion avec l'equipe</p></div>
     <div class="chat-layout fade-in" style="height:calc(100% - 60px)">
       <div class="chat-main" style="border-radius:var(--radius)">
-        <div class="chat-header">💬 General</div>
+        <div class="chat-header">Chat General</div>
         <div class="chat-messages" id="tChatMessages"><div class="loading"><div class="spinner"></div></div></div>
         <div class="chat-input-bar">
-          <button class="btn btn-secondary chat-attach-btn" onclick="document.getElementById('tChatFile').click()">📎</button>
+          <button class="btn btn-secondary chat-attach-btn" onclick="document.getElementById('tChatFile').click()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
           <input type="text" id="tChatInput" placeholder="Ecrire un message..." onkeydown="if(event.key==='Enter')tChatSend()">
           <button class="btn btn-primary" onclick="tChatSend()">Envoyer</button>
           <input type="file" id="tChatFile" style="display:none" onchange="tChatUpload(this)">
@@ -136,11 +202,13 @@ async function tLoadChat(el) {
 async function tChatLoadMessages() {
   const container = document.getElementById('tChatMessages');
   if (!container) { if (tChatInterval) { clearInterval(tChatInterval); tChatInterval = null; } return; }
-  const rows = await dbQuery("SELECT sender_id, sender_name, message, file_url, file_name, created_at FROM tester_chat ORDER BY created_at DESC LIMIT 50");
+  const rows = await dbQuery("SELECT CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_chat ORDER BY created_at DESC LIMIT 50");
+  if (!rows || rows.error) return;
   rows.reverse();
-  if (!rows.length) { container.innerHTML = '<div class="coming-soon" style="height:100%"><div class="icon">💬</div><p>Aucun message</p></div>'; return; }
+  if (!rows.length) { container.innerHTML = '<div class="coming-soon" style="height:100%"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div><p>Aucun message</p></div>'; return; }
+  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
   container.innerHTML = rows.map(r => tRenderMessage(r)).join('');
-  container.scrollTop = container.scrollHeight;
+  if (wasAtBottom) container.scrollTop = container.scrollHeight;
 }
 
 function tRenderMessage(r) {
@@ -150,7 +218,7 @@ function tRenderMessage(r) {
     const ext = (r.file_name || '').split('.').pop().toLowerCase();
     if (['png','jpg','jpeg','gif','webp'].includes(ext)) content += `<div class="chat-file-preview"><img src="${r.file_url}" onclick="window.open('${r.file_url}')"></div>`;
     else if (['mp4','webm','mov'].includes(ext)) content += `<div class="chat-file-preview"><video src="${r.file_url}" controls style="max-width:300px;border-radius:8px"></video></div>`;
-    else content += `<div class="chat-file-link"><a href="${r.file_url}" target="_blank">📎 ${esc(r.file_name || 'Fichier')}</a></div>`;
+    else content += `<div class="chat-file-link"><a href="${r.file_url}" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> ${esc(r.file_name || 'Fichier')}</a></div>`;
   }
   return `<div class="chat-bubble ${isMe ? 'chat-bubble-owner' : ''}">
     <div class="chat-bubble-header">
@@ -192,10 +260,12 @@ async function tLoadDm(el) {
     <div class="page-header fade-in"><h2>Message prive</h2><p>Discussion avec l'owner</p></div>
     <div class="chat-layout fade-in" style="height:calc(100% - 60px)">
       <div class="chat-main" style="border-radius:var(--radius)">
-        <div class="chat-header">✉ DM avec Tib (Owner)</div>
+        <div class="chat-header">DM avec Tib (Owner)</div>
         <div class="chat-messages" id="tDmMessages"><div class="loading"><div class="spinner"></div></div></div>
         <div class="chat-input-bar">
-          <button class="btn btn-secondary chat-attach-btn" onclick="document.getElementById('tDmFile').click()">📎</button>
+          <button class="btn btn-secondary chat-attach-btn" onclick="document.getElementById('tDmFile').click()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
           <input type="text" id="tDmInput" placeholder="Ecrire un message..." onkeydown="if(event.key==='Enter')tDmSend()">
           <button class="btn btn-primary" onclick="tDmSend()">Envoyer</button>
           <input type="file" id="tDmFile" style="display:none" onchange="tDmUpload(this)">
@@ -209,11 +279,13 @@ async function tLoadDm(el) {
 async function tDmLoadMessages() {
   const container = document.getElementById('tDmMessages');
   if (!container) { if (tChatInterval) { clearInterval(tChatInterval); tChatInterval = null; } return; }
-  const rows = await dbQuery("SELECT sender_id, sender_name, message, file_url, file_name, created_at FROM tester_dms WHERE sender_id=%s OR receiver_id=%s ORDER BY created_at DESC LIMIT 50", [testerId, testerId]);
+  const rows = await dbQuery("SELECT CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_dms WHERE sender_id=%s OR receiver_id=%s ORDER BY created_at DESC LIMIT 50", [testerId, testerId]);
+  if (!rows || rows.error) return;
   rows.reverse();
-  if (!rows.length) { container.innerHTML = '<div class="coming-soon" style="height:100%"><div class="icon">✉</div><p>Aucun message</p></div>'; return; }
+  if (!rows.length) { container.innerHTML = '<div class="coming-soon" style="height:100%"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div><p>Aucun message</p></div>'; return; }
+  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
   container.innerHTML = rows.map(r => tRenderMessage(r)).join('');
-  container.scrollTop = container.scrollHeight;
+  if (wasAtBottom) container.scrollTop = container.scrollHeight;
 }
 
 async function tDmSend() {
@@ -245,7 +317,7 @@ async function tDmUpload(input) {
 async function tLoadAnnouncements(el) {
   el.innerHTML = `<div class="page-header fade-in"><h2>Annonces</h2><p>Messages de l'owner</p></div><div id="tAnnounceList"><div class="loading"><div class="spinner"></div></div></div>`;
   const rows = await dbQuery("SELECT title, content, author AS author_name, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 30");
-  if (!rows.length) { document.getElementById('tAnnounceList').innerHTML = '<div class="coming-soon"><div class="icon">📢</div><p>Aucune annonce</p></div>'; return; }
+  if (!rows.length || rows[0]?.error) { document.getElementById('tAnnounceList').innerHTML = '<div class="coming-soon"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M18 11v2h4v-2zm-2 6.46l2.18 1.63 1.12-1.5-2.18-1.63zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h4v-2H2zm9-9h2V0h-2z"/></svg></div><p>Aucune annonce</p></div>'; return; }
   document.getElementById('tAnnounceList').innerHTML = rows.map(r => `
     <div class="card announce-card slide-in" style="margin-bottom:10px">
       <div class="announce-title">${esc(r.title)}</div>
@@ -259,7 +331,7 @@ async function tLoadAnnouncements(el) {
 async function tLoadTasks(el) {
   el.innerHTML = `<div class="page-header fade-in"><h2>Mes Taches</h2><p>Taches qui me sont assignees</p></div><div id="tTaskList"><div class="loading"><div class="spinner"></div></div></div>`;
   const rows = await dbQuery("SELECT id, title, description, priority, status, created_at FROM tester_tasks WHERE assigned_to=%s ORDER BY FIELD(priority,'urgent','high','medium','low'), created_at DESC", [testerId]);
-  if (!rows.length) { document.getElementById('tTaskList').innerHTML = '<div class="coming-soon"><div class="icon">📋</div><p>Aucune tache assignee</p></div>'; return; }
+  if (!rows.length || rows[0]?.error) { document.getElementById('tTaskList').innerHTML = '<div class="coming-soon"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/></svg></div><p>Aucune tache assignee</p></div>'; return; }
 
   const prioColors = { low: 'var(--blue)', medium: 'var(--gold)', high: 'var(--red)', urgent: '#ff2d55' };
   const statusLabels = { todo: 'A faire', in_progress: 'En cours', done: 'Termine' };
@@ -322,8 +394,7 @@ async function tBugSubmit() {
   const desc = document.getElementById('tBugDesc').value.trim();
   const severity = document.getElementById('tBugSeverity').value;
   if (!title) return;
-  await dbQuery("INSERT INTO tester_bugs (reporter, title, description, severity, status, created_at) VALUES (%s,%s,%s,%s,'open',NOW())",
-    [testerName, title, desc, severity]);
+  await dbQuery("INSERT INTO tester_bugs (reporter, title, description, severity, status, created_at) VALUES (%s,%s,%s,%s,'open',NOW())", [testerName, title, desc, severity]);
   document.getElementById('tBugForm').innerHTML = '';
   tBugLoadList();
 }
@@ -331,7 +402,7 @@ async function tBugSubmit() {
 async function tBugLoadList() {
   const listEl = document.getElementById('tBugList');
   const rows = await dbQuery("SELECT id, reporter AS reporter_name, title, description, severity, status, created_at FROM tester_bugs ORDER BY created_at DESC LIMIT 30");
-  if (!rows.length) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">🐛</div><p>Aucun bug</p></div>'; return; }
+  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 8h-2.81a5.985 5.985 0 0 0-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5s-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20z"/></svg></div><p>Aucun bug</p></div>'; return; }
   const sevColors = { low: 'var(--blue)', medium: 'var(--gold)', high: 'var(--red)', critical: '#ff2d55' };
   listEl.innerHTML = rows.map(r => `
     <div class="card bug-item slide-in" style="margin-bottom:8px">
@@ -375,8 +446,7 @@ async function tSugSubmit() {
   const title = document.getElementById('tSugTitle').value.trim();
   const desc = document.getElementById('tSugDesc').value.trim();
   if (!title) return;
-  await dbQuery("INSERT INTO tester_suggestions (reporter_id, reporter_name, title, description, status, created_at) VALUES (%s,%s,%s,%s,'pending',NOW())",
-    [testerId, testerName, title, desc]);
+  await dbQuery("INSERT INTO tester_suggestions (reporter_id, reporter_name, title, description, status, created_at) VALUES (%s,%s,%s,%s,'pending',NOW())", [testerId, testerName, title, desc]);
   document.getElementById('tSugForm').innerHTML = '';
   tSugLoadList();
 }
@@ -384,7 +454,7 @@ async function tSugSubmit() {
 async function tSugLoadList() {
   const listEl = document.getElementById('tSugList');
   const rows = await dbQuery("SELECT id, reporter_name, title, description, status, created_at FROM tester_suggestions ORDER BY created_at DESC LIMIT 30");
-  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">💡</div><p>Aucune suggestion</p></div>'; return; }
+  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg></div><p>Aucune suggestion</p></div>'; return; }
   listEl.innerHTML = rows.map(r => {
     const statusBadge = r.status === 'approved' ? 'badge-green' : r.status === 'rejected' ? 'badge-red' : 'badge-gold';
     const statusLabel = r.status === 'approved' ? 'Approuve' : r.status === 'rejected' ? 'Rejete' : 'En attente';
@@ -417,7 +487,7 @@ async function tLoadTestLab(el) {
       </div>
       <div class="testlab-main">
         <div class="testlab-chat" id="tTestlabChat">
-          <div class="testlab-welcome"><div class="testlab-welcome-icon">⚗</div><div class="testlab-welcome-title">Silver Bot — Test Lab</div><div class="testlab-welcome-sub">Tape une commande avec / pour tester</div></div>
+          <div class="testlab-welcome"><div class="testlab-welcome-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="var(--muted)" opacity=".3"><path d="M7 2v2h1v5.17L3.2 16.8A2.5 2.5 0 0 0 5.24 21h13.52a2.5 2.5 0 0 0 2.04-4.2L16 9.17V4h1V2zm2 2h6v5.83l1.08 1.42H7.92L9 9.83z"/></svg></div><div class="testlab-welcome-title">Silver Bot — Test Lab</div><div class="testlab-welcome-sub">Tape une commande avec / pour tester</div></div>
         </div>
         <div class="testlab-input-bar">
           <span class="testlab-slash">/</span>
@@ -427,19 +497,21 @@ async function tLoadTestLab(el) {
         <div class="testlab-suggestions" id="tTestlabSuggestions"></div>
       </div>
     </div>`;
-  const res = await fetch(`${BACKEND}/testlab/commands`);
-  tTestlabCommands = await res.json();
+  try {
+    const res = await fetch(`${BACKEND}/testlab/commands`);
+    tTestlabCommands = await res.json();
+  } catch { tTestlabCommands = []; }
   tTestlabMessages = [];
   tRenderCmdList(tTestlabCommands);
 }
 
 function tRenderCmdList(cmds) {
   document.getElementById('tTestlabCmdCount').textContent = `${cmds.length} commande${cmds.length > 1 ? 's' : ''}`;
-  document.getElementById('tTestlabCmdList').innerHTML = cmds.map(c => `
+  document.getElementById('tTestlabCmdList').innerHTML = cmds.length ? cmds.map(c => `
     <div class="testlab-cmd-item" onclick="document.getElementById('tTestlabInput').value='${esc(c.name)} ';document.getElementById('tTestlabInput').focus()">
       <span class="testlab-cmd-name">/${esc(c.name)}</span>
       <span class="testlab-cmd-desc">${esc(c.description)}</span>
-    </div>`).join('');
+    </div>`).join('') : '<div style="padding:12px;font-size:11px;color:var(--muted);text-align:center">Aucune commande</div>';
 }
 
 function tTestlabFilter() {
@@ -451,9 +523,9 @@ function tTestlabKeydown(e) {
   if (e.key === 'Enter') tTestlabSend();
   if (e.key === 'Tab') { e.preventDefault(); const v = document.getElementById('tTestlabInput').value.trim().toLowerCase(); const m = tTestlabCommands.find(c => c.name.startsWith(v)); if (m) document.getElementById('tTestlabInput').value = m.name + ' '; }
   setTimeout(() => {
-    const v = document.getElementById('tTestlabInput').value.trim().toLowerCase();
+    const v = document.getElementById('tTestlabInput')?.value.trim().toLowerCase();
     const sg = document.getElementById('tTestlabSuggestions');
-    if (!v) { sg.innerHTML = ''; return; }
+    if (!v || !sg) { if (sg) sg.innerHTML = ''; return; }
     const matches = tTestlabCommands.filter(c => c.name.startsWith(v)).slice(0, 5);
     sg.innerHTML = matches.map(c => `<div class="testlab-suggestion-item" onclick="document.getElementById('tTestlabInput').value='${esc(c.name)} ';document.getElementById('tTestlabInput').focus();document.getElementById('tTestlabSuggestions').innerHTML=''">${esc('/' + c.name)} <span style="color:var(--muted)">${esc(c.description)}</span></div>`).join('');
   }, 10);
@@ -479,11 +551,11 @@ async function tTestlabSend() {
 function tRenderTestlabChat() {
   const chat = document.getElementById('tTestlabChat');
   chat.innerHTML = tTestlabMessages.map(m => {
-    if (m.type === 'user') return `<div class="testlab-msg testlab-msg-user"><div class="testlab-msg-avatar">T</div><div class="testlab-msg-body"><div class="testlab-msg-name" style="color:var(--accent)">${esc(testerName)}</div><div class="testlab-msg-content">${esc(m.content)}</div></div></div>`;
+    if (m.type === 'user') return `<div class="testlab-msg"><div class="testlab-msg-avatar">T</div><div class="testlab-msg-body"><div class="testlab-msg-name" style="color:var(--accent)">${esc(testerName)}</div><div class="testlab-msg-content">${esc(m.content)}</div></div></div>`;
     let h = '';
     if (m.content) h += `<div class="testlab-msg-content">${esc(m.content)}</div>`;
     if (m.embed) h += tRenderEmbed(m.embed);
-    return `<div class="testlab-msg testlab-msg-bot"><div class="testlab-msg-avatar bot-avatar">⚡</div><div class="testlab-msg-body"><div class="testlab-msg-name" style="color:var(--cyan)">Silver Bot</div>${h}</div></div>`;
+    return `<div class="testlab-msg"><div class="testlab-msg-avatar bot-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--cyan)"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg></div><div class="testlab-msg-body"><div class="testlab-msg-name" style="color:var(--cyan)">Silver Bot</div>${h}</div></div>`;
   }).join('');
   chat.scrollTop = chat.scrollHeight;
 }
@@ -515,7 +587,7 @@ function tFmtDiscord(text) {
 async function tLoadBotInfo(el) {
   el.innerHTML = `<div class="page-header fade-in"><h2>Bot Info</h2><p>Informations du bot</p></div><div id="tBotInfoContent"><div class="loading"><div class="spinner"></div> Chargement...</div></div>`;
   const bot = await discordGet('/users/@me');
-  if (bot.error) { document.getElementById('tBotInfoContent').innerHTML = '<div class="coming-soon"><div class="icon">●</div><p>Impossible de contacter Discord</p></div>'; return; }
+  if (bot.error) { document.getElementById('tBotInfoContent').innerHTML = '<div class="coming-soon"><p>Impossible de contacter Discord</p></div>'; return; }
   const avatar = getBotAvatar(bot, 256);
   const guilds = await discordGet('/users/@me/guilds');
   const guildCount = Array.isArray(guilds) ? guilds.length : 0;
@@ -559,4 +631,4 @@ async function tLogout() {
 })();
 
 // Init
-testerShowPage('t-overview');
+testerShowPage('t-home');

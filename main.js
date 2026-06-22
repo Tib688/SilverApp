@@ -23,7 +23,6 @@ function createWindow() {
     icon: path.join(__dirname, 'icon.ico'),
   });
 
-  mainWindow.webContents.session.clearCache();
   mainWindow.loadFile('src/pages/login.html');
   mainWindow.on('closed', () => { mainWindow = null; });
 }
@@ -43,13 +42,18 @@ ipcMain.on('open-external', (e, url) => {
 });
 
 function startBackend() {
-  const pythonPath = path.join(__dirname, 'backend', 'venv', 'Scripts', 'python.exe');
+  const isWin = process.platform === 'win32';
+  const pythonPath = isWin
+    ? path.join(__dirname, 'backend', 'venv', 'Scripts', 'python.exe')
+    : path.join(__dirname, 'backend', 'venv', 'bin', 'python');
   const serverPath = path.join(__dirname, 'backend', 'server.py');
-  backendProcess = spawn(pythonPath, [serverPath], {
-    stdio: 'ignore',
-    cwd: path.join(__dirname, 'backend'),
-  });
-  backendProcess.on('error', () => {});
+  try {
+    backendProcess = spawn(pythonPath, [serverPath], {
+      stdio: 'ignore',
+      cwd: path.join(__dirname, 'backend'),
+    });
+    backendProcess.on('error', () => {});
+  } catch {}
 }
 
 async function waitForBackend(maxRetries = 60) {
@@ -70,14 +74,16 @@ async function waitForBackend(maxRetries = 60) {
   }
 }
 
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
   startBackend();
   createWindow();
-  await waitForBackend();
-  mainWindow?.webContents.reload();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
 
 app.on('window-all-closed', () => {
   if (backendProcess) backendProcess.kill();
-  app.quit();
+  if (process.platform !== 'darwin') app.quit();
 });

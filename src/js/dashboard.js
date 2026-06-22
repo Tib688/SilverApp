@@ -9,7 +9,7 @@ const i18n = {
     forgot: 'Codes oublies', database: 'Base de donnees', logs: 'Logs', history: 'Historique',
     changelog: 'Changelog', settings: 'Parametres', channels: 'Stats Channels',
     welcome: 'Welcome, Tib !', ownerSub: 'Owner', realtime: 'Donnees en temps reel',
-    servers: 'Serveurs', users: 'Utilisateurs', testers: 'Testeurs', openBugs: 'Bugs ouverts',
+    servers: 'Serveurs', users: 'Membres', testers: 'Testeurs', openBugs: 'Bugs ouverts',
     xpTotal: 'XP Total', messages: 'Messages', level: 'Niveau', warns: 'Avertissements',
     search: 'Rechercher', favorites: 'Favoris', noData: 'Aucune donnee', loading: 'Chargement...',
     online: 'En ligne', offline: 'Hors ligne', created: 'Cree le', disconnect: 'Se deconnecter',
@@ -32,7 +32,8 @@ const i18n = {
     joinDiscord: 'Rejoindre le serveur Discord', exportPdf: 'Export PDF',
     language: 'Langue', channelStats: 'Statistiques par channel',
     selectServer: '-- Serveur --', selectChannel: '-- Channel --',
-    msgCount: 'Messages', activeUsers: 'Utilisateurs actifs', topChannels: 'Top Channels',
+    msgCount: 'Messages', activeUsers: 'Membres actifs', topChannels: 'Top Channels',
+    secPrincipal: 'Principal', secControle: 'Controle', secTesteurs: 'Testeurs', secSysteme: 'Systeme',
   },
   en: {
     home: 'Home', overview: 'Overview', leaderboard: 'Leaderboard', members: 'Members',
@@ -66,15 +67,37 @@ const i18n = {
     language: 'Language', channelStats: 'Channel statistics',
     selectServer: '-- Server --', selectChannel: '-- Channel --',
     msgCount: 'Messages', activeUsers: 'Active users', topChannels: 'Top Channels',
+    secPrincipal: 'Main', secControle: 'Control', secTesteurs: 'Testers', secSysteme: 'System',
   },
 };
 
 let currentLang = localStorage.getItem('silverapp_lang') || 'fr';
 function t(key) { return (i18n[currentLang] || i18n.fr)[key] || (i18n.fr)[key] || key; }
+
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('silverapp_lang', lang);
-  showPage(currentPage);
+  updateStaticUI();
+  const content = document.getElementById('content');
+  const loader = pageLoaders[currentPage];
+  if (loader) loader(content);
+}
+
+function updateStaticUI() {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const m = n.getAttribute('onclick')?.match(/showPage\('(\w+)'\)/);
+    if (m) {
+      const icon = n.querySelector('.icon');
+      if (icon) n.innerHTML = icon.outerHTML + ' ' + t(m[1]);
+    }
+  });
+  const secKeys = ['secPrincipal', 'secControle', 'secTesteurs', 'secSysteme'];
+  document.querySelectorAll('.nav-section').forEach((s, i) => { if (secKeys[i]) s.textContent = t(secKeys[i]); });
+  const wt = document.getElementById('welcomeTitle');
+  if (wt) wt.textContent = t('welcome');
+  const ws = document.getElementById('welcomeSub');
+  if (ws && _botInfoCache) ws.textContent = t('ownerSub') + ' · ' + _botInfoCache.username;
+  updateBreadcrumbs(currentPage);
 }
 
 // Clock
@@ -157,6 +180,10 @@ async function loadHome(el) {
   if (bot && !bot.error && !_botInfoCache) _botInfoCache = bot;
   const b = _botInfoCache || {};
   const avatar = b.id ? getBotAvatar(b, 256) : '';
+  if (b.id) {
+    const sbAv = document.getElementById('sidebarAvatar');
+    if (sbAv) sbAv.innerHTML = `<img src="${getBotAvatar(b, 128)}">`;
+  }
   const created = b.id ? new Date(Number((BigInt(b.id) >> 22n) + 1420070400000n)) : null;
   const uptime = created ? Math.floor((Date.now() - created.getTime()) / 86400000) : '?';
 
@@ -230,7 +257,7 @@ async function loadOverview(el) {
 
   const statInfo = [
     { label: 'Serveurs', color: 'var(--blue)', id: 'st0' },
-    { label: 'Utilisateurs', color: 'var(--accent)', id: 'st1' },
+    { label: 'Membres', color: 'var(--accent)', id: 'st1' },
     { label: 'XP Total', color: 'var(--purple)', id: 'st2' },
     { label: 'Messages', color: 'var(--cyan)', id: 'st3' },
     { label: 'Testeurs', color: 'var(--green)', id: 'st4' },
@@ -245,16 +272,19 @@ async function loadOverview(el) {
     </div>
   `).join('');
 
-  const [guilds, users, xp, msgs, testers, bugs] = await Promise.all([
+  const [guilds, xp, msgs, testers, bugs] = await Promise.all([
     getCachedGuilds(),
-    dbScalar('SELECT COUNT(DISTINCT user_id) FROM user_xp'),
     dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
     dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats'),
     dbScalar('SELECT COUNT(*) FROM tester_codes'),
     dbScalar("SELECT COUNT(*) FROM tester_bugs WHERE status='open'"),
   ]);
 
-  const vals = [guilds.length, users, xp, msgs, testers, bugs];
+  let totalMembers = 0;
+  const guildDetails = await Promise.all(guilds.map(g => discordGet(`/guilds/${g.id}?with_counts=true`)));
+  guildDetails.forEach(g => { if (g && !g.error) totalMembers += g.approximate_member_count || 0; });
+
+  const vals = [guilds.length, totalMembers, xp, msgs, testers, bugs];
   vals.forEach((v, i) => animateValue(`st${i}`, 0, v, 400));
 
   document.getElementById('pillServers').textContent = guilds.length;
@@ -1372,7 +1402,7 @@ async function loadChat(el) {
 }
 
 async function loadChatPresence() {
-  const presences = await dbQuery("SELECT user_id, status, last_seen FROM user_presence");
+  const presences = await dbQuery("SELECT CAST(user_id AS CHAR) AS user_id, status, last_seen FROM user_presence");
   for (const p of presences) {
     const dot = document.getElementById(`chatDot-${p.user_id}`);
     const sub = document.getElementById(`chatPresence-${p.user_id}`);
@@ -1423,12 +1453,15 @@ async function chatLoadMessages() {
   if (!container) { if (chatInterval) { clearInterval(chatInterval); chatInterval = null; } return; }
 
   let rows;
-  if (chatMode === 'general') {
-    rows = await dbQuery("SELECT id, sender_id, sender_name, message, file_url, file_name, created_at FROM tester_chat ORDER BY created_at DESC LIMIT 50");
-  } else {
-    rows = await dbQuery("SELECT id, sender_id, sender_name, message, file_url, file_name, created_at FROM tester_dms WHERE (sender_id = %s OR receiver_id = %s) ORDER BY created_at DESC LIMIT 50", [chatDmTarget, chatDmTarget]);
-  }
+  try {
+    if (chatMode === 'general') {
+      rows = await dbQuery("SELECT id, CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_chat ORDER BY created_at DESC LIMIT 50");
+    } else {
+      rows = await dbQuery("SELECT id, CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_dms WHERE (sender_id = %s OR receiver_id = %s) ORDER BY created_at DESC LIMIT 50", [chatDmTarget, chatDmTarget]);
+    }
+  } catch { rows = []; }
 
+  if (!Array.isArray(rows)) rows = [];
   rows.reverse();
 
   if (!rows.length) {
@@ -1436,9 +1469,10 @@ async function chatLoadMessages() {
     return;
   }
 
+  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
   const ownerId = '1504594533521031219';
   container.innerHTML = rows.map(r => {
-    const isOwner = r.sender_id === ownerId;
+    const isOwner = String(r.sender_id) === ownerId;
     let content = esc(r.message || '');
     if (r.file_url) {
       const ext = (r.file_name || '').split('.').pop().toLowerCase();
@@ -1458,7 +1492,7 @@ async function chatLoadMessages() {
       <div class="chat-bubble-content">${content}</div>
     </div>`;
   }).join('');
-  container.scrollTop = container.scrollHeight;
+  if (wasAtBottom) container.scrollTop = container.scrollHeight;
 }
 
 function fmtDateTime(d) {
@@ -1475,12 +1509,14 @@ async function chatSend() {
   input.value = '';
   const ownerId = '1504594533521031219';
 
+  let res;
   if (chatMode === 'general') {
-    await dbQuery("INSERT INTO tester_chat (sender_id, sender_name, message, created_at) VALUES (%s, %s, %s, NOW())", [ownerId, 'Tib (Owner)', msg]);
+    res = await dbQuery("INSERT INTO tester_chat (sender_id, sender_name, message, created_at) VALUES (%s, %s, %s, NOW())", [ownerId, 'Tib (Owner)', msg]);
   } else {
-    await dbQuery("INSERT INTO tester_dms (sender_id, sender_name, receiver_id, message, created_at) VALUES (%s, %s, %s, %s, NOW())", [ownerId, 'Tib (Owner)', chatDmTarget, msg]);
+    res = await dbQuery("INSERT INTO tester_dms (sender_id, sender_name, receiver_id, message, created_at) VALUES (%s, %s, %s, %s, NOW())", [ownerId, 'Tib (Owner)', chatDmTarget, msg]);
   }
-  chatLoadMessages();
+  if (res && res[0]?.error) console.error('Chat send error:', res[0].error);
+  await chatLoadMessages();
 }
 
 function chatAttachFile() {
@@ -1582,6 +1618,7 @@ async function loadBotInfo(el) {
 
 let controlGuilds = [];
 let controlChannels = [];
+let controlMembers = [];
 
 async function loadControl(el) {
   el.innerHTML = `
@@ -1595,14 +1632,15 @@ async function loadControl(el) {
         <select id="ctrlChannel" style="margin-top:8px"><option value="">Selectionner un channel</option></select>
       </div>
 
-      <!-- Annonce / Embed -->
-      <div class="card control-panel">
-        <div class="control-section-title">Envoyer une annonce</div>
-        <input type="text" id="ctrlEmbedTitle" placeholder="Titre de l'embed">
-        <textarea id="ctrlEmbedDesc" placeholder="Description..." rows="3" style="margin-top:6px;resize:vertical"></textarea>
-        <input type="text" id="ctrlEmbedColor" placeholder="Couleur hex (ex: #5865F2)" style="margin-top:6px" value="#5865F2">
-        <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="controlSendEmbed()">Envoyer l'embed</button>
-        <div id="ctrlEmbedStatus" class="control-status"></div>
+      <!-- Envoyer un message -->
+      <div class="card control-panel" style="position:relative">
+        <div class="control-section-title">Envoyer un message</div>
+        <div style="position:relative">
+          <textarea id="ctrlMsgContent" placeholder="Ton message... (@ pour mentionner)" rows="4" style="resize:vertical" oninput="mentionCheck(this)"></textarea>
+          <div id="mentionDropdown" style="display:none;position:absolute;bottom:100%;left:0;right:0;max-height:160px;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.3)"></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="controlSendMessage()">Envoyer</button>
+        <div id="ctrlMsgStatus" class="control-status"></div>
       </div>
 
       <!-- Slowmode -->
@@ -1645,6 +1683,7 @@ async function loadControl(el) {
         <div id="ctrlNickStatus" class="control-status"></div>
       </div>
 
+
     </div>`;
 
   controlGuilds = await getCachedGuilds();
@@ -1656,12 +1695,55 @@ async function loadControl(el) {
 async function controlGuildChanged() {
   const guildId = document.getElementById('ctrlGuild').value;
   const chanSel = document.getElementById('ctrlChannel');
-  if (!guildId) { chanSel.innerHTML = '<option value="">Selectionner un channel</option>'; return; }
+  if (!guildId) { chanSel.innerHTML = '<option value="">Selectionner un channel</option>'; controlMembers = []; return; }
   chanSel.innerHTML = '<option value="">Chargement...</option>';
-  controlChannels = await discordGet(`/guilds/${guildId}/channels`);
-  if (!Array.isArray(controlChannels)) controlChannels = [];
+  const [channels, members] = await Promise.all([
+    discordGet(`/guilds/${guildId}/channels`),
+    discordGet(`/guilds/${guildId}/members?limit=1000`),
+  ]);
+  controlChannels = Array.isArray(channels) ? channels : [];
+  controlMembers = Array.isArray(members) ? members : [];
   const textChannels = controlChannels.filter(c => c.type === 0).sort((a, b) => a.position - b.position);
   chanSel.innerHTML = '<option value="">-- Channel --</option>' + textChannels.map(c => `<option value="${c.id}">#${esc(c.name)}</option>`).join('');
+}
+
+function mentionCheck(textarea) {
+  const dropdown = document.getElementById('mentionDropdown');
+  const val = textarea.value;
+  const cursor = textarea.selectionStart;
+  const before = val.slice(0, cursor);
+  const atMatch = before.match(/@(\w*)$/);
+  if (!atMatch || !controlMembers.length) { dropdown.style.display = 'none'; return; }
+  const query = atMatch[1].toLowerCase();
+  const matches = controlMembers.filter(m => {
+    const name = (m.nick || m.user?.global_name || m.user?.username || '').toLowerCase();
+    return name.includes(query) && !m.user?.bot;
+  }).slice(0, 8);
+  if (!matches.length) { dropdown.style.display = 'none'; return; }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = matches.map(m => {
+    const name = m.nick || m.user?.global_name || m.user?.username || '?';
+    const tag = m.user?.username || '';
+    const av = m.user?.avatar ? getUserAvatar(m.user.id, m.user.avatar, 32) : null;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;transition:background .1s;font-size:12px" onmousedown="mentionInsert('${m.user.id}','${esc(name).replace(/'/g,"\\'")}')">
+      ${av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%">` : '<div style="width:22px;height:22px;border-radius:50%;background:var(--bg2)"></div>'}
+      <span style="color:var(--bright);font-weight:600">${esc(name)}</span>
+      <span style="color:var(--muted);font-size:10px">${esc(tag)}</span>
+    </div>`;
+  }).join('');
+}
+
+function mentionInsert(userId, displayName) {
+  const textarea = document.getElementById('ctrlMsgContent');
+  const dropdown = document.getElementById('mentionDropdown');
+  const cursor = textarea.selectionStart;
+  const before = textarea.value.slice(0, cursor);
+  const after = textarea.value.slice(cursor);
+  const newBefore = before.replace(/@\w*$/, `<@${userId}> `);
+  textarea.value = newBefore + after;
+  textarea.selectionStart = textarea.selectionEnd = newBefore.length;
+  dropdown.style.display = 'none';
+  textarea.focus();
 }
 
 function getSelectedChannel() {
@@ -1672,6 +1754,7 @@ function getSelectedGuild() {
   return document.getElementById('ctrlGuild').value;
 }
 
+
 function ctrlStatus(id, msg, ok) {
   const el = document.getElementById(id);
   el.textContent = msg;
@@ -1679,16 +1762,14 @@ function ctrlStatus(id, msg, ok) {
   setTimeout(() => el.textContent = '', 4000);
 }
 
-async function controlSendEmbed() {
+async function controlSendMessage() {
   const ch = getSelectedChannel();
-  if (!ch) return ctrlStatus('ctrlEmbedStatus', 'Selectionne un channel', false);
-  const title = document.getElementById('ctrlEmbedTitle').value.trim();
-  const desc = document.getElementById('ctrlEmbedDesc').value.trim();
-  if (!title && !desc) return ctrlStatus('ctrlEmbedStatus', 'Titre ou description requis', false);
-  const colorHex = document.getElementById('ctrlEmbedColor').value.replace('#', '');
-  const color = parseInt(colorHex, 16) || 0x5865F2;
-  const res = await discordPost(`/channels/${ch}/messages`, { embeds: [{ title, description: desc, color }] });
-  ctrlStatus('ctrlEmbedStatus', res.error ? `Erreur: ${res.error}` : 'Embed envoye !', !res.error);
+  if (!ch) return ctrlStatus('ctrlMsgStatus', 'Selectionne un channel', false);
+  const content = document.getElementById('ctrlMsgContent').value.trim();
+  if (!content) return ctrlStatus('ctrlMsgStatus', 'Message vide', false);
+  const res = await discordPost(`/channels/${ch}/messages`, { content });
+  if (!res.error) document.getElementById('ctrlMsgContent').value = '';
+  ctrlStatus('ctrlMsgStatus', res.error ? `Erreur: ${res.error}` : 'Message envoye !', !res.error);
 }
 
 async function controlSlowmode() {
@@ -1847,7 +1928,7 @@ async function loadHistory(el) {
   if (!rows.length || rows[0]?.error) { document.getElementById('historyContent').innerHTML = '<div class="coming-soon"><div class="icon">⏱</div><p>Aucune connexion</p></div>'; return; }
   const userIds = rows.map(r => r.user_id).filter(Boolean);
   const userCache = await fetchUsersBatch(userIds);
-  document.getElementById('historyContent').innerHTML = buildTable(['Utilisateur', 'Statut', 'Derniere activite'],
+  document.getElementById('historyContent').innerHTML = buildTable(['Membre', 'Statut', 'Derniere activite'],
     rows.map(r => {
       const badge = r.status === 'online' ? '<span class="badge badge-green">En ligne</span>' : '<span class="badge badge-red">Hors ligne</span>';
       return [avatarCell(r.user_id, userCache), badge, fmtDateTime(r.last_seen)];
@@ -2087,14 +2168,17 @@ document.addEventListener('keydown', e => {
 async function loadStats(el) {
   el.innerHTML = `<div class="page-header fade-in"><h2>Statistiques</h2><p>Analyse detaillee</p></div>
     <div id="statsContent"><div class="loading"><div class="spinner"></div></div></div>`;
-  const [totalXp, totalMsgs, totalUsers, totalWarns, topDay, activeGuilds] = await Promise.all([
+  const [totalXp, totalMsgs, totalWarns, topDay, activeGuilds, guilds] = await Promise.all([
     dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
     dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats'),
-    dbScalar('SELECT COUNT(DISTINCT user_id) FROM user_xp'),
     dbScalar('SELECT COUNT(*) FROM warnings'),
     dbQuery('SELECT DATE(created_at) as d, COUNT(*) as c FROM warnings GROUP BY d ORDER BY c DESC LIMIT 1'),
     dbScalar('SELECT COUNT(DISTINCT guild_id) FROM user_xp'),
+    getCachedGuilds(),
   ]);
+  let totalUsers = 0;
+  const guildDetails = await Promise.all(guilds.map(g => discordGet(`/guilds/${g.id}?with_counts=true`)));
+  guildDetails.forEach(g => { if (g && !g.error) totalUsers += g.approximate_member_count || 0; });
   const avgXp = totalUsers > 0 ? Math.round(totalXp / totalUsers) : 0;
   const avgMsgs = totalUsers > 0 ? Math.round(totalMsgs / totalUsers) : 0;
   const peakDay = topDay.length && !topDay[0]?.error ? topDay[0] : null;
@@ -2106,7 +2190,7 @@ async function loadStats(el) {
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Serveurs actifs</div><div class="stat-value">${activeGuilds}</div></div>
   </div>`;
   html += `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Utilisateurs</div><div class="stat-value">${totalUsers}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Membres</div><div class="stat-value">${totalUsers}</div></div>
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Warns Total</div><div class="stat-value">${totalWarns}</div></div>
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Msgs Moyen/User</div><div class="stat-value">${avgMsgs}</div></div>
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:#c084fc"></div><div class="stat-label">Jour le + actif</div><div class="stat-value" style="font-size:12px">${peakDay ? peakDay.d : '—'}</div></div>
@@ -2404,31 +2488,22 @@ function exportCurrentPage() {
 
 // ═══ UI ENHANCEMENTS ════════════════════════════════════════════════════════
 
-const pageNames = {
-  home: 'Accueil', overview: "Vue d'ensemble", leaderboard: 'Leaderboard', members: 'Membres',
-  compare: 'Comparateur', stats: 'Statistiques', control: 'Controle Bot',
-  botinfo: 'Bot Info', uptime: 'Uptime', chat: 'Chat Testeurs',
-  bugs: 'Bugs Reports', tasks: 'Taches', announcements: 'Annonces',
-  suggestions: 'Suggestions', testlab: 'Test Lab', forgot: 'Codes oublies',
-  database: 'Base de donnees', logs: 'Logs', history: 'Historique',
-  changelog: 'Changelog', settings: 'Parametres',
-};
-
 const pageSections = {
-  home: 'Silver Bot', overview: 'Principal', leaderboard: 'Principal', members: 'Principal',
-  compare: 'Principal', stats: 'Principal', channels: 'Principal', control: 'Controle',
-  botinfo: 'Controle', uptime: 'Controle', chat: 'Testeurs',
-  bugs: 'Testeurs', tasks: 'Testeurs', announcements: 'Testeurs',
-  suggestions: 'Testeurs', testlab: 'Testeurs', forgot: 'Testeurs',
-  database: 'Systeme', logs: 'Systeme', history: 'Systeme',
-  changelog: 'Systeme', settings: 'Systeme',
+  home: 'Silver Bot', overview: 'secPrincipal', leaderboard: 'secPrincipal', members: 'secPrincipal',
+  compare: 'secPrincipal', stats: 'secPrincipal', channels: 'secPrincipal', control: 'secControle',
+  botinfo: 'secControle', uptime: 'secControle', chat: 'secTesteurs',
+  bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
+  suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs',
+  database: 'secSysteme', logs: 'secSysteme', history: 'secSysteme',
+  changelog: 'secSysteme', settings: 'secSysteme',
 };
 
 function updateBreadcrumbs(name) {
   const sec = document.getElementById('breadcrumbSection');
   const cur = document.getElementById('breadcrumbCurrent');
-  if (sec) sec.textContent = pageSections[name] || '';
-  if (cur) cur.textContent = pageNames[name] || name;
+  const sKey = pageSections[name] || '';
+  if (sec) sec.textContent = sKey === 'Silver Bot' ? 'Silver Bot' : t(sKey);
+  if (cur) cur.textContent = t(name);
 }
 
 function toggleSidebar() {

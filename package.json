@@ -1,5 +1,5 @@
 {
-  "name": "silver-app",
+  "name": "silverapp",
   "version": "2.1.0",
   "description": "Silver Bot Dashboard",
   "main": "main.js",
@@ -19,6 +19,11 @@
     "win": {
       "target": "nsis",
       "icon": "icon.ico"
+    },
+    "mac": {
+      "target": "zip",
+      "icon": "icon.ico",
+      "category": "public.app-category.utilities"
     },
     "nsis": {
       "oneClick": true,

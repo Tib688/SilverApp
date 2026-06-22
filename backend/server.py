@@ -1,5 +1,5 @@
 """Lightweight FastAPI backend for MySQL queries."""
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -83,11 +83,13 @@ async def save_config(body: dict):
 import aiohttp as _aio
 
 @app.get("/discord/{path:path}")
-async def discord_proxy_get(path: str):
+async def discord_proxy_get(path: str, request: Request):
     cfg = await import_config()
     token = cfg.get("token", "")
+    qs = str(request.query_params)
+    url = f"https://discord.com/api/v10/{path}" + (f"?{qs}" if qs else "")
     async with _aio.ClientSession() as s:
-        async with s.get(f"https://discord.com/api/v10/{path}", headers={"Authorization": f"Bot {token}"}) as r:
+        async with s.get(url, headers={"Authorization": f"Bot {token}"}) as r:
             return await r.json() if r.status == 200 else {"error": r.status}
 
 class DiscordBody(BaseModel):
@@ -130,7 +132,10 @@ async def discord_proxy_delete(path: str):
 import re as _re
 import sys as _sys
 
-BOT_MAIN = Path(r"C:\Users\thiba.TIB\Desktop\discord_bot_all_in_one\main.py")
+_server_dir = Path(__file__).parent
+_bot_dir_local = Path(r"C:\Users\thiba.TIB\Desktop\discord_bot_all_in_one")
+_bot_dir_remote = _server_dir.parent
+BOT_MAIN = _bot_dir_local / "main.py" if (_bot_dir_local / "main.py").exists() else _bot_dir_remote / "main.py"
 
 @app.get("/testlab/commands")
 async def testlab_commands():
@@ -192,7 +197,7 @@ class SimulateBody(BaseModel):
 @app.post("/testlab/simulate")
 async def testlab_simulate(body: SimulateBody):
     """Import and run bot_commands.simulate_command."""
-    bot_commands_path = Path(r"C:\Users\thiba.TIB\Desktop\SilverApp\bot_commands.py")
+    bot_commands_path = _bot_dir_local / "bot_commands.py" if (_bot_dir_local / "bot_commands.py").exists() else _bot_dir_remote / "bot_commands.py"
     if not bot_commands_path.exists():
         return {"content": "bot_commands.py introuvable", "embed": None}
 
@@ -279,6 +284,45 @@ def ensure_columns():
         conn.close()
     except:
         pass
+
+# ── Voice stubs (voice requires remote backend with bot) ────────────────────
+
+class VoiceBody(BaseModel):
+    guild_id: str = ""
+    channel_id: str = ""
+
+class TTSBody(BaseModel):
+    guild_id: str = ""
+    text: str = ""
+    lang: str = "fr"
+
+class AmbianceBody(BaseModel):
+    guild_id: str = ""
+    sound: str = ""
+
+@app.post("/voice/join")
+async def voice_join(body: VoiceBody):
+    return {"error": "Voice requires remote backend (Nowheberg)"}
+
+@app.post("/voice/leave")
+async def voice_leave(body: VoiceBody):
+    return {"error": "Voice requires remote backend (Nowheberg)"}
+
+@app.post("/voice/tts")
+async def voice_tts(body: TTSBody):
+    return {"error": "Voice requires remote backend (Nowheberg)"}
+
+@app.post("/voice/ambiance")
+async def voice_ambiance(body: AmbianceBody):
+    return {"error": "Voice requires remote backend (Nowheberg)"}
+
+@app.post("/voice/stop")
+async def voice_stop(body: VoiceBody):
+    return {"error": "Voice requires remote backend (Nowheberg)"}
+
+@app.get("/voice/ambiance/list")
+async def voice_ambiance_list():
+    return []
 
 if __name__ == "__main__":
     ensure_columns()
