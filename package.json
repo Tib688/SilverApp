@@ -22,7 +22,6 @@
     },
     "mac": {
       "target": "zip",
-      "icon": "icon.ico",
       "category": "public.app-category.utilities"
     },
     "nsis": {
