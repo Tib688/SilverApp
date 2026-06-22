@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('silver', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
   navigate: (page) => ipcRenderer.send('navigate', page),
+  openExternal: (url) => ipcRenderer.send('open-external', url),
 });

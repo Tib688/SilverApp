@@ -7,48 +7,59 @@
 </head>
 <body>
   <div class="titlebar">
-    <button class="titlebar-btn" onclick="silver.minimize()">─</button>
-    <button class="titlebar-btn" onclick="silver.maximize()">□</button>
-    <button class="titlebar-btn close" onclick="silver.close()">✕</button>
+    <button class="titlebar-btn" onclick="silver.minimize()">
+      <svg width="10" height="1" viewBox="0 0 10 1"><rect fill="currentColor" width="10" height="1" rx=".5"/></svg>
+    </button>
+    <button class="titlebar-btn" onclick="silver.maximize()">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><rect x=".6" y=".6" width="8.8" height="8.8" rx="1.5"/></svg>
+    </button>
+    <button class="titlebar-btn close" onclick="silver.close()">
+      <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
+    </button>
   </div>
 
   <div class="app-layout">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="sidebar-brand">
+    <div class="sidebar" id="sidebar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Reduire">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 1L3 5l4 4"/></svg>
+      </button>
+      <div class="sidebar-brand" style="cursor:pointer" onclick="showPage('home')">
         <div class="sidebar-brand-avatar" id="sidebarAvatar"></div>
         <div class="sidebar-brand-text">
           <h2>Silver App</h2>
-          <span>By Tib · v2.0</span>
+          <span>By Tib · v2.1</span>
         </div>
       </div>
 
       <div class="sidebar-nav">
         <div class="nav-section">Principal</div>
-        <a class="nav-item active" onclick="showPage('overview')"><span class="icon">◆</span> Vue d'ensemble</a>
-        <a class="nav-item" onclick="showPage('moderation')"><span class="icon">⚠</span> Moderation</a>
-        <a class="nav-item" onclick="showPage('tickets')"><span class="icon">✉</span> Tickets</a>
-
-        <div class="nav-section">Engagement</div>
-        <a class="nav-item" onclick="showPage('leaderboard')"><span class="icon">★</span> Leaderboard</a>
-        <a class="nav-item" onclick="showPage('members')"><span class="icon">☻</span> Membres</a>
-        <a class="nav-item" onclick="showPage('suggestions')"><span class="icon">✦</span> Suggestions</a>
+        <a class="nav-item active" onclick="showPage('overview')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" opacity=".8"/></svg></span> Vue d'ensemble</a>
+        <a class="nav-item" onclick="showPage('leaderboard')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg></span> Leaderboard</a>
+        <a class="nav-item" onclick="showPage('members')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg></span> Membres</a>
+        <a class="nav-item" onclick="showPage('compare')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3L5 7h3v7H5l4 4 4-4h-3V7h3zM15 17l4-4h-3V6h3l-4-4-4 4h3v7h-3z"/></svg></span> Comparateur</a>
+        <a class="nav-item" onclick="showPage('stats')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 21H3v-9h2zm4 0H7V3h2zm4 0h-2v-6h2zm4 0h-2V8h2zm4 0h-2v-4h2z"/></svg></span> Statistiques</a>
+        <a class="nav-item" onclick="showPage('channels')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5.41 21L6.12 17H2.12L2.47 15H6.47L7.53 9H3.53L3.88 7H7.88L8.59 3H10.59L9.88 7H15.88L16.59 3H18.59L17.88 7H21.88L21.53 9H17.53L16.47 15H20.47L20.12 17H16.12L15.41 21H13.41L14.12 17H8.12L7.41 21zM9.47 9L8.47 15H14.47L15.47 9z"/></svg></span> Stats Channels</a>
 
         <div class="nav-section">Controle</div>
-        <a class="nav-item" onclick="showPage('control')"><span class="icon">⚡</span> Controle Bot</a>
-        <a class="nav-item" onclick="showPage('botinfo')"><span class="icon">●</span> Bot Info</a>
+        <a class="nav-item" onclick="showPage('control')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg></span> Controle Bot</a>
+        <a class="nav-item" onclick="showPage('botinfo')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> Bot Info</a>
+        <a class="nav-item" onclick="showPage('uptime')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54z"/></svg></span> Uptime</a>
 
         <div class="nav-section">Testeurs</div>
-        <a class="nav-item" onclick="showPage('chat')"><span class="icon">💬</span> Chat Testeurs</a>
-        <a class="nav-item" onclick="showPage('bugs')"><span class="icon">🐛</span> Bugs Reports</a>
-        <a class="nav-item" onclick="showPage('tasks')"><span class="icon">📋</span> Taches</a>
-        <a class="nav-item" onclick="showPage('announcements')"><span class="icon">📢</span> Annonces</a>
-        <a class="nav-item" onclick="showPage('testlab')"><span class="icon">⚗</span> Test Lab</a>
-        <a class="nav-item" onclick="showPage('forgot')"><span class="icon">🔑</span> Codes oublies</a>
+        <a class="nav-item" onclick="showPage('chat')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></span> Chat Testeurs</a>
+        <a class="nav-item" onclick="showPage('bugs')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-2.81a5.985 5.985 0 0 0-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5s-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20z"/></svg></span> Bugs Reports</a>
+        <a class="nav-item" onclick="showPage('tasks')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"/></svg></span> Taches</a>
+        <a class="nav-item" onclick="showPage('announcements')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 11v2h4v-2zm-2 6.46l2.18 1.63 1.12-1.5-2.18-1.63zM19.3 5.41l-1.12-1.5L16 5.54l1.12 1.5zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h4v-2H2zm9-9h2V0h-2z"/></svg></span> Annonces</a>
+        <a class="nav-item" onclick="showPage('suggestions')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg></span> Suggestions</a>
+        <a class="nav-item" onclick="showPage('testlab')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2h1v5.17L3.2 16.8A2.5 2.5 0 0 0 5.24 21h13.52a2.5 2.5 0 0 0 2.04-4.2L16 9.17V4h1V2zm2 2h6v5.83l1.08 1.42H7.92L9 9.83z"/></svg></span> Test Lab</a>
+        <a class="nav-item" onclick="showPage('forgot')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-9h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-6-5a3 3 0 013 3v2H9V6a3 3 0 013-3z"/></svg></span> Codes oublies</a>
 
         <div class="nav-section">Systeme</div>
-        <a class="nav-item" onclick="showPage('database')"><span class="icon">⛁</span> Base de donnees</a>
-        <a class="nav-item" onclick="showPage('settings')"><span class="icon">⚙</span> Parametres</a>
+        <a class="nav-item" onclick="showPage('database')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg></span> Base de donnees</a>
+        <a class="nav-item" onclick="showPage('logs')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3zm0-5h18v-2H3zm0-7v2h18V6z"/></svg></span> Logs</a>
+        <a class="nav-item" onclick="showPage('history')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 00-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7a6.99 6.99 0 01-4.95-2.05l-1.41 1.41A8.96 8.96 0 0013 21a9 9 0 000-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z"/></svg></span> Historique</a>
+        <a class="nav-item" onclick="showPage('changelog')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zm4 18H6V4h7v5h5zM8 15h8v2H8zm0-4h8v2H8z"/></svg></span> Changelog</a>
+        <a class="nav-item" onclick="showPage('settings')"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94a7.07 7.07 0 000-1.88l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58a7.07 7.07 0 000 1.88l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.23 0 .43-.17.48-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61zM12 15.6A3.6 3.6 0 1115.6 12 3.61 3.61 0 0112 15.6z"/></svg></span> Parametres</a>
       </div>
 
       <div class="sidebar-user">
@@ -57,7 +68,6 @@
       </div>
     </div>
 
-    <!-- Main -->
     <div class="main">
       <div class="welcome-banner">
         <div class="welcome-left">
@@ -66,19 +76,29 @@
         </div>
         <div class="welcome-pills">
           <div class="welcome-pill pill-blue"><div class="pill-label">Serveurs</div><div class="pill-value" id="pillServers">-</div></div>
-          <div class="welcome-pill pill-gold"><div class="pill-label">Warns</div><div class="pill-value" id="pillWarns">-</div></div>
-          <div class="welcome-pill pill-red"><div class="pill-label">Tickets</div><div class="pill-value" id="pillTickets">-</div></div>
+          <div class="welcome-pill pill-gold"><div class="pill-label">Testeurs</div><div class="pill-value" id="pillWarns">-</div></div>
+          <div class="welcome-pill pill-red"><div class="pill-label">Bugs</div><div class="pill-value" id="pillTickets">-</div></div>
         </div>
       </div>
 
-      <div class="content" id="content">
-        <!-- Pages loaded here -->
+      <div class="breadcrumbs" id="breadcrumbs">
+        <span class="breadcrumb-item" onclick="showPage('overview')">Silver App</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item" id="breadcrumbSection">Principal</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item active" id="breadcrumbCurrent">Vue d'ensemble</span>
       </div>
+
+      <div class="content" id="content"></div>
 
       <div class="status-bar">
         <div class="left">
-          <span class="dot dot-green" style="width:6px;height:6px"></span>
-          Silver App v2.0 · MySQL · Pret
+          <span class="dot dot-green" style="width:5px;height:5px"></span>
+          Silver App v2.1
+          <span class="ping-separator">·</span>
+          <span id="pingBackend" class="ping-indicator">API: --ms</span>
+          <span class="ping-separator">·</span>
+          <span id="pingDiscord" class="ping-indicator">Discord: --ms</span>
         </div>
         <div id="clock"></div>
       </div>

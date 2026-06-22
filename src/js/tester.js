@@ -38,6 +38,7 @@ function testerShowPage(name) {
     't-announcements': tLoadAnnouncements,
     't-tasks': tLoadTasks,
     't-bugs': tLoadBugs,
+    't-suggestions': tLoadSuggestions,
     't-testlab': tLoadTestLab,
     't-botinfo': tLoadBotInfo,
   };
@@ -57,7 +58,7 @@ function sectionHeader(text) { return `<div class="section-header"><div class="b
 async function tLoadOverview(el) {
   const [tasks, bugs, announces] = await Promise.all([
     dbQuery("SELECT status, COUNT(*) as c FROM tester_tasks WHERE assigned_to=%s GROUP BY status", [testerId]),
-    dbQuery("SELECT status, COUNT(*) as c FROM tester_bugs WHERE reporter_id=%s GROUP BY status", [testerId]),
+    dbQuery("SELECT status, COUNT(*) as c FROM tester_bugs WHERE reporter=%s GROUP BY status", [testerId]),
     dbScalar("SELECT COUNT(*) FROM tester_announcements"),
   ]);
 
@@ -82,7 +83,7 @@ async function tLoadOverview(el) {
     <div id="tOverviewTasks"></div>`;
 
   // Recent announcements
-  const recentAnnounces = await dbQuery("SELECT title, content, author_name, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 3");
+  const recentAnnounces = await dbQuery("SELECT title, content, author AS author_name, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 3");
   if (recentAnnounces.length) {
     let h = sectionHeader('Annonces recentes');
     h += recentAnnounces.map(r => `
@@ -243,7 +244,7 @@ async function tDmUpload(input) {
 
 async function tLoadAnnouncements(el) {
   el.innerHTML = `<div class="page-header fade-in"><h2>Annonces</h2><p>Messages de l'owner</p></div><div id="tAnnounceList"><div class="loading"><div class="spinner"></div></div></div>`;
-  const rows = await dbQuery("SELECT title, content, author_name, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 30");
+  const rows = await dbQuery("SELECT title, content, author AS author_name, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 30");
   if (!rows.length) { document.getElementById('tAnnounceList').innerHTML = '<div class="coming-soon"><div class="icon">📢</div><p>Aucune annonce</p></div>'; return; }
   document.getElementById('tAnnounceList').innerHTML = rows.map(r => `
     <div class="card announce-card slide-in" style="margin-bottom:10px">
@@ -321,15 +322,15 @@ async function tBugSubmit() {
   const desc = document.getElementById('tBugDesc').value.trim();
   const severity = document.getElementById('tBugSeverity').value;
   if (!title) return;
-  await dbQuery("INSERT INTO tester_bugs (reporter_id, reporter_name, title, description, severity, status, created_at) VALUES (%s,%s,%s,%s,%s,'open',NOW())",
-    [testerId, testerName, title, desc, severity]);
+  await dbQuery("INSERT INTO tester_bugs (reporter, title, description, severity, status, created_at) VALUES (%s,%s,%s,%s,'open',NOW())",
+    [testerName, title, desc, severity]);
   document.getElementById('tBugForm').innerHTML = '';
   tBugLoadList();
 }
 
 async function tBugLoadList() {
   const listEl = document.getElementById('tBugList');
-  const rows = await dbQuery("SELECT id, reporter_name, title, description, severity, status, created_at FROM tester_bugs ORDER BY created_at DESC LIMIT 30");
+  const rows = await dbQuery("SELECT id, reporter AS reporter_name, title, description, severity, status, created_at FROM tester_bugs ORDER BY created_at DESC LIMIT 30");
   if (!rows.length) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">🐛</div><p>Aucun bug</p></div>'; return; }
   const sevColors = { low: 'var(--blue)', medium: 'var(--gold)', high: 'var(--red)', critical: '#ff2d55' };
   listEl.innerHTML = rows.map(r => `
@@ -342,6 +343,61 @@ async function tBugLoadList() {
       ${r.description ? `<div class="bug-item-desc">${esc(r.description)}</div>` : ''}
       <div class="bug-item-meta">${esc(r.reporter_name || '?')} · ${r.severity} · ${fmtDate(r.created_at)}</div>
     </div>`).join('');
+}
+
+// ═══ SUGGESTIONS ════════════════════════════════════════════════════════════
+
+async function tLoadSuggestions(el) {
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>Suggestions</h2><p>Propose des idees et ajouts</p></div>
+    <button class="btn btn-primary fade-in" onclick="tSugShowForm()" style="margin-bottom:14px">+ Nouvelle suggestion</button>
+    <div id="tSugForm"></div>
+    <div id="tSugList"><div class="loading"><div class="spinner"></div></div></div>`;
+  tSugLoadList();
+}
+
+function tSugShowForm() {
+  const c = document.getElementById('tSugForm');
+  if (c.innerHTML) { c.innerHTML = ''; return; }
+  c.innerHTML = `
+    <div class="card slide-in" style="margin-bottom:14px;padding:16px">
+      <div class="control-section-title">Nouvelle suggestion</div>
+      <input type="text" id="tSugTitle" placeholder="Titre">
+      <textarea id="tSugDesc" placeholder="Description detaillee..." rows="3" style="margin-top:8px;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary" onclick="tSugSubmit()">Soumettre</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('tSugForm').innerHTML=''">Annuler</button>
+      </div>
+    </div>`;
+}
+
+async function tSugSubmit() {
+  const title = document.getElementById('tSugTitle').value.trim();
+  const desc = document.getElementById('tSugDesc').value.trim();
+  if (!title) return;
+  await dbQuery("INSERT INTO tester_suggestions (reporter_id, reporter_name, title, description, status, created_at) VALUES (%s,%s,%s,%s,'pending',NOW())",
+    [testerId, testerName, title, desc]);
+  document.getElementById('tSugForm').innerHTML = '';
+  tSugLoadList();
+}
+
+async function tSugLoadList() {
+  const listEl = document.getElementById('tSugList');
+  const rows = await dbQuery("SELECT id, reporter_name, title, description, status, created_at FROM tester_suggestions ORDER BY created_at DESC LIMIT 30");
+  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">💡</div><p>Aucune suggestion</p></div>'; return; }
+  listEl.innerHTML = rows.map(r => {
+    const statusBadge = r.status === 'approved' ? 'badge-green' : r.status === 'rejected' ? 'badge-red' : 'badge-gold';
+    const statusLabel = r.status === 'approved' ? 'Approuve' : r.status === 'rejected' ? 'Rejete' : 'En attente';
+    return `<div class="card bug-item slide-in" style="margin-bottom:8px">
+      <div class="bug-item-header">
+        <div class="bug-item-severity" style="background:var(--purple)"></div>
+        <div class="bug-item-title">${esc(r.title)}</div>
+        <span class="badge ${statusBadge}">${statusLabel}</span>
+      </div>
+      ${r.description ? `<div class="bug-item-desc">${esc(r.description)}</div>` : ''}
+      <div class="bug-item-meta">${esc(r.reporter_name || '?')} · ${fmtDateTime(r.created_at)}</div>
+    </div>`;
+  }).join('');
 }
 
 // ═══ TEST LAB ═══════════════════════════════════════════════════════════════

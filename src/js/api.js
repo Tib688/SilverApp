@@ -38,8 +38,18 @@ async function discordDelete(path) {
   } catch (e) { return { error: e.message }; }
 }
 
-// MySQL via backend API (will use fetch to local FastAPI)
-const BACKEND = 'http://127.0.0.1:8051';
+// Backend API — try local first, fallback to remote
+const BACKEND_REMOTE = 'http://nh3r.now-heberg.com:27041';
+const BACKEND_LOCAL = 'http://127.0.0.1:8051';
+let BACKEND = BACKEND_REMOTE;
+
+(async () => {
+  try {
+    const r = await fetch(`${BACKEND_LOCAL}/health`, { signal: AbortSignal.timeout(1500) });
+    const d = await r.json();
+    if (d.status === 'ok') BACKEND = BACKEND_LOCAL;
+  } catch {}
+})();
 
 async function dbQuery(query, params = []) {
   try {

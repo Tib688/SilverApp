@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const http = require('http');
 const { spawn } = require('child_process');
@@ -38,15 +38,21 @@ ipcMain.on('window-close', () => mainWindow?.close());
 ipcMain.on('navigate', (e, page) => {
   mainWindow.loadFile(`src/pages/${page}.html`);
 });
+ipcMain.on('open-external', (e, url) => {
+  shell.openExternal(url);
+});
 
 function startBackend() {
   const pythonPath = path.join(__dirname, 'backend', 'venv', 'Scripts', 'python.exe');
   const serverPath = path.join(__dirname, 'backend', 'server.py');
-  backendProcess = spawn(pythonPath, [serverPath], { stdio: 'ignore' });
+  backendProcess = spawn(pythonPath, [serverPath], {
+    stdio: 'ignore',
+    cwd: path.join(__dirname, 'backend'),
+  });
   backendProcess.on('error', () => {});
 }
 
-async function waitForBackend(maxRetries = 20) {
+async function waitForBackend(maxRetries = 60) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       await new Promise((resolve, reject) => {
@@ -55,19 +61,20 @@ async function waitForBackend(maxRetries = 20) {
           resolve();
         });
         req.on('error', reject);
-        req.setTimeout(500, () => { req.destroy(); reject(); });
+        req.setTimeout(1000, () => { req.destroy(); reject(); });
       });
       return;
     } catch {
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 500));
     }
   }
 }
 
 app.whenReady().then(async () => {
   startBackend();
-  await waitForBackend();
   createWindow();
+  await waitForBackend();
+  mainWindow?.webContents.reload();
 });
 
 app.on('window-all-closed', () => {

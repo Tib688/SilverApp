@@ -1,31 +1,126 @@
+// ═══ i18n ═══════════════════════════════════════════════════════════════════
+
+const i18n = {
+  fr: {
+    home: 'Accueil', overview: "Vue d'ensemble", leaderboard: 'Leaderboard', members: 'Membres',
+    compare: 'Comparateur', stats: 'Statistiques', control: 'Controle Bot', botinfo: 'Bot Info',
+    uptime: 'Uptime', chat: 'Chat Testeurs', bugs: 'Bugs Reports', tasks: 'Taches',
+    announcements: 'Annonces', suggestions: 'Suggestions', testlab: 'Test Lab',
+    forgot: 'Codes oublies', database: 'Base de donnees', logs: 'Logs', history: 'Historique',
+    changelog: 'Changelog', settings: 'Parametres', channels: 'Stats Channels',
+    welcome: 'Welcome, Tib !', ownerSub: 'Owner', realtime: 'Donnees en temps reel',
+    servers: 'Serveurs', users: 'Utilisateurs', testers: 'Testeurs', openBugs: 'Bugs ouverts',
+    xpTotal: 'XP Total', messages: 'Messages', level: 'Niveau', warns: 'Avertissements',
+    search: 'Rechercher', favorites: 'Favoris', noData: 'Aucune donnee', loading: 'Chargement...',
+    online: 'En ligne', offline: 'Hors ligne', created: 'Cree le', disconnect: 'Se deconnecter',
+    disconnectDesc: 'Se deconnecter supprime le token local et revient a l\'ecran de connexion.',
+    appearance: 'Apparence', darkMode: 'Mode sombre', lightMode: 'Mode clair',
+    maintenance: 'Mode Maintenance', activeMaint: 'Desactiver maintenance',
+    enableMaint: 'Activer maintenance', sessions: 'Sessions actives', owner: 'Owner',
+    application: 'Application', testerMgmt: 'Gestion des testeurs', token: 'Token Bot Discord',
+    save: 'Sauver', generate: 'Generer un code', delete: 'Suppr', copyInvite: 'Copier invite',
+    noTester: 'Aucun testeur', codeCopied: 'Code genere et copie !', mysql: 'MySQL',
+    totalRows: 'Total lignes', tables: 'Tables', proportion: 'Proportion',
+    approve: 'Approuver', reject: 'Rejeter', pending: 'En attente', approved: 'Approuve',
+    rejected: 'Rejete', submit: 'Soumettre', cancel: 'Annuler', send: 'Envoyer',
+    newAnnounce: '+ Nouvelle annonce', newBug: '+ Signaler un bug', newTask: '+ Nouvelle tache',
+    all: 'Tous', open: 'Ouverts', fixed: 'Fixes', closed: 'Fermes',
+    todo: 'A faire', inProgress: 'En cours', done: 'Terminees', completion: 'Completion',
+    fix: 'Fixer', close: 'Fermer', reopen: 'Rouvrir', start: 'Demarrer', finish: 'Terminer',
+    assigned: 'Assignee', general: 'General', privateMsgs: 'Messages prives',
+    madeBy: 'Made by', info: 'Infos', framework: 'Framework',
+    joinDiscord: 'Rejoindre le serveur Discord', exportPdf: 'Export PDF',
+    language: 'Langue', channelStats: 'Statistiques par channel',
+    selectServer: '-- Serveur --', selectChannel: '-- Channel --',
+    msgCount: 'Messages', activeUsers: 'Utilisateurs actifs', topChannels: 'Top Channels',
+  },
+  en: {
+    home: 'Home', overview: 'Overview', leaderboard: 'Leaderboard', members: 'Members',
+    compare: 'Compare', stats: 'Statistics', control: 'Bot Control', botinfo: 'Bot Info',
+    uptime: 'Uptime', chat: 'Testers Chat', bugs: 'Bug Reports', tasks: 'Tasks',
+    announcements: 'Announcements', suggestions: 'Suggestions', testlab: 'Test Lab',
+    forgot: 'Forgotten Codes', database: 'Database', logs: 'Logs', history: 'History',
+    changelog: 'Changelog', settings: 'Settings', channels: 'Channel Stats',
+    welcome: 'Welcome, Tib!', ownerSub: 'Owner', realtime: 'Real-time data',
+    servers: 'Servers', users: 'Users', testers: 'Testers', openBugs: 'Open bugs',
+    xpTotal: 'Total XP', messages: 'Messages', level: 'Level', warns: 'Warnings',
+    search: 'Search', favorites: 'Favorites', noData: 'No data', loading: 'Loading...',
+    online: 'Online', offline: 'Offline', created: 'Created', disconnect: 'Disconnect',
+    disconnectDesc: 'Disconnecting removes the local token and returns to the login screen.',
+    appearance: 'Appearance', darkMode: 'Dark mode', lightMode: 'Light mode',
+    maintenance: 'Maintenance Mode', activeMaint: 'Disable maintenance',
+    enableMaint: 'Enable maintenance', sessions: 'Active sessions', owner: 'Owner',
+    application: 'Application', testerMgmt: 'Tester management', token: 'Discord Bot Token',
+    save: 'Save', generate: 'Generate code', delete: 'Delete', copyInvite: 'Copy invite',
+    noTester: 'No tester', codeCopied: 'Code generated and copied!', mysql: 'MySQL',
+    totalRows: 'Total rows', tables: 'Tables', proportion: 'Proportion',
+    approve: 'Approve', reject: 'Reject', pending: 'Pending', approved: 'Approved',
+    rejected: 'Rejected', submit: 'Submit', cancel: 'Cancel', send: 'Send',
+    newAnnounce: '+ New announcement', newBug: '+ Report a bug', newTask: '+ New task',
+    all: 'All', open: 'Open', fixed: 'Fixed', closed: 'Closed',
+    todo: 'To do', inProgress: 'In progress', done: 'Done', completion: 'Completion',
+    fix: 'Fix', close: 'Close', reopen: 'Reopen', start: 'Start', finish: 'Finish',
+    assigned: 'Assigned to', general: 'General', privateMsgs: 'Private messages',
+    madeBy: 'Made by', info: 'Info', framework: 'Framework',
+    joinDiscord: 'Join the Discord server', exportPdf: 'Export PDF',
+    language: 'Language', channelStats: 'Channel statistics',
+    selectServer: '-- Server --', selectChannel: '-- Channel --',
+    msgCount: 'Messages', activeUsers: 'Active users', topChannels: 'Top Channels',
+  },
+};
+
+let currentLang = localStorage.getItem('silverapp_lang') || 'fr';
+function t(key) { return (i18n[currentLang] || i18n.fr)[key] || (i18n.fr)[key] || key; }
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('silverapp_lang', lang);
+  showPage(currentPage);
+}
+
 // Clock
 setInterval(() => {
   const el = document.getElementById('clock');
-  if (el) el.textContent = new Date().toLocaleTimeString('fr-FR');
+  if (el) el.textContent = new Date().toLocaleTimeString(currentLang === 'fr' ? 'fr-FR' : 'en-US');
 }, 1000);
 
 // Page system
 let currentPage = 'overview';
+let pageLoadId = 0;
 
 function showPage(name) {
   currentPage = name;
+  pageLoadId++;
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.getAttribute('onclick')?.includes(`'${name}'`)) n.classList.add('active');
   });
   const content = document.getElementById('content');
-  content.innerHTML = '<div class="loading"><div class="spinner"></div> Chargement...</div>';
 
-  const loader = pageLoaders[name];
-  if (loader) loader(content);
-  else content.innerHTML = `<div class="coming-soon fade-in"><div class="icon">—</div><p>Coming soon</p></div>`;
+  content.classList.add('page-out');
+  setTimeout(() => {
+    content.innerHTML = renderSkeleton();
+    content.classList.remove('page-out');
+    updateBreadcrumbs(name);
+    const banner = document.querySelector('.welcome-banner');
+    const crumbs = document.getElementById('breadcrumbs');
+    if (name === 'home') {
+      if (banner) banner.style.display = 'none';
+      if (crumbs) crumbs.style.display = 'none';
+    } else {
+      if (banner) banner.style.display = '';
+      if (crumbs) crumbs.style.display = '';
+    }
+
+    const loader = pageLoaders[name];
+    if (loader) loader(content);
+    else content.innerHTML = `<div class="coming-soon fade-in"><div class="icon">—</div><p>Coming soon</p></div>`;
+  }, 150);
 }
 
 // Page loaders
 const pageLoaders = {
+  home: loadHome,
   overview: loadOverview,
-  moderation: loadModeration,
-  tickets: loadTickets,
   leaderboard: loadLeaderboard,
   members: loadMembers,
   suggestions: loadSuggestions,
@@ -39,7 +134,90 @@ const pageLoaders = {
   announcements: loadAnnouncements,
   forgot: loadForgotCodes,
   settings: loadSettings,
+  history: loadHistory,
+  compare: loadCompare,
+  stats: loadStats,
+  channels: loadChannels,
+  changelog: loadChangelog,
+  logs: loadLogs,
+  uptime: loadUptime,
 };
+
+// ═══ HOME ═══════════════════════════════════════════════════════════════════
+
+async function loadHome(el) {
+  const [bot, guilds, testers, openBugs, pendingSug, totalXp] = await Promise.all([
+    _botInfoCache || discordGet('/users/@me'),
+    getCachedGuilds(),
+    dbScalar('SELECT COUNT(*) FROM tester_codes'),
+    dbScalar("SELECT COUNT(*) FROM tester_bugs WHERE status='open'"),
+    dbScalar("SELECT COUNT(*) FROM tester_suggestions WHERE status='pending'"),
+    dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
+  ]);
+  if (bot && !bot.error && !_botInfoCache) _botInfoCache = bot;
+  const b = _botInfoCache || {};
+  const avatar = b.id ? getBotAvatar(b, 256) : '';
+  const created = b.id ? new Date(Number((BigInt(b.id) >> 22n) + 1420070400000n)) : null;
+  const uptime = created ? Math.floor((Date.now() - created.getTime()) / 86400000) : '?';
+
+  el.innerHTML = `
+    <div class="fade-in" style="display:flex;flex-direction:column;align-items:center;padding-top:30px">
+
+      <div style="position:relative;margin-bottom:20px">
+        ${avatar ? `<img src="${avatar}" style="width:96px;height:96px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 30px rgba(139,149,176,.15)">` : '<div style="width:96px;height:96px;border-radius:50%;background:var(--card);border:3px solid var(--accent)"></div>'}
+        <span class="dot dot-green dot-pulse" style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border:3px solid var(--bg)"></span>
+      </div>
+
+      <h1 style="font-size:28px;font-weight:800;color:var(--bright);letter-spacing:-.03em">${esc(b.username || 'Silver Bot')}</h1>
+      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.1</p>
+
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <span class="badge badge-green" style="padding:5px 14px;font-size:11px">En ligne</span>
+        ${b.bot ? '<span class="badge badge-blue" style="padding:5px 14px;font-size:11px">BOT</span>' : ''}
+        <span class="badge badge-purple" style="padding:5px 14px;font-size:11px">${guilds.length} serveur${guilds.length > 1 ? 's' : ''}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:600px;margin-top:28px">
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Serveurs</div><div class="stat-value">${guilds.length}</div></div>
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Testeurs</div><div class="stat-value">${testers}</div></div>
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Bugs</div><div class="stat-value">${openBugs}</div></div>
+        <div class="card stat-card" style="text-align:center"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">XP Total</div><div class="stat-value" style="font-size:18px">${totalXp.toLocaleString('fr-FR')}</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:600px;margin-top:14px">
+        <div class="card" style="text-align:center;cursor:pointer;padding:18px" onclick="showPage('overview')">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.5"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></div>
+          <div style="font-size:12px;font-weight:600;color:var(--bright)">Vue d'ensemble</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Donnees en direct</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer;padding:18px" onclick="showPage('leaderboard')">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.5"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg></div>
+          <div style="font-size:12px;font-weight:600;color:var(--bright)">Leaderboard</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Classement XP</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer;padding:18px" onclick="showPage('chat')">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.5"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
+          <div style="font-size:12px;font-weight:600;color:var(--bright)">Chat</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Testeurs</div>
+        </div>
+      </div>
+
+      <div class="card" style="width:100%;max-width:600px;margin-top:14px;padding:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Infos</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">Bot ID</span><span style="font-size:11px;color:var(--bright);font-weight:600;cursor:pointer" onclick="navigator.clipboard.writeText('${b.id || ''}');this.textContent='Copie !';setTimeout(()=>this.textContent='${b.id || '?'}',1500)">${b.id || '?'}</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">Cree le</span><span style="font-size:11px;color:var(--bright);font-weight:600">${created ? created.toLocaleDateString('fr-FR') : '?'}</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">Suggestions</span><span style="font-size:11px;color:var(--gold);font-weight:600">${pendingSug} en attente</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">Framework</span><span style="font-size:11px;color:var(--bright);font-weight:600">Electron + FastAPI</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
+      </div>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.1 · Electron · FastAPI · MySQL</p>
+    </div>`;
+}
 
 // ═══ OVERVIEW ════════════════════════════════════════════════════════════════
 
@@ -50,16 +228,13 @@ async function loadOverview(el) {
     <div id="serversSection"></div>
   `;
 
-  // Stats cards (instant with -)
   const statInfo = [
     { label: 'Serveurs', color: 'var(--blue)', id: 'st0' },
     { label: 'Utilisateurs', color: 'var(--accent)', id: 'st1' },
     { label: 'XP Total', color: 'var(--purple)', id: 'st2' },
     { label: 'Messages', color: 'var(--cyan)', id: 'st3' },
-    { label: 'Warns', color: 'var(--gold)', id: 'st4' },
-    { label: 'Tickets', color: 'var(--red)', id: 'st5' },
-    { label: 'Ouverts', color: 'var(--green)', id: 'st6' },
-    { label: 'Suggestions', color: '#c084fc', id: 'st7' },
+    { label: 'Testeurs', color: 'var(--green)', id: 'st4' },
+    { label: 'Bugs ouverts', color: 'var(--red)', id: 'st5' },
   ];
 
   document.getElementById('statsGrid').innerHTML = statInfo.map(s => `
@@ -70,28 +245,22 @@ async function loadOverview(el) {
     </div>
   `).join('');
 
-  // Load data async
-  const [guilds, users, xp, msgs, warns, tickets, open, suggestions] = await Promise.all([
-    discordGet('/users/@me/guilds').then(r => Array.isArray(r) ? r : []),
+  const [guilds, users, xp, msgs, testers, bugs] = await Promise.all([
+    getCachedGuilds(),
     dbScalar('SELECT COUNT(DISTINCT user_id) FROM user_xp'),
     dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
     dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats'),
-    dbScalar('SELECT COUNT(*) FROM warnings'),
-    dbScalar('SELECT COUNT(*) FROM tickets'),
-    dbScalar("SELECT COUNT(*) FROM tickets WHERE status='open'"),
-    dbScalar('SELECT COUNT(*) FROM suggestions'),
+    dbScalar('SELECT COUNT(*) FROM tester_codes'),
+    dbScalar("SELECT COUNT(*) FROM tester_bugs WHERE status='open'"),
   ]);
 
-  // Animate values
-  const vals = [guilds.length, users, xp, msgs, warns, tickets, open, suggestions];
+  const vals = [guilds.length, users, xp, msgs, testers, bugs];
   vals.forEach((v, i) => animateValue(`st${i}`, 0, v, 400));
 
-  // Banner pills
   document.getElementById('pillServers').textContent = guilds.length;
-  document.getElementById('pillWarns').textContent = warns;
-  document.getElementById('pillTickets').textContent = tickets;
+  document.getElementById('pillWarns').textContent = testers;
+  document.getElementById('pillTickets').textContent = bugs;
 
-  // Servers
   if (guilds.length) {
     let html = sectionHeader(`Serveurs (${guilds.length})`);
     html += '<div class="card">';
@@ -100,24 +269,28 @@ async function loadOverview(el) {
         ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64">`
         : g.name[0].toUpperCase();
       html += `
-        <div class="server-item">
+        <div class="server-item" style="cursor:pointer" onclick="showServerDetail('${g.id}','${esc(g.name).replace(/'/g,"\\'")}')">
           <div class="server-icon">${typeof icon === 'string' && icon.length === 1 ? icon : icon}</div>
           <div class="server-info">
             <div class="name">${esc(g.name)}</div>
             <div class="id">${g.id}</div>
           </div>
+          <span class="server-copy" style="font-size:10px;color:var(--muted)">Copier ID</span>
         </div>`;
     });
     html += '</div>';
     document.getElementById('serversSection').innerHTML = html;
   }
 
-  // Bot identity for sidebar
-  const me = await discordGet('/users/@me');
-  if (me && !me.error) {
-    const url = getBotAvatar(me, 128);
+  // Bot identity for sidebar (cached)
+  if (!_botInfoCache) {
+    const me = await discordGet('/users/@me');
+    if (me && !me.error) _botInfoCache = me;
+  }
+  if (_botInfoCache) {
+    const url = getBotAvatar(_botInfoCache, 128);
     if (url) document.getElementById('sidebarAvatar').innerHTML = `<img src="${url}">`;
-    document.getElementById('welcomeSub').textContent = `Owner · ${me.username}`;
+    document.getElementById('welcomeSub').textContent = `Owner · ${_botInfoCache.username}`;
   }
 }
 
@@ -148,15 +321,68 @@ async function loadTickets(el) {
 // ═══ LEADERBOARD ═════════════════════════════════════════════════════════════
 
 async function loadLeaderboard(el) {
-  el.innerHTML = `<div class="page-header fade-in"><h2>Leaderboard</h2><p>Classement XP</p></div><div id="lbContent"><div class="loading"><div class="spinner"></div></div></div>`;
-  const rows = await dbQuery('SELECT user_id, SUM(xp) as xp, SUM(chat_xp) as chat_xp, SUM(voice_xp) as voice_xp, SUM(messages_count) as msgs FROM user_xp GROUP BY user_id ORDER BY xp DESC LIMIT 20');
-  if (!rows.length) { document.getElementById('lbContent').innerHTML = '<div class="coming-soon"><div class="icon">—</div><p>Aucune donnee XP</p></div>'; return; }
+  el.innerHTML = `<div class="page-header fade-in"><h2>Leaderboard</h2><p>Classement XP</p></div>
+    <div class="lb-columns fade-in">
+      <div><div class="control-section-title">Top Membres</div><div id="lbMembers"><div class="loading"><div class="spinner"></div></div></div></div>
+      <div><div class="control-section-title">Top Serveurs</div><div id="lbServers"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>`;
 
-  const userIds = rows.map(r => r.user_id).filter(Boolean);
-  const userCache = await fetchUsersBatch(userIds);
+  const [memberRows, serverRows, guilds] = await Promise.all([
+    dbQuery('SELECT CAST(user_id AS CHAR) AS user_id, SUM(xp) as xp, SUM(messages_count) as msgs FROM user_xp GROUP BY user_id ORDER BY xp DESC LIMIT 50'),
+    dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp FROM user_xp GROUP BY guild_id ORDER BY xp DESC LIMIT 50'),
+    getCachedGuilds(),
+  ]);
+  const guildMap = {};
+  guilds.forEach(g => guildMap[g.id] = g);
 
-  document.getElementById('lbContent').innerHTML = buildTable(['#', 'User', 'XP', 'Chat', 'Voice', 'Messages'],
-    rows.map((r, i) => [i < 3 ? ['🥇','🥈','🥉'][i] : i+1, avatarCell(r.user_id, userCache), r.xp || 0, r.chat_xp || 0, r.voice_xp || 0, r.msgs || 0]));
+  // Render servers immediately (no API call needed)
+  if (serverRows.length && !serverRows[0]?.error) {
+    document.getElementById('lbServers').innerHTML = buildTable(['#', 'Serveur', 'XP Total'],
+      serverRows.map((r, i) => {
+        const g = guildMap[r.guild_id];
+        const icon = g && g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:26px;height:26px;border-radius:50%">` : '';
+        const name = g ? esc(g.name) : `...${r.guild_id.slice(-4)}`;
+        const rank = `<span style="font-weight:700;color:${i < 3 ? 'var(--gold)' : 'var(--dim)'}">#${i+1}</span>`;
+        const cell = `<div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="navigator.clipboard.writeText('${r.guild_id}');this.querySelector('.lb-copy').textContent='Copie !';setTimeout(()=>this.querySelector('.lb-copy').textContent='',1500)">
+          ${icon}<span style="font-size:12px;color:var(--bright)">${name}</span>
+          <span class="lb-copy" style="font-size:9px;color:var(--muted)"></span>
+        </div>`;
+        return [rank, cell, (r.xp || 0).toLocaleString('fr-FR')];
+      }));
+  } else {
+    document.getElementById('lbServers').innerHTML = '<div class="coming-soon" style="height:150px"><p>Aucune donnee</p></div>';
+  }
+
+  // Render members: show table with placeholders first, then fill avatars
+  if (memberRows.length && !memberRows[0]?.error) {
+    document.getElementById('lbMembers').innerHTML = buildTable(['#', 'Membre', 'XP', 'Msgs'],
+      memberRows.map((r, i) => {
+        const rank = `<span style="font-weight:700;color:${i < 3 ? 'var(--gold)' : 'var(--dim)'}">#${i+1}</span>`;
+        const cell = `<div id="lbUser-${r.user_id}" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="navigator.clipboard.writeText('${r.user_id}');this.querySelector('.lb-copy').textContent='Copie !';setTimeout(()=>this.querySelector('.lb-copy').textContent='',1500)">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--bg2)"></div>
+          <span style="font-size:12px;color:var(--dim)">...</span>
+          <span class="lb-copy" style="font-size:9px;color:var(--muted)"></span>
+        </div>`;
+        return [rank, cell, (r.xp || 0).toLocaleString('fr-FR'), r.msgs || 0];
+      }));
+
+    // Fill avatars in parallel
+    await Promise.all(memberRows.map(async r => {
+      const cached = _userCacheGlobal[r.user_id];
+      const u = cached || await discordGet(`/users/${r.user_id}`);
+      const el = document.getElementById(`lbUser-${r.user_id}`);
+      if (!el) return;
+      if (u && !u.error) {
+        if (!cached) _userCacheGlobal[r.user_id] = u;
+        const url = getUserAvatar(r.user_id, u.avatar, 32);
+        el.innerHTML = `<img src="${url}" style="width:26px;height:26px;border-radius:50%">
+          <span style="font-size:12px;color:var(--bright)">${esc(u.username)}</span>
+          <span class="lb-copy" style="font-size:9px;color:var(--muted)"></span>`;
+      }
+    }));
+  } else {
+    document.getElementById('lbMembers').innerHTML = '<div class="coming-soon" style="height:150px"><p>Aucune donnee</p></div>';
+  }
 }
 
 // ═══ MEMBERS ═════════════════════════════════════════════════════════════════
@@ -179,7 +405,7 @@ async function searchMember() {
   res.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
   const [gstats, warns, gxp] = await Promise.all([
-    dbQuery('SELECT guild_id, xp, chat_xp, voice_xp, messages_count, voice_minutes FROM user_xp WHERE user_id = %s', [uid]),
+    dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, xp, chat_xp, voice_xp, messages_count, voice_minutes FROM user_xp WHERE user_id = %s', [uid]),
     dbQuery('SELECT id, guild_id, reason, created_at FROM warnings WHERE user_id = %s ORDER BY created_at DESC', [uid]),
     dbScalar('SELECT COALESCE(global_xp,0) FROM global_user_profile WHERE user_id = %s', [uid]),
   ]);
@@ -189,15 +415,49 @@ async function searchMember() {
   const avatar = user && !user.error ? getUserAvatar(uid, user.avatar, 128) : null;
   const level = Math.floor(Math.sqrt((gxp || 0) / 100));
 
-  let html = `<div class="card fade-in" style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:18px">`;
-  if (avatar) html += `<img src="${avatar}" style="width:56px;height:56px;border-radius:50%">`;
-  html += `<div><div style="font-size:18px;font-weight:700;color:var(--bright)">${esc(username)}</div>
-    <div style="font-size:11px;color:var(--dim)">Niveau ${level} · XP: ${gxp || 0} · ${warns.length} warn(s)</div></div></div>`;
+  const isFav = await dbScalar('SELECT COUNT(*) FROM member_favorites WHERE discord_id = %s', [uid]);
+
+  const created = new Date(Number((BigInt(uid) >> 22n) + 1420070400000n));
+  const createdStr = created.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const banner = user && !user.error && user.banner ? `https://cdn.discordapp.com/banners/${uid}/${user.banner}.${user.banner.startsWith('a_') ? 'gif' : 'png'}?size=600` : null;
+
+  let html = `<div class="card fade-in member-profile" style="margin-bottom:16px;padding:0;overflow:hidden;cursor:pointer" onclick="this.querySelector('.member-details').classList.toggle('open')">
+    ${banner ? `<div style="height:80px;background:url('${banner}') center/cover;border-radius:var(--radius) var(--radius) 0 0"></div>` : ''}
+    <div style="display:flex;align-items:center;gap:16px;padding:18px">
+      ${avatar ? `<img src="${avatar}" style="width:56px;height:56px;border-radius:50%;${banner ? 'margin-top:-40px;border:3px solid var(--card)' : ''}">` : ''}
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:700;color:var(--bright)">${esc(username)}</div>
+        <div style="font-size:11px;color:var(--dim)">Niveau ${level} · XP: ${(gxp || 0).toLocaleString('fr-FR')} · ${warns.length} warn(s)</div>
+      </div>
+      <button class="fav-btn ${isFav ? 'is-fav' : ''}" style="background:none;border:none;font-size:24px;cursor:pointer;padding:8px" onclick="event.stopPropagation();toggleFav('${uid}','${esc(username)}',this)">${isFav ? '★' : '☆'}</button>
+    </div>
+    <div class="member-details">
+      <div class="member-detail-grid">
+        <div><span class="settings-label">Discord ID</span><span class="settings-value" style="cursor:pointer" onclick="event.stopPropagation();navigator.clipboard.writeText('${uid}');this.textContent='Copie !';setTimeout(()=>this.textContent='${uid}',1500)">${uid}</span></div>
+        <div><span class="settings-label">Compte cree le</span><span class="settings-value">${createdStr}</span></div>
+        <div><span class="settings-label">Niveau</span><span class="settings-value">${level}</span></div>
+        <div><span class="settings-label">XP Global</span><span class="settings-value">${(gxp || 0).toLocaleString('fr-FR')}</span></div>
+        <div><span class="settings-label">Serveurs actifs</span><span class="settings-value">${gstats.length}</span></div>
+        <div><span class="settings-label">Avertissements</span><span class="settings-value">${warns.length}</span></div>
+        ${user && !user.error ? `<div><span class="settings-label">Pseudo global</span><span class="settings-value">${esc(user.global_name || user.username)}</span></div>` : ''}
+      </div>
+    </div>
+  </div>`;
 
   if (gstats.length) {
+    const guilds = await getCachedGuilds();
+    const guildMap = {};
+    guilds.forEach(g => guildMap[g.id] = g);
+
     html += sectionHeader(`Activite par serveur (${gstats.length})`);
     html += buildTable(['Serveur', 'XP', 'Chat', 'Voice', 'Messages', 'Vocal'],
-      gstats.map(g => [g.guild_id, g.xp||0, g.chat_xp||0, g.voice_xp||0, g.messages_count||0, `${g.voice_minutes||0}m`]));
+      gstats.map(g => {
+        const guild = guildMap[g.guild_id];
+        const icon = guild && guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=32" style="width:20px;height:20px;border-radius:6px">` : '';
+        const name = guild ? esc(guild.name) : g.guild_id;
+        const cell = `<div style="display:flex;align-items:center;gap:8px">${icon}<span style="font-size:12px;color:var(--bright)">${name}</span></div>`;
+        return [cell, (g.xp||0).toLocaleString('fr-FR'), g.chat_xp||0, g.voice_xp||0, g.messages_count||0, `${g.voice_minutes||0}m`];
+      }));
   }
   if (warns.length) {
     html += sectionHeader(`Avertissements (${warns.length})`);
@@ -207,29 +467,93 @@ async function searchMember() {
   res.innerHTML = html;
 }
 
+async function toggleFav(uid, username, btn) {
+  const exists = await dbScalar('SELECT COUNT(*) FROM member_favorites WHERE discord_id = %s', [uid]);
+  if (exists) {
+    await dbQuery('DELETE FROM member_favorites WHERE discord_id = %s', [uid]);
+    if (btn) { btn.textContent = '☆'; btn.classList.remove('is-fav'); }
+  } else {
+    await dbQuery('INSERT INTO member_favorites (discord_id, username, added_at) VALUES (%s, %s, NOW())', [uid, username]);
+    if (btn) {
+      btn.textContent = '★';
+      btn.classList.add('is-fav', 'fav-pop');
+      setTimeout(() => btn.classList.remove('fav-pop'), 500);
+      const r = btn.getBoundingClientRect();
+      spawnConfetti(r.left + r.width / 2, r.top);
+    }
+  }
+}
+
 async function showFavorites() {
   const res = document.getElementById('memberResult');
-  const favs = await dbQuery('SELECT discord_id, username, added_at FROM member_favorites ORDER BY added_at DESC');
-  if (!favs.length) { res.innerHTML = '<div class="coming-soon"><div class="icon">★</div><p>Aucun favori</p></div>'; return; }
+  res.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const favs = await dbQuery('SELECT CAST(discord_id AS CHAR) AS discord_id, username, added_at FROM member_favorites ORDER BY added_at DESC');
+  if (!favs.length || favs[0]?.error) { res.innerHTML = '<div class="coming-soon"><div class="icon">★</div><p>Aucun favori</p></div>'; return; }
+
+  const userIds = favs.map(f => f.discord_id).filter(Boolean);
+  const userCache = await fetchUsersBatch(userIds);
+
+  const favData = await Promise.all(favs.map(async f => {
+    const [xp, warns] = await Promise.all([
+      dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp WHERE user_id = %s', [f.discord_id]),
+      dbScalar('SELECT COUNT(*) FROM warnings WHERE user_id = %s', [f.discord_id]),
+    ]);
+    return { ...f, xp, warns };
+  }));
+
   let html = sectionHeader(`Favoris (${favs.length})`);
-  html += '<div class="card">';
-  favs.forEach(f => {
-    html += `<div class="server-item"><span style="font-size:16px;color:var(--gold)">★</span>
-      <div class="server-info"><div class="name">${esc(f.username || String(f.discord_id))}</div><div class="id">${f.discord_id}</div></div>
-      <button class="btn btn-secondary" style="padding:6px 12px;font-size:11px" onclick="document.getElementById('memberSearch').value='${f.discord_id}';searchMember()">Voir</button></div>`;
-  });
-  html += '</div>';
+  for (const f of favData) {
+    const user = userCache[f.discord_id];
+    const username = user ? user.username : (f.username || f.discord_id);
+    const avatar = user ? getUserAvatar(f.discord_id, user.avatar, 128) : null;
+    const level = Math.floor(Math.sqrt((f.xp || 0) / 100));
+
+    html += `<div class="card fade-in" style="display:flex;align-items:center;gap:14px;padding:14px;margin-bottom:8px;cursor:pointer" onclick="document.getElementById('memberSearch').value='${f.discord_id}';searchMember()">
+      ${avatar ? `<img src="${avatar}" style="width:44px;height:44px;border-radius:50%">` : '<div style="width:44px;height:44px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dim)">?</div>'}
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--bright)">${esc(username)}</div>
+        <div style="font-size:10px;color:var(--dim)">Niveau ${level} · XP: ${(f.xp || 0).toLocaleString('fr-FR')} · ${f.warns} warn(s)</div>
+      </div>
+      <span style="font-size:18px;color:var(--gold)">★</span>
+    </div>`;
+  }
   res.innerHTML = html;
 }
 
 // ═══ SUGGESTIONS ═════════════════════════════════════════════════════════════
 
 async function loadSuggestions(el) {
-  el.innerHTML = `<div class="page-header fade-in"><h2>Suggestions</h2><p>Idees des membres</p></div><div id="sugContent"><div class="loading"><div class="spinner"></div></div></div>`;
-  const rows = await dbQuery('SELECT id, user_id, content, status, created_at FROM suggestions ORDER BY created_at DESC LIMIT 30');
-  if (!rows.length) { document.getElementById('sugContent').innerHTML = '<div class="coming-soon"><div class="icon">—</div><p>Aucune suggestion</p></div>'; return; }
-  document.getElementById('sugContent').innerHTML = buildTable(['ID', 'User', 'Contenu', 'Statut', 'Date'],
-    rows.map(r => [`#${r.id}`, r.user_id, esc((r.content||'').slice(0,40)), `<span class="badge badge-${r.status === 'approved' ? 'green' : r.status === 'rejected' ? 'red' : 'gold'}">${r.status}</span>`, fmtDate(r.created_at)]));
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>Suggestions</h2><p>Idees et demandes d'ajouts des testeurs</p></div>
+    <div id="sugContent"><div class="loading"><div class="spinner"></div></div></div>`;
+
+  const rows = await dbQuery("SELECT id, reporter_name, title, description, status, created_at FROM tester_suggestions ORDER BY created_at DESC LIMIT 50");
+  if (!rows.length || rows[0]?.error) { document.getElementById('sugContent').innerHTML = '<div class="coming-soon"><div class="icon">💡</div><p>Aucune suggestion</p></div>'; return; }
+
+  document.getElementById('sugContent').innerHTML = rows.map(r => {
+    const statusBadge = r.status === 'approved' ? 'badge-green' : r.status === 'rejected' ? 'badge-red' : 'badge-gold';
+    const statusLabel = r.status === 'approved' ? 'Approuve' : r.status === 'rejected' ? 'Rejete' : 'En attente';
+    return `<div class="card bug-item slide-in" style="margin-bottom:8px">
+      <div class="bug-item-header">
+        <div class="bug-item-severity" style="background:var(--purple)"></div>
+        <div class="bug-item-title">${esc(r.title)}</div>
+        <span class="badge ${statusBadge}">${statusLabel}</span>
+        <div class="bug-item-actions">
+          ${r.status === 'pending' ? `
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="sugSetStatus(${r.id},'approved')">Approuver</button>
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="sugSetStatus(${r.id},'rejected')">Rejeter</button>
+          ` : ''}
+        </div>
+      </div>
+      ${r.description ? `<div class="bug-item-desc">${esc(r.description)}</div>` : ''}
+      <div class="bug-item-meta">${esc(r.reporter_name || '?')} · ${fmtDateTime(r.created_at)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function sugSetStatus(id, status) {
+  await dbQuery("UPDATE tester_suggestions SET status=%s WHERE id=%s", [status, id]);
+  loadSuggestions(document.getElementById('content'));
 }
 
 // ═══ DATABASE ════════════════════════════════════════════════════════════════
@@ -237,13 +561,9 @@ async function loadSuggestions(el) {
 async function loadDatabase(el) {
   el.innerHTML = `<div class="page-header fade-in"><h2>Base de donnees</h2><p>MySQL en direct</p></div><div id="dbContent"><div class="loading"><div class="spinner"></div></div></div>`;
   const tables = ['guild_config','warnings','welcome_config','ticket_config','tickets','role_panels','antispam_config','reminders','autoroles','suggestions','user_xp','global_user_profile','level_rewards','global_user_stats','notification_config','guild_customization'];
+  const counts = await Promise.all(tables.map(t => dbScalar(`SELECT COUNT(*) FROM \`${t}\``)));
   let total = 0;
-  const data = [];
-  for (const t of tables) {
-    const c = await dbScalar(`SELECT COUNT(*) FROM \`${t}\``);
-    data.push([t, c]);
-    total += c;
-  }
+  const data = tables.map((t, i) => { total += counts[i]; return [t, counts[i]]; });
   data.sort((a, b) => b[1] - a[1]);
 
   let html = `<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
@@ -262,7 +582,8 @@ async function loadDatabase(el) {
 
 async function loadSettings(el) {
   const cfg = await fetch(`${BACKEND}/import-config`).then(r => r.json());
-  const testers = await dbQuery("SELECT id, code, discord_id, discord_username, created_at FROM tester_codes ORDER BY created_at DESC");
+  let testers = await dbQuery("SELECT code, CAST(discord_id AS CHAR) AS discord_id, label AS discord_username, created_at FROM tester_codes ORDER BY created_at DESC");
+  if (testers.length && testers[0]?.error) testers = [];
 
   el.innerHTML = `
     <div class="page-header fade-in"><h2>Parametres</h2><p>Configuration de Silver App</p></div>
@@ -302,16 +623,51 @@ async function loadSettings(el) {
         <div id="settingsTesterList" style="margin-top:12px">
           ${testers.length ? testers.map(t => `
             <div class="server-item">
-              <div class="server-icon" style="font-size:11px;width:28px;height:28px">${(t.discord_username || '?')[0].toUpperCase()}</div>
-              <div class="server-info">
+              <div class="server-icon tester-avatar-slot" id="testerAv-${String(t.discord_id || t.code)}" style="width:32px;height:32px;font-size:12px">${(t.discord_username || '?')[0].toUpperCase()}</div>
+              <div class="server-info" style="flex:1">
                 <div class="name">${esc(t.discord_username || 'Testeur')}</div>
                 <div class="id">${t.discord_id || '—'} · Code: <code>${esc(t.code)}</code></div>
               </div>
               <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="settingsCopyInvite('${esc(t.code)}','${esc(t.discord_username || '')}')">Copier invite</button>
-              <button class="btn btn-danger" style="padding:4px 10px;font-size:10px" onclick="settingsDeleteTester(${t.id})">Suppr</button>
+              <button class="btn btn-danger" style="padding:4px 10px;font-size:10px" onclick="settingsDeleteTester('${esc(t.code)}')">Suppr</button>
             </div>
           `).join('') : '<div style="font-size:12px;color:var(--muted)">Aucun testeur</div>'}
         </div>
+      </div>
+
+      <!-- Apparence -->
+      <div class="card settings-section">
+        <div class="control-section-title">${t('appearance')}</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+          ${Object.keys(themeColors).map(name => `<div class="theme-dot" style="background:${themeColors[name].accent}" onclick="applyTheme('${name}')" title="${name}"></div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="lightModeBtn" class="btn btn-secondary" style="flex:1" onclick="toggleLightMode()">${(localStorage.getItem('silverapp_mode')||'dark') === 'light' ? t('darkMode') : t('lightMode')}</button>
+          <button id="glassBtn" class="btn btn-secondary" style="flex:1" onclick="toggleGlass()">${localStorage.getItem('silverapp_glass') === 'true' ? 'Liquid Glass: ON' : 'Liquid Glass: OFF'}</button>
+          <button class="btn btn-secondary" style="flex:1" onclick="exportCurrentPage()">${t('exportPdf')}</button>
+        </div>
+      </div>
+
+      <!-- Langue -->
+      <div class="card settings-section">
+        <div class="control-section-title">${t('language')}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ${currentLang === 'fr' ? 'btn-primary' : 'btn-secondary'}" style="flex:1" onclick="setLang('fr')">Francais</button>
+          <button class="btn ${currentLang === 'en' ? 'btn-primary' : 'btn-secondary'}" style="flex:1" onclick="setLang('en')">English</button>
+        </div>
+      </div>
+
+      <!-- Maintenance -->
+      <div class="card settings-section">
+        <div class="control-section-title">Mode Maintenance</div>
+        <button id="maintBtn" class="${maintenanceMode ? 'btn btn-danger' : 'btn btn-primary'}" style="width:100%" onclick="toggleMaintenance()">${maintenanceMode ? 'Desactiver maintenance' : 'Activer maintenance'}</button>
+        <div id="maintStatus" class="control-status"></div>
+      </div>
+
+      <!-- Session tracker -->
+      <div class="card settings-section" style="grid-column:1/-1">
+        <div class="control-section-title">Sessions actives</div>
+        <div id="settingsSessions"><div class="loading"><div class="spinner"></div></div></div>
       </div>
 
       <!-- App info -->
@@ -320,7 +676,7 @@ async function loadSettings(el) {
         <div class="settings-info-grid">
           <div><span class="settings-label">Version</span><span class="settings-value">v2.0.0</span></div>
           <div><span class="settings-label">Framework</span><span class="settings-value">Electron</span></div>
-          <div><span class="settings-label">Backend</span><span class="settings-value">FastAPI :8051</span></div>
+          <div><span class="settings-label">Backend</span><span class="settings-value">FastAPI</span></div>
           <div><span class="settings-label">GitHub</span><span class="settings-value">Tib688/SilverApp</span></div>
         </div>
       </div>
@@ -335,13 +691,55 @@ async function loadSettings(el) {
         </div>
       </div>
 
+      <!-- Deconnexion -->
+      <div class="card settings-section" style="grid-column:1/-1;border-color:rgba(239,68,68,.15)">
+        <div class="control-section-title" style="color:var(--red)">Deconnexion</div>
+        <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Se deconnecter supprime le token local et revient a l'ecran de connexion.</p>
+        <button class="btn btn-red" style="width:100%" onclick="disconnect()">Se deconnecter</button>
+      </div>
+
     </div>`;
+
+  // Load active sessions
+  const sessions = await dbQuery("SELECT CAST(user_id AS CHAR) AS user_id, status, last_seen FROM user_presence WHERE status='online'");
+  const sessEl = document.getElementById('settingsSessions');
+  if (!sessions.length || sessions[0]?.error) {
+    sessEl.innerHTML = '<div style="font-size:12px;color:var(--muted)">Aucune session active</div>';
+  } else {
+    const sUserCache = await fetchUsersBatch(sessions.map(s => s.user_id));
+    sessEl.innerHTML = sessions.map(s => {
+      const u = sUserCache[s.user_id];
+      const av = u ? getUserAvatar(s.user_id, u.avatar, 32) : null;
+      const name = u ? esc(u.username) : s.user_id;
+      return `<div class="server-item">
+        ${av ? `<img src="${av}" style="width:28px;height:28px;border-radius:50%">` : '<div style="width:28px;height:28px;border-radius:50%;background:var(--bg2)"></div>'}
+        <div class="server-info"><div class="name">${name}</div><div class="id"><span class="dot dot-green dot-pulse" style="width:6px;height:6px"></span> En ligne · ${fmtDateTime(s.last_seen)}</div></div>
+      </div>`;
+    }).join('');
+  }
 
   // Check DB health
   try {
     const h = await fetch(`${BACKEND}/health`).then(r => r.json());
     if (h.status !== 'ok') document.getElementById('settingsDbStatus').innerHTML = '<span class="dot dot-red" style="width:6px;height:6px"></span> Erreur';
   } catch { document.getElementById('settingsDbStatus').innerHTML = '<span class="dot dot-red" style="width:6px;height:6px"></span> Hors ligne'; }
+
+  fetchTesterAvatars(testers);
+}
+
+async function fetchTesterAvatars(testers) {
+  await Promise.all(testers.filter(t => t.discord_id).map(async t => {
+    const did = String(t.discord_id);
+    const avEl = document.getElementById(`testerAv-${did}`);
+    if (!avEl) return;
+    const cached = _userCacheGlobal[did];
+    const u = cached || await discordGet(`/users/${did}`);
+    if (u && !u.error) {
+      if (!cached) _userCacheGlobal[did] = u;
+      const url = getUserAvatar(did, u.avatar, 64);
+      avEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    }
+  }));
 }
 
 async function settingsSaveToken() {
@@ -361,11 +759,11 @@ async function settingsGenerateCode() {
   const username = document.getElementById('settingsNewTesterName').value.trim();
   const discordId = document.getElementById('settingsNewTesterId').value.trim();
   const code = 'SILVER-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-  await dbQuery("INSERT INTO tester_codes (code, discord_id, discord_username, created_at) VALUES (%s,%s,%s,NOW())",
+  await dbQuery("INSERT INTO tester_codes (code, discord_id, label, created_at) VALUES (%s,%s,%s,NOW())",
     [code, discordId || null, username || null]);
 
-  const githubLink = 'https://github.com/Tib688/SilverApp/releases';
-  const invitation = `Silver App - Invitation Testeur\nUtilisateur: ${username || discordId || 'Nouveau testeur'}\nCode: ${code}\nTelecharger: ${githubLink}`;
+  const githubLink = 'https://github.com/Tib688/SilverApp/releases/tag/V2';
+  const invitation = `Hey ! Tu as ete invite a tester **Silver Bot** !\n\nPour acceder a l'app :\n\n1. Telecharge **SilverApp.exe** ici :\n${githubLink}\n\n2. Lance l'app\n\n3. Entre ton **Discord ID** et ce code d'invitation :\n\n**Code : ${code}**\n\nA bientot sur Silver Bot !`;
   try { await navigator.clipboard.writeText(invitation); } catch {}
 
   document.getElementById('settingsCodeResult').innerHTML = `
@@ -373,17 +771,33 @@ async function settingsGenerateCode() {
       <div style="font-size:12px;color:var(--green);font-weight:700">Code genere et copie !</div>
       <div style="font-size:14px;color:var(--bright);font-family:monospace;margin-top:4px">${code}</div>
     </div>`;
-  setTimeout(() => loadSettings(document.getElementById('content')), 2000);
+  spawnConfetti(window.innerWidth / 2, 200);
+  // Refresh tester list
+  const updatedTesters = await dbQuery("SELECT code, CAST(discord_id AS CHAR) AS discord_id, label AS discord_username, created_at FROM tester_codes ORDER BY created_at DESC");
+  if (updatedTesters.length && !updatedTesters[0]?.error) {
+    document.getElementById('settingsTesterList').innerHTML = updatedTesters.map(t => `
+      <div class="server-item">
+        <div class="server-icon tester-avatar-slot" id="testerAv-${String(t.discord_id || t.code)}" style="width:32px;height:32px;font-size:12px">${(t.discord_username || '?')[0].toUpperCase()}</div>
+        <div class="server-info" style="flex:1">
+          <div class="name">${esc(t.discord_username || 'Testeur')}</div>
+          <div class="id">${t.discord_id || '—'} · Code: <code>${esc(t.code)}</code></div>
+        </div>
+        <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="settingsCopyInvite('${esc(t.code)}','${esc(t.discord_username || '')}')">Copier invite</button>
+        <button class="btn btn-danger" style="padding:4px 10px;font-size:10px" onclick="settingsDeleteTester('${esc(t.code)}')">Suppr</button>
+      </div>
+    `).join('');
+    fetchTesterAvatars(updatedTesters);
+  }
 }
 
 function settingsCopyInvite(code, username) {
-  const githubLink = 'https://github.com/Tib688/SilverApp/releases';
-  const invitation = `Silver App - Invitation Testeur\nUtilisateur: ${username || 'Testeur'}\nCode: ${code}\nTelecharger: ${githubLink}`;
+  const githubLink = 'https://github.com/Tib688/SilverApp/releases/tag/V2';
+  const invitation = `Hey ! Tu as ete invite a tester **Silver Bot** !\n\nPour acceder a l'app :\n\n1. Telecharge **SilverApp.exe** ici :\n${githubLink}\n\n2. Lance l'app\n\n3. Entre ton **Discord ID** et ce code d'invitation :\n\n**Code : ${code}**\n\nA bientot sur Silver Bot !`;
   navigator.clipboard.writeText(invitation);
 }
 
-async function settingsDeleteTester(id) {
-  await dbQuery("DELETE FROM tester_codes WHERE id=%s", [id]);
+async function settingsDeleteTester(code) {
+  await dbQuery("DELETE FROM tester_codes WHERE code=%s", [code]);
   loadSettings(document.getElementById('content'));
 }
 
@@ -398,8 +812,8 @@ async function loadForgotCodes(el) {
 
 async function forgotLoadList() {
   const listEl = document.getElementById('forgotList');
-  const rows = await dbQuery("SELECT id, discord_id, discord_username, status, created_at FROM forgot_code_requests ORDER BY created_at DESC LIMIT 50");
-  if (!rows.length) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">🔑</div><p>Aucune demande</p></div>'; return; }
+  const rows = await dbQuery("SELECT id, discord_id, username AS discord_username, status, created_at FROM forgot_code_requests ORDER BY created_at DESC LIMIT 50");
+  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">🔑</div><p>Aucune demande</p></div>'; return; }
 
   listEl.innerHTML = rows.map(r => {
     const isPending = r.status === 'pending';
@@ -422,8 +836,8 @@ async function forgotGenerate(requestId, discordId, username) {
   await dbQuery("UPDATE forgot_code_requests SET status='resolved' WHERE id=%s", [requestId]);
   await dbQuery("UPDATE tester_codes SET code=%s WHERE discord_id=%s", [code, discordId]);
 
-  const githubLink = 'https://github.com/Tib688/SilverApp/releases';
-  const invitation = `Silver App - Code Testeur\nUtilisateur: ${username || discordId}\nNouveau code: ${code}\nTelecharger: ${githubLink}`;
+  const githubLink = 'https://github.com/Tib688/SilverApp/releases/tag/V2';
+  const invitation = `Hey ! Voici ton nouveau code pour **Silver Bot** !\n\n1. Telecharge **SilverApp.exe** ici :\n${githubLink}\n\n2. Lance l'app\n\n3. Entre ton **Discord ID** et ce code :\n\n**Code : ${code}**\n\nA bientot sur Silver Bot !`;
 
   try { await navigator.clipboard.writeText(invitation); } catch {}
 
@@ -470,16 +884,16 @@ async function announceSubmit() {
   const title = document.getElementById('announceTitle').value.trim();
   const content = document.getElementById('announceContent').value.trim();
   if (!title) return;
-  await dbQuery("INSERT INTO tester_announcements (author_id, author_name, title, content, created_at) VALUES (%s,%s,%s,%s,NOW())",
-    ['1504594533521031219', 'Tib (Owner)', title, content]);
+  await dbQuery("INSERT INTO tester_announcements (author, title, content, created_at) VALUES (%s,%s,%s,NOW())",
+    ['Tib (Owner)', title, content]);
   document.getElementById('announceFormContainer').innerHTML = '';
   announceLoadList();
 }
 
 async function announceLoadList() {
   const listEl = document.getElementById('announceList');
-  const rows = await dbQuery("SELECT id, author_name, title, content, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 30");
-  if (!rows.length) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">📢</div><p>Aucune annonce</p></div>'; return; }
+  const rows = await dbQuery("SELECT id, author AS author_name, title, content, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 30");
+  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">📢</div><p>Aucune annonce</p></div>'; return; }
 
   listEl.innerHTML = rows.map(r => `
     <div class="card announce-card slide-in" style="margin-bottom:10px">
@@ -503,7 +917,7 @@ async function announceDelete(id) {
 let tasksFilter = 'all';
 
 async function loadTasks(el) {
-  const testers = await dbQuery("SELECT code, discord_id, discord_username FROM tester_codes ORDER BY created_at DESC");
+  const testers = await dbQuery("SELECT code, CAST(discord_id AS CHAR) AS discord_id, label AS discord_username FROM tester_codes ORDER BY created_at DESC");
   el.innerHTML = `
     <div class="page-header fade-in"><h2>Taches Testeurs</h2><p>Creer et suivre les taches</p></div>
     <div class="bugs-toolbar fade-in">
@@ -555,8 +969,8 @@ async function taskSubmit() {
   const assignee = document.getElementById('taskAssignee').value;
   const priority = document.getElementById('taskPriority').value;
   if (!title) return;
-  await dbQuery("INSERT INTO tester_tasks (title, description, assigned_to, priority, status, created_by, created_at) VALUES (%s,%s,%s,%s,'todo',%s,NOW())",
-    [title, desc, assignee || null, priority, '1504594533521031219']);
+  await dbQuery("INSERT INTO tester_tasks (title, description, assigned_to, priority, status, created_at) VALUES (%s,%s,%s,%s,'todo',NOW())",
+    [title, desc, assignee || null, priority]);
   document.getElementById('taskFormContainer').innerHTML = '';
   taskLoadList();
 }
@@ -618,6 +1032,7 @@ function taskFilter(f, btn) {
 
 async function taskSetStatus(id, status) {
   await dbQuery("UPDATE tester_tasks SET status=%s WHERE id=%s", [status, id]);
+  if (status === 'done') spawnConfetti(window.innerWidth / 2, 300);
   taskLoadList();
 }
 
@@ -634,10 +1049,10 @@ async function loadBugs(el) {
     <div class="bugs-toolbar fade-in">
       <button class="btn btn-primary" onclick="bugShowForm()">+ Signaler un bug</button>
       <div class="bugs-filters">
-        <button class="btn btn-secondary bugs-filter-btn active" onclick="bugFilter('all')">Tous</button>
-        <button class="btn btn-secondary bugs-filter-btn" onclick="bugFilter('open')">Ouverts</button>
-        <button class="btn btn-secondary bugs-filter-btn" onclick="bugFilter('fixed')">Fixes</button>
-        <button class="btn btn-secondary bugs-filter-btn" onclick="bugFilter('closed')">Fermes</button>
+        <button class="btn btn-secondary bugs-filter-btn active" onclick="bugFilter('all',this)">Tous</button>
+        <button class="btn btn-secondary bugs-filter-btn" onclick="bugFilter('open',this)">Ouverts</button>
+        <button class="btn btn-secondary bugs-filter-btn" onclick="bugFilter('fixed',this)">Fixes</button>
+        <button class="btn btn-secondary bugs-filter-btn" onclick="bugFilter('closed',this)">Fermes</button>
       </div>
     </div>
     <div id="bugFormContainer"></div>
@@ -672,19 +1087,19 @@ async function bugSubmit() {
   const desc = document.getElementById('bugDesc').value.trim();
   const severity = document.getElementById('bugSeverity').value;
   if (!title) { document.getElementById('bugFormStatus').textContent = 'Titre requis'; return; }
-  await dbQuery("INSERT INTO tester_bugs (reporter_id, reporter_name, title, description, severity, status, created_at) VALUES (%s, %s, %s, %s, %s, 'open', NOW())",
-    ['1504594533521031219', 'Tib (Owner)', title, desc, severity]);
+  await dbQuery("INSERT INTO tester_bugs (reporter, title, description, severity, status, created_at) VALUES (%s, %s, %s, %s, 'open', NOW())",
+    ['Tib (Owner)', title, desc, severity]);
   document.getElementById('bugFormContainer').innerHTML = '';
   bugLoadList('all');
 }
 
 async function bugLoadList(filter) {
   const listEl = document.getElementById('bugsList');
-  let query = "SELECT id, reporter_name, title, description, severity, status, created_at FROM tester_bugs";
+  let query = "SELECT id, reporter AS reporter_name, title, description, severity, status, created_at FROM tester_bugs";
   if (filter && filter !== 'all') query += ` WHERE status='${filter}'`;
   query += " ORDER BY created_at DESC LIMIT 50";
   const rows = await dbQuery(query);
-  if (!rows.length) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">🐛</div><p>Aucun bug signale</p></div>'; return; }
+  if (!rows.length || rows[0]?.error) { listEl.innerHTML = '<div class="coming-soon"><div class="icon">🐛</div><p>Aucun bug signale</p></div>'; return; }
 
   listEl.innerHTML = rows.map(r => {
     const sevColors = { low: 'var(--blue)', medium: 'var(--gold)', high: 'var(--red)', critical: '#ff2d55' };
@@ -706,14 +1121,15 @@ async function bugLoadList(filter) {
   }).join('');
 }
 
-function bugFilter(filter) {
+function bugFilter(filter, btn) {
   document.querySelectorAll('.bugs-filter-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
   bugLoadList(filter);
 }
 
 async function bugSetStatus(id, status) {
   await dbQuery("UPDATE tester_bugs SET status=%s WHERE id=%s", [status, id]);
+  if (status === 'fixed') spawnConfetti(window.innerWidth / 2, 300);
   const activeFilter = document.querySelector('.bugs-filter-btn.active');
   bugLoadList(activeFilter ? activeFilter.textContent.toLowerCase().replace('tous','all').replace('ouverts','open').replace('fixes','fixed').replace('fermes','closed') : 'all');
 }
@@ -722,6 +1138,9 @@ async function bugSetStatus(id, status) {
 
 let testlabCommands = [];
 let testlabMessages = [];
+
+let testlabBotAvatar = null;
+let testlabUserAvatar = null;
 
 async function loadTestLab(el) {
   el.innerHTML = `
@@ -752,9 +1171,15 @@ async function loadTestLab(el) {
       </div>
     </div>`;
 
-  const res = await fetch(`${BACKEND}/testlab/commands`);
+  const [res, bot, owner] = await Promise.all([
+    fetch(`${BACKEND}/testlab/commands`),
+    discordGet('/users/@me'),
+    discordGet('/users/1504594533521031219'),
+  ]);
   testlabCommands = await res.json();
   testlabMessages = [];
+  testlabBotAvatar = (bot && !bot.error) ? getBotAvatar(bot, 64) : null;
+  testlabUserAvatar = (owner && !owner.error) ? getUserAvatar('1504594533521031219', owner.avatar, 64) : null;
   renderTestlabCmdList(testlabCommands);
 }
 
@@ -834,10 +1259,12 @@ async function testlabSend() {
 
 function renderTestlabChat() {
   const chat = document.getElementById('testlabChat');
+  const userAv = testlabUserAvatar ? `<img src="${testlabUserAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : 'T';
+  const botAv = testlabBotAvatar ? `<img src="${testlabBotAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '⚡';
   chat.innerHTML = testlabMessages.map(m => {
     if (m.type === 'user') {
       return `<div class="testlab-msg testlab-msg-user">
-        <div class="testlab-msg-avatar">T</div>
+        <div class="testlab-msg-avatar">${userAv}</div>
         <div class="testlab-msg-body">
           <div class="testlab-msg-name" style="color:var(--accent)">Tib</div>
           <div class="testlab-msg-content">${esc(m.content)}</div>
@@ -845,14 +1272,10 @@ function renderTestlabChat() {
       </div>`;
     }
     let html = '';
-    if (m.content) {
-      html += `<div class="testlab-msg-content">${esc(m.content)}</div>`;
-    }
-    if (m.embed) {
-      html += renderDiscordEmbed(m.embed);
-    }
+    if (m.content) html += `<div class="testlab-msg-content">${esc(m.content)}</div>`;
+    if (m.embed) html += renderDiscordEmbed(m.embed);
     return `<div class="testlab-msg testlab-msg-bot">
-      <div class="testlab-msg-avatar bot-avatar">⚡</div>
+      <div class="testlab-msg-avatar bot-avatar">${botAv}</div>
       <div class="testlab-msg-body">
         <div class="testlab-msg-name" style="color:var(--cyan)">Silver Bot</div>
         ${html}
@@ -900,7 +1323,7 @@ let chatInterval = null;
 async function loadChat(el) {
   if (chatInterval) { clearInterval(chatInterval); chatInterval = null; }
 
-  const testers = await dbQuery("SELECT code, discord_id, discord_username, created_at FROM tester_codes ORDER BY created_at DESC");
+  const testers = await dbQuery("SELECT code, CAST(discord_id AS CHAR) AS discord_id, label AS discord_username, created_at FROM tester_codes ORDER BY created_at DESC");
   chatTesters = testers;
 
   el.innerHTML = `
@@ -953,25 +1376,27 @@ async function loadChatPresence() {
   for (const p of presences) {
     const dot = document.getElementById(`chatDot-${p.user_id}`);
     const sub = document.getElementById(`chatPresence-${p.user_id}`);
+    const av = document.getElementById(`chatAvatar-${p.user_id}`);
     if (dot) {
       const online = p.status === 'online';
       dot.innerHTML = `<span class="dot ${online ? 'dot-green dot-pulse' : 'dot-red'}" style="width:6px;height:6px"></span>`;
       if (sub) sub.textContent = online ? 'En ligne' : (p.last_seen ? `Vu ${fmtDate(p.last_seen)}` : 'Hors ligne');
+      if (av) { av.classList.remove('status-ring-online', 'status-ring-offline'); av.classList.add('status-ring', online ? 'status-ring-online' : 'status-ring-offline'); }
     }
   }
 }
 
 async function loadChatAvatars() {
-  for (const t of chatTesters) {
-    if (!t.discord_id) continue;
+  await Promise.all(chatTesters.filter(t => t.discord_id).map(async t => {
     const el = document.getElementById(`chatAvatar-${t.discord_id}`);
-    if (!el) continue;
-    const user = await discordGet(`/users/${t.discord_id}`);
+    if (!el) return;
+    const cached = _userCacheGlobal[t.discord_id];
+    const user = cached || await discordGet(`/users/${t.discord_id}`);
     if (user && !user.error) {
-      const url = getUserAvatar(t.discord_id, user.avatar, 64);
-      el.innerHTML = `<img src="${url}">`;
+      if (!cached) _userCacheGlobal[t.discord_id] = user;
+      el.innerHTML = `<img src="${getUserAvatar(t.discord_id, user.avatar, 64)}">`;
     }
-  }
+  }));
 }
 
 function chatSwitchGeneral() {
@@ -1093,7 +1518,7 @@ async function loadBotInfo(el) {
 
   const [bot, guilds] = await Promise.all([
     discordGet('/users/@me'),
-    discordGet('/users/@me/guilds'),
+    getCachedGuilds(),
   ]);
 
   if (bot.error) {
@@ -1222,7 +1647,7 @@ async function loadControl(el) {
 
     </div>`;
 
-  controlGuilds = await discordGet('/users/@me/guilds');
+  controlGuilds = await getCachedGuilds();
   if (!Array.isArray(controlGuilds)) controlGuilds = [];
   const sel = document.getElementById('ctrlGuild');
   sel.innerHTML = '<option value="">-- Serveur --</option>' + controlGuilds.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
@@ -1305,10 +1730,22 @@ async function controlNickname() {
 // ═══ HELPERS ═════════════════════════════════════════════════════════════════
 
 const _userCacheGlobal = {};
+let _botInfoCache = null;
+let _guildsCache = null;
+let _guildsCacheTime = 0;
+
+async function getCachedGuilds() {
+  if (_guildsCache && Date.now() - _guildsCacheTime < 60000) return _guildsCache;
+  const g = await discordGet('/users/@me/guilds');
+  _guildsCache = Array.isArray(g) ? g : [];
+  _guildsCacheTime = Date.now();
+  return _guildsCache;
+}
 
 async function fetchUsersBatch(userIds) {
   const results = {};
-  const toFetch = userIds.filter(id => {
+  const ids = userIds.map(String);
+  const toFetch = ids.filter(id => {
     if (_userCacheGlobal[id]) { results[id] = _userCacheGlobal[id]; return false; }
     return true;
   });
@@ -1322,9 +1759,10 @@ async function fetchUsersBatch(userIds) {
 
 function avatarCell(userId, cache) {
   if (!userId) return '—';
-  const user = cache[userId];
-  if (!user) return `<span style="font-size:11px;color:var(--dim)">${userId}</span>`;
-  const url = getUserAvatar(userId, user.avatar, 32);
+  const id = String(userId);
+  const user = cache[id];
+  if (!user) return `<span style="font-size:11px;color:var(--dim)">${id}</span>`;
+  const url = getUserAvatar(id, user.avatar, 32);
   return `<div style="display:flex;align-items:center;gap:8px"><img src="${url}" style="width:22px;height:22px;border-radius:50%"><span style="font-size:12px;color:var(--bright)">${esc(user.username)}</span></div>`;
 }
 
@@ -1344,35 +1782,719 @@ function sectionHeader(text) {
   return `<div class="section-header"><div class="bar"></div><h3>${text}</h3><div class="line"></div></div>`;
 }
 
+let _tableCounter = 0;
+
 function buildTable(headers, rows) {
-  let html = '<div class="card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse">';
-  html += '<thead><tr>' + headers.map(h => `<th style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg2);border-bottom:1px solid var(--border)">${h}</th>`).join('') + '</tr></thead>';
-  html += '<tbody>';
-  rows.forEach((row, i) => {
-    const bg = i % 2 === 0 ? 'transparent' : 'var(--bg2)';
-    html += '<tr style="transition:background .1s">';
-    row.forEach(val => html += `<td style="padding:10px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.02);background:${bg}">${val}</td>`);
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
+  const tid = `tbl${++_tableCounter}`;
+  window['_td_' + tid] = rows;
+  let html = `<div class="card" style="padding:0;overflow:hidden"><table id="${tid}" style="width:100%;border-collapse:collapse">`;
+  html += '<thead><tr>' + headers.map((h, i) => `<th class="sortable" onclick="sortTable('${tid}',${i})" style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg2);border-bottom:1px solid var(--border);cursor:pointer">${h}<span class="sort-icon" style="margin-left:4px;font-size:9px;opacity:.3">↕</span></th>`).join('') + '</tr></thead>';
+  html += '<tbody>' + renderTbody(rows) + '</tbody></table></div>';
   return html;
+}
+
+function renderTbody(rows) {
+  return rows.map((row, i) => {
+    const bg = i % 2 === 0 ? 'transparent' : 'var(--bg2)';
+    return '<tr style="transition:background .1s">' + row.map(val => `<td style="padding:10px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.02);background:${bg}">${val}</td>`).join('') + '</tr>';
+  }).join('');
+}
+
+function sortTable(tid, col) {
+  const table = document.getElementById(tid);
+  const data = window['_td_' + tid];
+  if (!table || !data) return;
+  const th = table.querySelectorAll('th')[col];
+  const asc = th.classList.contains('sort-asc');
+  table.querySelectorAll('th').forEach(h => {
+    h.classList.remove('sort-asc', 'sort-desc');
+    const ic = h.querySelector('.sort-icon');
+    if (ic) ic.textContent = '↕';
+  });
+  const strip = s => String(s).replace(/<[^>]*>/g, '').replace(/\s/g, '').trim();
+  const sorted = [...data].sort((a, b) => {
+    let va = strip(a[col]), vb = strip(b[col]);
+    const na = parseFloat(va.replace(',', '.')), nb = parseFloat(vb.replace(',', '.'));
+    if (!isNaN(na) && !isNaN(nb)) return asc ? nb - na : na - nb;
+    return asc ? vb.localeCompare(va, 'fr') : va.localeCompare(vb, 'fr');
+  });
+  th.classList.add(asc ? 'sort-desc' : 'sort-asc');
+  th.querySelector('.sort-icon').textContent = asc ? '↓' : '↑';
+  table.querySelector('tbody').innerHTML = renderTbody(sorted);
+  window['_td_' + tid] = sorted;
 }
 
 function animateValue(id, start, end, duration) {
   const el = document.getElementById(id);
   if (!el) return;
   if (end === 0) { el.textContent = '0'; return; }
-  const steps = 15;
-  const increment = (end - start) / steps;
-  let current = start;
-  let step = 0;
-  const timer = setInterval(() => {
-    step++;
-    current += increment;
-    el.textContent = Math.round(current).toLocaleString('fr-FR');
-    if (step >= steps) { clearInterval(timer); el.textContent = end.toLocaleString('fr-FR'); }
-  }, duration / steps);
+  const t0 = performance.now();
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  function tick(now) {
+    const t = Math.min((now - t0) / duration, 1);
+    el.textContent = Math.round(start + (end - start) * ease(t)).toLocaleString('fr-FR');
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ═══ HISTORIQUE CONNEXIONS ═══════════════════════════════════════════════════
+
+async function loadHistory(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>Historique</h2><p>Connexions et sessions</p></div>
+    <div id="historyContent"><div class="loading"><div class="spinner"></div></div></div>`;
+  const rows = await dbQuery("SELECT CAST(user_id AS CHAR) AS user_id, status, last_seen FROM user_presence ORDER BY last_seen DESC LIMIT 50");
+  if (!rows.length || rows[0]?.error) { document.getElementById('historyContent').innerHTML = '<div class="coming-soon"><div class="icon">⏱</div><p>Aucune connexion</p></div>'; return; }
+  const userIds = rows.map(r => r.user_id).filter(Boolean);
+  const userCache = await fetchUsersBatch(userIds);
+  document.getElementById('historyContent').innerHTML = buildTable(['Utilisateur', 'Statut', 'Derniere activite'],
+    rows.map(r => {
+      const badge = r.status === 'online' ? '<span class="badge badge-green">En ligne</span>' : '<span class="badge badge-red">Hors ligne</span>';
+      return [avatarCell(r.user_id, userCache), badge, fmtDateTime(r.last_seen)];
+    }));
+}
+
+// ═══ COMPARATEUR MEMBRES ════════════════════════════════════════════════════
+
+async function loadCompare(el) {
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>Comparateur</h2><p>Comparer deux membres</p></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center" class="fade-in">
+      <input type="text" id="cmpId1" placeholder="User ID #1" style="max-width:220px" inputmode="numeric">
+      <span style="color:var(--muted);font-size:14px;font-weight:700">VS</span>
+      <input type="text" id="cmpId2" placeholder="User ID #2" style="max-width:220px" inputmode="numeric">
+      <button class="btn btn-primary" onclick="runCompare()">Comparer</button>
+    </div>
+    <div id="cmpResult"></div>`;
+}
+
+async function runCompare() {
+  const id1 = document.getElementById('cmpId1').value.trim();
+  const id2 = document.getElementById('cmpId2').value.trim();
+  if (!id1 || !id2) return;
+  document.getElementById('cmpResult').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const [u1, u2, xp1, xp2, w1, w2, m1, m2] = await Promise.all([
+    discordGet(`/users/${id1}`), discordGet(`/users/${id2}`),
+    dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp WHERE user_id=%s', [id1]),
+    dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp WHERE user_id=%s', [id2]),
+    dbScalar('SELECT COUNT(*) FROM warnings WHERE user_id=%s', [id1]),
+    dbScalar('SELECT COUNT(*) FROM warnings WHERE user_id=%s', [id2]),
+    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM user_xp WHERE user_id=%s', [id1]),
+    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM user_xp WHERE user_id=%s', [id2]),
+  ]);
+  const name1 = u1?.username || id1, name2 = u2?.username || id2;
+  const av1 = u1 && !u1.error ? getUserAvatar(id1, u1.avatar, 128) : null;
+  const av2 = u2 && !u2.error ? getUserAvatar(id2, u2.avatar, 128) : null;
+  const lv1 = Math.floor(Math.sqrt((xp1||0)/100)), lv2 = Math.floor(Math.sqrt((xp2||0)/100));
+  const rows = [
+    ['Niveau', lv1, lv2], ['XP', (xp1||0).toLocaleString('fr-FR'), (xp2||0).toLocaleString('fr-FR')],
+    ['Messages', m1||0, m2||0], ['Warns', w1||0, w2||0],
+  ];
+  document.getElementById('cmpResult').innerHTML = `
+    <div class="cmp-grid fade-in">
+      <div class="cmp-player">
+        ${av1 ? `<img src="${av1}" style="width:64px;height:64px;border-radius:50%">` : ''}
+        <div style="font-size:16px;font-weight:700;color:var(--bright)">${esc(name1)}</div>
+      </div>
+      <div class="cmp-vs">VS</div>
+      <div class="cmp-player">
+        ${av2 ? `<img src="${av2}" style="width:64px;height:64px;border-radius:50%">` : ''}
+        <div style="font-size:16px;font-weight:700;color:var(--bright)">${esc(name2)}</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px;padding:0;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        ${rows.map(([label, v1, v2]) => {
+          const win1 = Number(String(v1).replace(/\s/g,'')) > Number(String(v2).replace(/\s/g,''));
+          const win2 = Number(String(v2).replace(/\s/g,'')) > Number(String(v1).replace(/\s/g,''));
+          return `<tr>
+            <td style="padding:12px 16px;font-size:14px;font-weight:700;color:${win1?'var(--green)':'var(--text)'};text-align:center;width:33%">${v1}</td>
+            <td style="padding:12px 16px;font-size:11px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:1px;background:var(--bg2)">${label}</td>
+            <td style="padding:12px 16px;font-size:14px;font-weight:700;color:${win2?'var(--green)':'var(--text)'};text-align:center;width:33%">${v2}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>`;
+}
+
+// ═══ PING API ═══════════════════════════════════════════════════════════════
+
+async function updatePing() {
+  try {
+    const t1 = performance.now();
+    await fetch(`${BACKEND}/health`);
+    const backendMs = Math.round(performance.now() - t1);
+    const el1 = document.getElementById('pingBackend');
+    if (el1) { el1.textContent = `API: ${backendMs}ms`; el1.style.color = backendMs < 200 ? 'var(--green)' : backendMs < 500 ? 'var(--gold)' : 'var(--red)'; }
+  } catch {}
+  try {
+    const t2 = performance.now();
+    await discordGet('/users/@me');
+    const discordMs = Math.round(performance.now() - t2);
+    const el2 = document.getElementById('pingDiscord');
+    if (el2) { el2.textContent = `Discord: ${discordMs}ms`; el2.style.color = discordMs < 300 ? 'var(--green)' : discordMs < 800 ? 'var(--gold)' : 'var(--red)'; }
+  } catch {}
+}
+updatePing();
+setInterval(updatePing, 10000);
+
+// ═══ THEME ACCENT ═══════════════════════════════════════════════════════════
+
+const themeColors = {
+  silver: { accent: '#8b95b0', silver: '#a8b0c4' },
+  blue: { accent: '#60a5fa', silver: '#93bbfc' },
+  purple: { accent: '#a78bfa', silver: '#bda4fc' },
+  green: { accent: '#34d399', silver: '#6ee7b7' },
+  red: { accent: '#f87171', silver: '#fca5a5' },
+  gold: { accent: '#fbbf24', silver: '#fcd34d' },
+};
+
+function applyTheme(name) {
+  const t = themeColors[name];
+  if (!t) return;
+  document.documentElement.style.setProperty('--accent', t.accent);
+  document.documentElement.style.setProperty('--silver', t.silver);
+  localStorage.setItem('silverapp_theme', name);
+}
+
+(function() {
+  const saved = localStorage.getItem('silverapp_theme');
+  if (saved && themeColors[saved]) applyTheme(saved);
+})();
+
+// ═══ MODE MAINTENANCE ═══════════════════════════════════════════════════════
+
+let maintenanceMode = localStorage.getItem('silverapp_maintenance') === 'true';
+
+async function toggleMaintenance() {
+  maintenanceMode = !maintenanceMode;
+  localStorage.setItem('silverapp_maintenance', maintenanceMode);
+  const btn = document.getElementById('maintBtn');
+  if (btn) {
+    btn.textContent = maintenanceMode ? 'Desactiver maintenance' : 'Activer maintenance';
+    btn.className = maintenanceMode ? 'btn btn-danger' : 'btn btn-primary';
+  }
+  const status = document.getElementById('maintStatus');
+  if (maintenanceMode) {
+    const guilds = await getCachedGuilds();
+    let sent = 0;
+    for (const g of guilds) {
+      const channels = await discordGet(`/guilds/${g.id}/channels`);
+      if (!Array.isArray(channels)) continue;
+      const general = channels.find(c => c.type === 0);
+      if (general) {
+        await discordPost(`/channels/${general.id}/messages`, { embeds: [{ title: 'Mode Maintenance', description: 'Le bot est en maintenance. Il sera de retour bientot.', color: 0xFBBF24 }] });
+        sent++;
+      }
+    }
+    if (status) status.textContent = `Maintenance activee — ${sent} serveur(s) notifie(s)`;
+  } else {
+    if (status) status.textContent = 'Maintenance desactivee';
+  }
+  setTimeout(() => { if (status) status.textContent = ''; }, 4000);
+}
+
+// ═══ SERVER DETAIL ══════════════════════════════════════════════════════════
+
+async function showServerDetail(guildId, guildName) {
+  const content = document.getElementById('content');
+  content.innerHTML = `<div class="page-header fade-in"><h2>${esc(guildName)}</h2><p>Details du serveur</p><button class="btn btn-secondary" style="margin-top:8px;padding:6px 14px;font-size:11px" onclick="showPage('overview')">Retour</button></div>
+    <div id="serverDetailContent"><div class="loading"><div class="spinner"></div></div></div>`;
+  const [guild, channels] = await Promise.all([
+    discordGet(`/guilds/${guildId}?with_counts=true`),
+    discordGet(`/guilds/${guildId}/channels`),
+  ]);
+  if (guild.error) { document.getElementById('serverDetailContent').innerHTML = '<div class="coming-soon"><p>Impossible de charger</p></div>'; return; }
+  const textCh = Array.isArray(channels) ? channels.filter(c => c.type === 0) : [];
+  const voiceCh = Array.isArray(channels) ? channels.filter(c => c.type === 2) : [];
+  const catCh = Array.isArray(channels) ? channels.filter(c => c.type === 4) : [];
+  const icon = guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guildId}/${guild.icon}.png?size=128" style="width:64px;height:64px;border-radius:16px">` : '';
+
+  let html = `<div class="card fade-in" style="display:flex;align-items:center;gap:16px;padding:18px;margin-bottom:14px">
+    ${icon}
+    <div style="flex:1">
+      <div style="font-size:18px;font-weight:700;color:var(--bright)">${esc(guild.name)}</div>
+      <div style="font-size:11px;color:var(--dim)">${guildId} · ${guild.approximate_member_count || '?'} membres</div>
+    </div>
+  </div>`;
+  html += `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Membres</div><div class="stat-value">${guild.approximate_member_count || '?'}</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--cyan)"></div><div class="stat-label">En ligne</div><div class="stat-value">${guild.approximate_presence_count || '?'}</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--accent)"></div><div class="stat-label">Channels</div><div class="stat-value">${textCh.length + voiceCh.length}</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">Categories</div><div class="stat-value">${catCh.length}</div></div>
+  </div>`;
+  if (textCh.length) {
+    html += sectionHeader(`Channels texte (${textCh.length})`);
+    html += '<div class="card">' + textCh.sort((a,b)=>a.position-b.position).map(c => `<div class="server-item"><span style="color:var(--muted)">#</span><div class="server-info"><div class="name">${esc(c.name)}</div><div class="id">${c.id}</div></div></div>`).join('') + '</div>';
+  }
+  if (voiceCh.length) {
+    html += sectionHeader(`Channels vocaux (${voiceCh.length})`);
+    html += '<div class="card">' + voiceCh.sort((a,b)=>a.position-b.position).map(c => `<div class="server-item"><span style="color:var(--muted)">🔊</span><div class="server-info"><div class="name">${esc(c.name)}</div><div class="id">${c.id}</div></div></div>`).join('') + '</div>';
+  }
+  document.getElementById('serverDetailContent').innerHTML = html;
+}
+
+// ═══ RECHERCHE GLOBALE (Ctrl+K) ═════════════════════════════════════════════
+
+function openSearch() {
+  if (document.getElementById('globalSearchOverlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'globalSearchOverlay';
+  overlay.className = 'search-overlay';
+  overlay.innerHTML = `<div class="search-box">
+    <input type="text" id="globalSearchInput" placeholder="Rechercher membre, serveur, page..." autofocus oninput="globalSearchUpdate()">
+    <div id="globalSearchResults" class="search-results"></div>
+  </div>`;
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+  document.getElementById('globalSearchInput').focus();
+}
+
+async function globalSearchUpdate() {
+  const q = document.getElementById('globalSearchInput').value.trim().toLowerCase();
+  const results = document.getElementById('globalSearchResults');
+  if (!q) { results.innerHTML = ''; return; }
+  let html = '';
+  const pages = [
+    ['overview','Vue d\'ensemble'],['leaderboard','Leaderboard'],['members','Membres'],['compare','Comparateur'],
+    ['control','Controle Bot'],['botinfo','Bot Info'],['chat','Chat Testeurs'],['bugs','Bugs Reports'],
+    ['tasks','Taches'],['announcements','Annonces'],['suggestions','Suggestions'],['testlab','Test Lab'],
+    ['forgot','Codes oublies'],['database','Base de donnees'],['history','Historique'],['settings','Parametres'],
+    ['stats','Statistiques'],['changelog','Changelog'],
+  ];
+  const matchedPages = pages.filter(([,name]) => name.toLowerCase().includes(q));
+  if (matchedPages.length) {
+    html += matchedPages.map(([id, name]) => `<div class="search-result-item" onclick="document.getElementById('globalSearchOverlay').remove();showPage('${id}')">${name}</div>`).join('');
+  }
+  if (/^\d{10,}$/.test(q)) {
+    html += `<div class="search-result-item" onclick="document.getElementById('globalSearchOverlay').remove();showPage('members');setTimeout(()=>{document.getElementById('memberSearch').value='${q}';searchMember()},100)">Rechercher membre ${q}</div>`;
+  }
+  const guilds = await getCachedGuilds();
+  const matchedGuilds = guilds.filter(g => g.name.toLowerCase().includes(q)).slice(0, 3);
+  matchedGuilds.forEach(g => {
+    html += `<div class="search-result-item" onclick="document.getElementById('globalSearchOverlay').remove();showServerDetail('${g.id}','${esc(g.name).replace(/'/g,"\\'")}')">${esc(g.name)}</div>`;
+  });
+  results.innerHTML = html || '<div style="padding:12px;color:var(--muted);font-size:12px">Aucun resultat</div>';
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape') { const o = document.getElementById('globalSearchOverlay'); if (o) o.remove(); }
+});
+
+// ═══ STATISTIQUES AVANCEES ══════════════════════════════════════════════════
+
+async function loadStats(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>Statistiques</h2><p>Analyse detaillee</p></div>
+    <div id="statsContent"><div class="loading"><div class="spinner"></div></div></div>`;
+  const [totalXp, totalMsgs, totalUsers, totalWarns, topDay, activeGuilds] = await Promise.all([
+    dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
+    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats'),
+    dbScalar('SELECT COUNT(DISTINCT user_id) FROM user_xp'),
+    dbScalar('SELECT COUNT(*) FROM warnings'),
+    dbQuery('SELECT DATE(created_at) as d, COUNT(*) as c FROM warnings GROUP BY d ORDER BY c DESC LIMIT 1'),
+    dbScalar('SELECT COUNT(DISTINCT guild_id) FROM user_xp'),
+  ]);
+  const avgXp = totalUsers > 0 ? Math.round(totalXp / totalUsers) : 0;
+  const avgMsgs = totalUsers > 0 ? Math.round(totalMsgs / totalUsers) : 0;
+  const peakDay = topDay.length && !topDay[0]?.error ? topDay[0] : null;
+
+  let html = `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">XP Total</div><div class="stat-value" style="font-size:18px">${totalXp.toLocaleString('fr-FR')}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--cyan)"></div><div class="stat-label">Messages Total</div><div class="stat-value" style="font-size:18px">${totalMsgs.toLocaleString('fr-FR')}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--accent)"></div><div class="stat-label">XP Moyen/User</div><div class="stat-value" style="font-size:18px">${avgXp.toLocaleString('fr-FR')}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Serveurs actifs</div><div class="stat-value">${activeGuilds}</div></div>
+  </div>`;
+  html += `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Utilisateurs</div><div class="stat-value">${totalUsers}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Warns Total</div><div class="stat-value">${totalWarns}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Msgs Moyen/User</div><div class="stat-value">${avgMsgs}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:#c084fc"></div><div class="stat-label">Jour le + actif</div><div class="stat-value" style="font-size:12px">${peakDay ? peakDay.d : '—'}</div></div>
+  </div>`;
+
+  const xpByGuild = await dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp, SUM(messages_count) as msgs, COUNT(DISTINCT user_id) as users FROM user_xp GROUP BY guild_id ORDER BY xp DESC LIMIT 10');
+  if (xpByGuild.length && !xpByGuild[0]?.error) {
+    const guilds = await getCachedGuilds();
+    const gm = {}; guilds.forEach(g => gm[g.id] = g);
+    html += sectionHeader('Repartition par serveur');
+    html += buildTable(['Serveur', 'XP', 'Messages', 'Membres'],
+      xpByGuild.map(r => {
+        const g = gm[r.guild_id];
+        const icon = g && g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:20px;height:20px;border-radius:6px">` : '';
+        const name = g ? esc(g.name) : `...${r.guild_id.slice(-4)}`;
+        return [`<div style="display:flex;align-items:center;gap:8px">${icon}<span>${name}</span></div>`, (r.xp||0).toLocaleString('fr-FR'), r.msgs||0, r.users||0];
+      }));
+  }
+  document.getElementById('statsContent').innerHTML = html;
+}
+
+// ═══ STATS PAR CHANNEL ═════════════════════════════════════════════════════
+
+let channelGuildId = null;
+
+async function loadChannels(el) {
+  const guilds = await getCachedGuilds();
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>${t('channelStats')}</h2><p>${t('realtime')}</p></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <select id="channelGuildSelect" onchange="channelGuildChanged()" style="max-width:300px">
+        <option value="">${t('selectServer')}</option>
+        ${guilds.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="channelContent"></div>`;
+}
+
+async function channelGuildChanged() {
+  const guildId = document.getElementById('channelGuildSelect').value;
+  const container = document.getElementById('channelContent');
+  if (!guildId) { container.innerHTML = ''; return; }
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  const channels = await discordGet(`/guilds/${guildId}/channels`);
+  if (!Array.isArray(channels)) { container.innerHTML = `<div class="coming-soon"><p>${t('noData')}</p></div>`; return; }
+
+  const textChannels = channels.filter(c => c.type === 0).sort((a, b) => a.position - b.position);
+  const voiceChannels = channels.filter(c => c.type === 2).sort((a, b) => a.position - b.position);
+  const categories = channels.filter(c => c.type === 4).sort((a, b) => a.position - b.position);
+  const catMap = {};
+  categories.forEach(c => catMap[c.id] = c.name);
+
+  const channelData = await Promise.all(textChannels.slice(0, 20).map(async ch => {
+    try {
+      const msgs = await discordGet(`/channels/${ch.id}/messages?limit=100`);
+      if (!Array.isArray(msgs)) return { ch, count: 0, users: 0, recent: null };
+      const uniqueUsers = new Set(msgs.map(m => m.author?.id)).size;
+      const recent = msgs.length ? msgs[0] : null;
+      return { ch, count: msgs.length, users: uniqueUsers, recent };
+    } catch { return { ch, count: 0, users: 0, recent: null }; }
+  }));
+
+  channelData.sort((a, b) => b.count - a.count);
+  const totalMsgs = channelData.reduce((s, d) => s + d.count, 0);
+  const totalUsers = new Set(channelData.flatMap(d => [])).size;
+  const mostActive = channelData[0];
+
+  let html = `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Channels texte</div><div class="stat-value">${textChannels.length}</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">Channels vocaux</div><div class="stat-value">${voiceChannels.length}</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--cyan)"></div><div class="stat-label">Categories</div><div class="stat-value">${categories.length}</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">${t('topChannels')}</div><div class="stat-value" style="font-size:13px">${mostActive ? '#' + esc(mostActive.ch.name) : '—'}</div></div>
+  </div>`;
+
+  html += sectionHeader(`${t('topChannels')} (${channelData.length})`);
+  html += buildTable(['#', 'Channel', 'Categorie', t('msgCount'), t('activeUsers'), 'Activite'],
+    channelData.map((d, i) => {
+      const cat = d.ch.parent_id ? (catMap[d.ch.parent_id] || '—') : '—';
+      const pct = totalMsgs > 0 ? Math.round(d.count / totalMsgs * 100) : 0;
+      const bar = `<div style="display:flex;align-items:center;gap:6px"><div style="width:80px;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px"></div></div><span style="font-size:10px;color:var(--muted)">${pct}%</span></div>`;
+      const rank = `<span style="font-weight:700;color:${i < 3 ? 'var(--gold)' : 'var(--dim)'}">#${i + 1}</span>`;
+      return [rank, `<span style="color:var(--bright)">#${esc(d.ch.name)}</span>`, esc(cat), d.count, d.users, bar];
+    }));
+
+  if (voiceChannels.length) {
+    html += sectionHeader(`Channels vocaux (${voiceChannels.length})`);
+    html += '<div class="card" style="padding:0;overflow:hidden">';
+    voiceChannels.forEach(ch => {
+      const cat = ch.parent_id ? (catMap[ch.parent_id] || '') : '';
+      html += `<div class="server-item">
+        <span style="color:var(--muted);font-size:14px">🔊</span>
+        <div class="server-info">
+          <div class="name">${esc(ch.name)}</div>
+          <div class="id">${cat ? esc(cat) + ' · ' : ''}${ch.id}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+// ═══ CHANGELOG ══════════════════════════════════════════════════════════════
+
+function loadChangelog(el) {
+  const logs = [
+    { version: 'v2.1', date: '23/06/2026', changes: [
+      'Page Home avec branding Silver Bot + lien Discord',
+      'Sidebar retractable (mode icones)',
+      'Transitions de page animees (fade in/out)',
+      'Skeleton loading (placeholders animes)',
+      'Compteurs animes avec easing',
+      'Hover parallax 3D sur les stat cards',
+      'Status rings animes (chat testeurs)',
+      'Fil d\'ariane (breadcrumbs)',
+      'Confetti sur actions reussies',
+      'Tableaux triables (clic sur colonnes)',
+      'Smooth scroll',
+      'Bordures gradient animees',
+      'Multi-langue FR/EN',
+      'Statistiques par channel Discord',
+      'Bouton deconnexion dans Parametres',
+      'Installeur NSIS (anti-virus friendly)',
+      'Lien Discord ouvre dans le navigateur/app',
+    ]},
+    { version: 'v2.0', date: '21/06/2026', changes: [
+      'Migration complete vers Electron',
+      'Backend FastAPI heberge sur Nowheberg',
+      'Dashboard Owner + Testeur',
+      'Chat testeurs avec upload fichiers',
+      'Test Lab simulateur de commandes',
+      'Bugs Reports + Taches + Annonces',
+      'Leaderboard 2 colonnes (membres + serveurs)',
+      'Suggestions testeurs',
+      'Bot Info live depuis Discord API',
+      'Controle Bot (embeds, slowmode, purge)',
+      'Comparateur de membres',
+      'Ping API en temps reel',
+      'Themes couleur personnalisables',
+      'Mode maintenance',
+      'Liquid Glass (mode Apple)',
+      'Panneau serveur detaille',
+      'Recherche globale (Ctrl+K)',
+      'Statistiques avancees',
+      'Session tracker',
+      'Historique connexions',
+    ]},
+  ];
+  el.innerHTML = `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>` +
+    logs.map(log => `
+      <div class="card fade-in" style="margin-bottom:12px;padding:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span class="badge badge-blue" style="font-size:12px;padding:4px 12px">${log.version}</span>
+          <span style="font-size:11px;color:var(--muted)">${log.date}</span>
+        </div>
+        <ul style="margin:0;padding-left:18px;color:var(--text);font-size:13px;line-height:2">
+          ${log.changes.map(c => `<li>${esc(c)}</li>`).join('')}
+        </ul>
+      </div>`).join('');
+}
+
+// ═══ LOGS ACTIVITE ══════════════════════════════════════════════════════════
+
+async function loadLogs(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>Logs</h2><p>Activite recente</p></div>
+    <div id="logsContent"><div class="loading"><div class="spinner"></div></div></div>`;
+  const [warns, bugs, tasks, announces] = await Promise.all([
+    dbQuery("SELECT 'warn' as type, CAST(user_id AS CHAR) as target, reason as detail, created_at FROM warnings ORDER BY created_at DESC LIMIT 10"),
+    dbQuery("SELECT 'bug' as type, reporter AS target, title as detail, created_at FROM tester_bugs ORDER BY created_at DESC LIMIT 10"),
+    dbQuery("SELECT 'task' as type, assigned_to as target, title as detail, created_at FROM tester_tasks ORDER BY created_at DESC LIMIT 10"),
+    dbQuery("SELECT 'announce' as type, author as target, title as detail, created_at FROM tester_announcements ORDER BY created_at DESC LIMIT 10"),
+  ]);
+  const all = [...(warns[0]?.error ? [] : warns), ...(bugs[0]?.error ? [] : bugs), ...(tasks[0]?.error ? [] : tasks), ...(announces[0]?.error ? [] : announces)]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 30);
+  if (!all.length) { document.getElementById('logsContent').innerHTML = '<div class="coming-soon"><div class="icon">📋</div><p>Aucun log</p></div>'; return; }
+
+  const icons = { warn: '⚠', bug: '🐛', task: '📋', announce: '📢' };
+  const colors = { warn: 'var(--gold)', bug: 'var(--red)', task: 'var(--blue)', announce: 'var(--green)' };
+  document.getElementById('logsContent').innerHTML = all.map(r => `
+    <div class="card slide-in" style="display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:4px">
+      <div style="width:28px;height:28px;border-radius:50%;background:${colors[r.type]};display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;opacity:.8">${icons[r.type]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.detail || '—')}</div>
+        <div style="font-size:9px;color:var(--muted)">${r.type} · ${esc(String(r.target || '').slice(0,20))} · ${fmtDateTime(r.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══ MODE CLAIR/SOMBRE ══════════════════════════════════════════════════════
+
+function toggleLightMode() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('silverapp_mode', next);
+  const btn = document.getElementById('lightModeBtn');
+  if (btn) btn.textContent = next === 'light' ? 'Mode sombre' : 'Mode clair';
+}
+
+(function() {
+  const saved = localStorage.getItem('silverapp_mode');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  if (localStorage.getItem('silverapp_glass') === 'true') document.documentElement.setAttribute('data-glass', 'true');
+})();
+
+function toggleGlass() {
+  const current = document.documentElement.getAttribute('data-glass') === 'true';
+  document.documentElement.setAttribute('data-glass', !current);
+  localStorage.setItem('silverapp_glass', !current);
+  const btn = document.getElementById('glassBtn');
+  if (btn) btn.textContent = !current ? 'Liquid Glass: ON' : 'Liquid Glass: OFF';
+}
+
+// ═══ NOTIFICATIONS ═════════════════════════════════════════════════════════
+
+let _lastBugCount = null;
+let _lastMsgCount = null;
+let _lastSugCount = null;
+
+function showNotif(title, body) {
+  const notif = document.createElement('div');
+  notif.className = 'notif-toast slide-in';
+  notif.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--bright)">${esc(title)}</div><div style="font-size:11px;color:var(--dim)">${esc(body)}</div>`;
+  document.body.appendChild(notif);
+  setTimeout(() => { notif.style.opacity = '0'; setTimeout(() => notif.remove(), 300); }, 4000);
+}
+
+async function checkNotifications() {
+  try {
+    const [bugs, msgs, sugs] = await Promise.all([
+      dbScalar("SELECT COUNT(*) FROM tester_bugs WHERE status='open'"),
+      dbScalar("SELECT COUNT(*) FROM tester_chat"),
+      dbScalar("SELECT COUNT(*) FROM tester_suggestions WHERE status='pending'"),
+    ]);
+    if (_lastBugCount !== null && bugs > _lastBugCount) showNotif('Nouveau bug', `${bugs - _lastBugCount} nouveau(x) bug(s) signale(s)`);
+    if (_lastMsgCount !== null && msgs > _lastMsgCount) showNotif('Nouveau message', `${msgs - _lastMsgCount} nouveau(x) message(s)`);
+    if (_lastSugCount !== null && sugs > _lastSugCount) showNotif('Nouvelle suggestion', `${sugs - _lastSugCount} nouvelle(s) suggestion(s)`);
+    _lastBugCount = bugs; _lastMsgCount = msgs; _lastSugCount = sugs;
+  } catch {}
+}
+setInterval(checkNotifications, 15000);
+checkNotifications();
+
+// ═══ UPTIME MONITOR ════════════════════════════════════════════════════════
+
+async function loadUptime(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>Uptime</h2><p>Disponibilite du bot et du backend</p></div>
+    <div id="uptimeContent"><div class="loading"><div class="spinner"></div></div></div>`;
+  const checks = [];
+  const labels = [];
+  for (let i = 0; i < 20; i++) {
+    const t = performance.now();
+    try {
+      await fetch(`${BACKEND}/health`, { signal: AbortSignal.timeout(3000) });
+      checks.push(Math.round(performance.now() - t));
+      labels.push(`#${i+1}`);
+    } catch {
+      checks.push(-1);
+      labels.push(`#${i+1}`);
+    }
+  }
+  const upCount = checks.filter(c => c > 0).length;
+  const avgMs = upCount > 0 ? Math.round(checks.filter(c => c > 0).reduce((a, b) => a + b, 0) / upCount) : 0;
+  const uptimePct = Math.round(upCount / checks.length * 100);
+
+  let html = `<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+    <div class="card stat-card"><div class="stat-bar" style="background:${uptimePct > 90 ? 'var(--green)' : 'var(--red)'}"></div><div class="stat-label">Uptime</div><div class="stat-value">${uptimePct}%</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--cyan)"></div><div class="stat-label">Latence moyenne</div><div class="stat-value">${avgMs}ms</div></div>
+    <div class="card stat-card"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Checks</div><div class="stat-value">${upCount}/${checks.length}</div></div>
+  </div>`;
+  html += sectionHeader('Historique des pings');
+  html += '<div class="card" style="padding:16px"><div class="uptime-bar">';
+  checks.forEach((c, i) => {
+    const color = c < 0 ? 'var(--red)' : c < 200 ? 'var(--green)' : c < 500 ? 'var(--gold)' : 'var(--red)';
+    html += `<div class="uptime-block" style="background:${color}" title="${labels[i]}: ${c < 0 ? 'DOWN' : c + 'ms'}"></div>`;
+  });
+  html += '</div></div>';
+  document.getElementById('uptimeContent').innerHTML = html;
+}
+
+// ═══ EXPORT PDF ═════════════════════════════════════════════════════════════
+
+function exportCurrentPage() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>Silver App Export</title>
+    <style>body{font-family:Inter,sans-serif;background:#fff;color:#111;padding:40px}table{width:100%;border-collapse:collapse}th,td{padding:8px 12px;border:1px solid #ddd;text-align:left;font-size:12px}th{background:#f5f5f5;font-weight:700}.badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}.stat-value{font-size:20px;font-weight:800}img{max-width:40px;border-radius:50%}</style>
+  </head><body><h1>Silver App — ${esc(currentPage)}</h1><p style="color:#666;font-size:12px">${new Date().toLocaleString('fr-FR')}</p><hr>${content.innerHTML}</body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); }, 500);
+}
+
+// ═══ UI ENHANCEMENTS ════════════════════════════════════════════════════════
+
+const pageNames = {
+  home: 'Accueil', overview: "Vue d'ensemble", leaderboard: 'Leaderboard', members: 'Membres',
+  compare: 'Comparateur', stats: 'Statistiques', control: 'Controle Bot',
+  botinfo: 'Bot Info', uptime: 'Uptime', chat: 'Chat Testeurs',
+  bugs: 'Bugs Reports', tasks: 'Taches', announcements: 'Annonces',
+  suggestions: 'Suggestions', testlab: 'Test Lab', forgot: 'Codes oublies',
+  database: 'Base de donnees', logs: 'Logs', history: 'Historique',
+  changelog: 'Changelog', settings: 'Parametres',
+};
+
+const pageSections = {
+  home: 'Silver Bot', overview: 'Principal', leaderboard: 'Principal', members: 'Principal',
+  compare: 'Principal', stats: 'Principal', channels: 'Principal', control: 'Controle',
+  botinfo: 'Controle', uptime: 'Controle', chat: 'Testeurs',
+  bugs: 'Testeurs', tasks: 'Testeurs', announcements: 'Testeurs',
+  suggestions: 'Testeurs', testlab: 'Testeurs', forgot: 'Testeurs',
+  database: 'Systeme', logs: 'Systeme', history: 'Systeme',
+  changelog: 'Systeme', settings: 'Systeme',
+};
+
+function updateBreadcrumbs(name) {
+  const sec = document.getElementById('breadcrumbSection');
+  const cur = document.getElementById('breadcrumbCurrent');
+  if (sec) sec.textContent = pageSections[name] || '';
+  if (cur) cur.textContent = pageNames[name] || name;
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('silverapp_sidebar', sb.classList.contains('collapsed'));
+}
+
+(function() {
+  if (localStorage.getItem('silverapp_sidebar') === 'true') {
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.classList.add('collapsed');
+  }
+})();
+
+function renderSkeleton() {
+  return `<div style="padding:0">
+    <div class="skeleton skeleton-text" style="width:180px;height:20px;margin-bottom:4px"></div>
+    <div class="skeleton skeleton-text" style="width:120px;height:12px;margin-bottom:16px"></div>
+    <div class="skeleton-grid">${'<div class="skeleton skeleton-card"></div>'.repeat(4)}</div>
+    <div class="skeleton-list">${'<div class="skeleton skeleton-row"></div>'.repeat(5)}</div>
+  </div>`;
+}
+
+function spawnConfetti(x, y) {
+  const colors = ['#22c55e', '#3b82f6', '#8b5cf6', '#eab308', '#06b6d4', '#f43f5e'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (x + (Math.random() - .5) * 80) + 'px';
+    p.style.top = (y + (Math.random() - .5) * 20) + 'px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (.6 + Math.random() * .5) + 's';
+    p.style.animationDelay = (Math.random() * .15) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+}
+
+// Parallax 3D on stat cards
+document.addEventListener('mousemove', e => {
+  const card = e.target.closest('.stat-card');
+  if (!card) return;
+  const rect = card.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - .5;
+  const y = (e.clientY - rect.top) / rect.height - .5;
+  card.style.transform = `perspective(800px) rotateX(${y * -5}deg) rotateY(${x * 5}deg) scale(1.02)`;
+  card.style.transition = 'transform .08s ease';
+});
+document.addEventListener('mouseout', e => {
+  const card = e.target.closest?.('.stat-card');
+  if (card && !card.contains(e.relatedTarget)) {
+    card.style.transform = '';
+    card.style.transition = 'transform .3s ease';
+  }
+});
+
+function disconnect() {
+  localStorage.removeItem(CONFIG_FILE);
+  localStorage.removeItem('silverapp_theme');
+  localStorage.removeItem('silverapp_mode');
+  localStorage.removeItem('silverapp_glass');
+  localStorage.removeItem('silverapp_sidebar');
+  localStorage.removeItem('silverapp_maintenance');
+  silver.navigate('login');
 }
 
 // Init
-showPage('overview');
+showPage('home');

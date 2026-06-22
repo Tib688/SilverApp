@@ -58,11 +58,13 @@ async def health():
 
 @app.get("/import-config")
 async def import_config():
-    import os, json
-    from pathlib import Path
+    import json
     cfg_path = Path.home() / ".silverapp" / "config.json"
     if cfg_path.exists():
         return json.loads(cfg_path.read_text())
+    token = os.environ.get('DISCORD_TOKEN', '')
+    if token:
+        return {"token": token}
     return {}
 
 class ConfigBody(BaseModel):
@@ -238,6 +240,18 @@ def ensure_columns():
                     except:
                         pass
             try:
+                c.execute("""CREATE TABLE IF NOT EXISTS tester_suggestions (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    reporter_id VARCHAR(50),
+                    reporter_name VARCHAR(100),
+                    title VARCHAR(255),
+                    description TEXT,
+                    status VARCHAR(20) DEFAULT 'pending',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )""")
+            except:
+                pass
+            try:
                 c.execute("""CREATE TABLE IF NOT EXISTS testlab_messages (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     sender VARCHAR(50),
@@ -247,6 +261,20 @@ def ensure_columns():
                 )""")
             except:
                 pass
+            # One-time cleanup marker
+            try:
+                c.execute("SELECT 1 FROM _cleanup_done LIMIT 1")
+            except:
+                try:
+                    c.execute("CREATE TABLE _cleanup_done (id INT PRIMARY KEY)")
+                    c.execute("INSERT INTO _cleanup_done VALUES (1)")
+                    for t in ('tester_announcements', 'tester_bugs', 'forgot_code_requests'):
+                        try:
+                            c.execute(f"DELETE FROM `{t}` WHERE 1=1")
+                        except:
+                            pass
+                except:
+                    pass
             conn.commit()
         conn.close()
     except:
@@ -254,4 +282,6 @@ def ensure_columns():
 
 if __name__ == "__main__":
     ensure_columns()
-    uvicorn.run(app, host="127.0.0.1", port=8051, log_level="error")
+    import os
+    port = int(os.environ.get("BACKEND_PORT", 8051))
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="error")

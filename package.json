@@ -1,6 +1,6 @@
 {
   "name": "silver-app",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Silver Bot Dashboard",
   "main": "main.js",
   "scripts": {
@@ -17,8 +17,15 @@
     "appId": "com.tib.silverapp",
     "productName": "Silver App",
     "win": {
-      "target": "portable",
+      "target": "nsis",
       "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "shortcutName": "Silver App",
+      "uninstallDisplayName": "Silver App"
     },
     "files": [
       "main.js",
