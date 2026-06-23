@@ -2299,58 +2299,85 @@ async function channelGuildChanged() {
 
 function loadChangelog(el) {
   const logs = [
-    { version: 'v2.1', date: '23/06/2026', changes: [
-      'Page Home avec branding Silver Bot + lien Discord',
-      'Sidebar retractable (mode icones)',
-      'Transitions de page animees (fade in/out)',
-      'Skeleton loading (placeholders animes)',
-      'Compteurs animes avec easing',
-      'Hover parallax 3D sur les stat cards',
-      'Status rings animes (chat testeurs)',
-      'Fil d\'ariane (breadcrumbs)',
-      'Confetti sur actions reussies',
-      'Tableaux triables (clic sur colonnes)',
-      'Smooth scroll',
-      'Bordures gradient animees',
-      'Multi-langue FR/EN',
-      'Statistiques par channel Discord',
-      'Bouton deconnexion dans Parametres',
-      'Installeur NSIS (anti-virus friendly)',
-      'Lien Discord ouvre dans le navigateur/app',
+    { version: 'v2.1', date: '23/06/2026', tag: 'Nouveau', color: 'var(--green)', sections: [
+      { title: '🎨 Interface', items: [
+        'Page Home avec branding Silver Bot + lien Discord',
+        'Sidebar retractable (mode icones uniquement)',
+        'Transitions de page animees (fade in/out)',
+        'Skeleton loading (placeholders animes)',
+        'Compteurs animes avec easing cubique',
+        'Hover parallax 3D sur les stat cards',
+        'Status rings animes (online/offline/idle)',
+        'Fil d\'ariane (breadcrumbs) dynamique',
+        'Confetti sur actions reussies',
+        'Tableaux triables (clic sur en-tetes)',
+        'Bordures gradient animees',
+      ]},
+      { title: '🚀 Fonctionnalites', items: [
+        'Multi-langue FR/EN (switch instantane)',
+        'Statistiques par channel Discord',
+        '@mention autocomplete dans Controle Bot',
+        'Messages envoyes en texte normal (plus d\'embed)',
+        'Bouton deconnexion Owner + Testeur',
+        'Nombre de membres reel via Discord API',
+      ]},
+      { title: '👥 Dashboard Testeur', items: [
+        'Page Home testeur avec branding complet',
+        'Page Overview testeur (stats + annonces recentes)',
+        'Chat et DM repares (affichage + envoi)',
+        'Test Lab avec gestion d\'erreurs',
+      ]},
+      { title: '🖥️ Technique', items: [
+        'Support macOS (build via GitHub Actions)',
+        'Installeur NSIS Windows (anti-virus friendly)',
+        'Correction precision BigInt (IDs Discord)',
+        'Backend auto-detection local/distant',
+        'Lien Discord ouvre navigateur/app natif',
+      ]},
     ]},
-    { version: 'v2.0', date: '21/06/2026', changes: [
-      'Migration complete vers Electron',
-      'Backend FastAPI heberge sur Nowheberg',
-      'Dashboard Owner + Testeur',
-      'Chat testeurs avec upload fichiers',
-      'Test Lab simulateur de commandes',
-      'Bugs Reports + Taches + Annonces',
-      'Leaderboard 2 colonnes (membres + serveurs)',
-      'Suggestions testeurs',
-      'Bot Info live depuis Discord API',
-      'Controle Bot (embeds, slowmode, purge)',
-      'Comparateur de membres',
-      'Ping API en temps reel',
-      'Themes couleur personnalisables',
-      'Mode maintenance',
-      'Liquid Glass (mode Apple)',
-      'Panneau serveur detaille',
-      'Recherche globale (Ctrl+K)',
-      'Statistiques avancees',
-      'Session tracker',
-      'Historique connexions',
+    { version: 'v2.0', date: '21/06/2026', tag: 'Majeur', color: 'var(--blue)', sections: [
+      { title: '⚡ Core', items: [
+        'Migration complete vers Electron',
+        'Backend FastAPI heberge sur Nowheberg',
+        'Dashboard Owner + Testeur',
+        'Ping API en temps reel',
+      ]},
+      { title: '📋 Modules', items: [
+        'Chat testeurs avec upload fichiers',
+        'Test Lab simulateur de commandes',
+        'Bugs Reports + Taches + Annonces',
+        'Leaderboard 2 colonnes (membres + serveurs)',
+        'Suggestions testeurs',
+        'Bot Info live depuis Discord API',
+        'Controle Bot (embeds, slowmode, purge)',
+        'Comparateur de membres',
+        'Statistiques avancees',
+      ]},
+      { title: '🎨 Design', items: [
+        'Themes couleur personnalisables',
+        'Mode maintenance',
+        'Liquid Glass (mode Apple)',
+        'Panneau serveur detaille',
+        'Recherche globale (Ctrl+K)',
+        'Session tracker + Historique connexions',
+      ]},
     ]},
   ];
   el.innerHTML = `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>` +
     logs.map(log => `
-      <div class="card fade-in" style="margin-bottom:12px;padding:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <span class="badge badge-blue" style="font-size:12px;padding:4px 12px">${log.version}</span>
-          <span style="font-size:11px;color:var(--muted)">${log.date}</span>
+      <div class="card fade-in" style="margin-bottom:16px;padding:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <span class="badge" style="font-size:13px;padding:5px 14px;background:${log.color};color:#fff;font-weight:600;border-radius:6px">${log.version}</span>
+          <span style="font-size:10px;padding:3px 8px;border-radius:4px;background:${log.color}22;color:${log.color};font-weight:500">${log.tag}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto">${log.date}</span>
         </div>
-        <ul style="margin:0;padding-left:18px;color:var(--text);font-size:13px;line-height:2">
-          ${log.changes.map(c => `<li>${esc(c)}</li>`).join('')}
-        </ul>
+        ${log.sections.map(s => `
+          <div style="margin-bottom:12px">
+            <div style="font-size:12px;font-weight:600;color:var(--bright);margin-bottom:6px">${s.title}</div>
+            <ul style="margin:0;padding-left:18px;color:var(--text);font-size:12px;line-height:1.9">
+              ${s.items.map(c => `<li>${esc(c)}</li>`).join('')}
+            </ul>
+          </div>`).join('')}
       </div>`).join('');
 }
 
