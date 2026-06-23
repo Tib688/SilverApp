@@ -3,6 +3,9 @@ name: Build macOS
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-mac:
     runs-on: macos-latest
@@ -19,7 +22,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: SilverApp-mac
-          path: dist/*.zip
+          tag_name: v2.1.0-mac
+          name: Silver App v2.1.0 — macOS
+          body: |
+            ## Silver App v2.1 pour macOS
+
+            Télécharge le .zip, extrais-le, et lance Silver App.
+
+            Premier lancement : clic droit → Ouvrir → Ouvrir
+          files: dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
