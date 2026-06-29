@@ -2756,6 +2756,8 @@ function showDesktopNotif(title, body) {
 
 let _embedTemplates = JSON.parse(localStorage.getItem('silverapp_embed_templates') || '[]');
 
+let _ebMembers = [];
+
 async function loadEmbedBuilder(el) {
   const guilds = await getCachedGuilds();
   el.innerHTML = `
@@ -2771,15 +2773,36 @@ async function loadEmbedBuilder(el) {
             <select id="ebChannel" style="flex:1"><option value="">Channel</option></select>
           </div>
           <input type="text" id="ebTitle" placeholder="Titre" oninput="ebUpdatePreview()">
-          <textarea id="ebDesc" placeholder="Description (supporte **bold**, *italic*, \`code\`)" rows="4" style="resize:vertical" oninput="ebUpdatePreview()"></textarea>
+          <div style="position:relative">
+            <textarea id="ebDesc" placeholder="Description (@ pour mentionner, **bold**, *italic*)" rows="4" style="resize:vertical" oninput="ebMentionCheck(this);ebUpdatePreview()"></textarea>
+            <div id="ebMentionDropdown" style="display:none;position:absolute;bottom:100%;left:0;right:0;max-height:160px;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.3)"></div>
+          </div>
           <div style="display:flex;gap:8px">
             <input type="color" id="ebColor" value="#3b82f6" style="width:50px;height:34px;border:none;cursor:pointer;border-radius:6px" oninput="ebUpdatePreview()">
             <input type="text" id="ebAuthor" placeholder="Auteur (optionnel)" style="flex:1" oninput="ebUpdatePreview()">
           </div>
           <input type="text" id="ebFooter" placeholder="Footer (optionnel)" oninput="ebUpdatePreview()">
-          <input type="text" id="ebImage" placeholder="URL image (optionnel)" oninput="ebUpdatePreview()">
-          <input type="text" id="ebThumbnail" placeholder="URL thumbnail (optionnel)" oninput="ebUpdatePreview()">
-          <div class="control-section-title" style="margin-top:8px">Fields</div>
+          <input type="text" id="ebVideo" placeholder="URL video YouTube/autre (optionnel)" oninput="ebUpdatePreview()">
+
+          <div class="control-section-title" style="margin-top:4px">${currentLang === 'fr' ? 'Image / Thumbnail' : 'Image / Thumbnail'}</div>
+          <div id="ebDropZone" style="border:2px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:border-color .2s" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="ebHandleDrop(event)" onclick="document.getElementById('ebFileInput').click()">
+            <input type="file" id="ebFileInput" accept="image/*" style="display:none" onchange="ebHandleFile(this.files[0])">
+            <div style="font-size:12px;color:var(--dim)">${currentLang === 'fr' ? 'Glisse une image ici, colle (Ctrl+V), ou clique pour choisir' : 'Drag image here, paste (Ctrl+V), or click to browse'}</div>
+            <div id="ebUploadPreview" style="margin-top:8px;display:none">
+              <img id="ebUploadImg" style="max-width:100%;max-height:120px;border-radius:6px">
+              <div style="display:flex;gap:6px;margin-top:6px;justify-content:center">
+                <button class="btn btn-secondary" style="font-size:10px;padding:3px 10px" onclick="ebSetAsImage()">${currentLang === 'fr' ? 'Mettre en Image' : 'Set as Image'}</button>
+                <button class="btn btn-secondary" style="font-size:10px;padding:3px 10px" onclick="ebSetAsThumbnail()">${currentLang === 'fr' ? 'Mettre en Thumbnail' : 'Set as Thumbnail'}</button>
+                <button class="btn btn-secondary" style="font-size:10px;padding:3px 10px;color:var(--red)" onclick="ebClearUpload()">×</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="ebImage" placeholder="URL image" style="flex:1" oninput="ebUpdatePreview()">
+            <input type="text" id="ebThumbnail" placeholder="URL thumbnail" style="flex:1" oninput="ebUpdatePreview()">
+          </div>
+
+          <div class="control-section-title" style="margin-top:4px">Fields</div>
           <div id="ebFields"></div>
           <button class="btn btn-secondary" style="font-size:11px" onclick="ebAddField()">+ Ajouter un field</button>
           <div style="display:flex;gap:8px;margin-top:8px">
@@ -2802,6 +2825,100 @@ async function loadEmbedBuilder(el) {
       </div>
     </div>`;
   ebUpdatePreview();
+  ebInitPaste();
+}
+
+let _ebUploadedUrl = null;
+
+function ebHandleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = 'var(--border)';
+  const file = e.dataTransfer?.files?.[0];
+  if (file && file.type.startsWith('image/')) ebHandleFile(file);
+}
+
+async function ebHandleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('ebUploadPreview');
+    const img = document.getElementById('ebUploadImg');
+    if (preview && img) { img.src = e.target.result; preview.style.display = 'block'; }
+  };
+  reader.readAsDataURL(file);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${BACKEND}/upload`, { method: 'POST', body: formData }).then(r => r.json());
+    if (res.url) _ebUploadedUrl = res.url;
+  } catch {}
+}
+
+function ebSetAsImage() {
+  if (_ebUploadedUrl) { document.getElementById('ebImage').value = _ebUploadedUrl; ebUpdatePreview(); }
+}
+function ebSetAsThumbnail() {
+  if (_ebUploadedUrl) { document.getElementById('ebThumbnail').value = _ebUploadedUrl; ebUpdatePreview(); }
+}
+function ebClearUpload() {
+  _ebUploadedUrl = null;
+  const preview = document.getElementById('ebUploadPreview');
+  if (preview) preview.style.display = 'none';
+}
+
+function ebInitPaste() {
+  document.addEventListener('paste', function _ebPaste(e) {
+    if (currentPage !== 'embedbuilder') { document.removeEventListener('paste', _ebPaste); return; }
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        ebHandleFile(item.getAsFile());
+        return;
+      }
+    }
+  });
+}
+
+function ebMentionCheck(textarea) {
+  const dropdown = document.getElementById('ebMentionDropdown');
+  const val = textarea.value;
+  const cursor = textarea.selectionStart;
+  const before = val.slice(0, cursor);
+  const atMatch = before.match(/@(\w*)$/);
+  if (!atMatch || !_ebMembers.length) { if (dropdown) dropdown.style.display = 'none'; return; }
+  const query = atMatch[1].toLowerCase();
+  const matches = _ebMembers.filter(m => {
+    const name = (m.nick || m.user?.global_name || m.user?.username || '').toLowerCase();
+    return name.includes(query) && !m.user?.bot;
+  }).slice(0, 8);
+  if (!matches.length) { dropdown.style.display = 'none'; return; }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = matches.map(m => {
+    const name = m.nick || m.user?.global_name || m.user?.username || '?';
+    const tag = m.user?.username || '';
+    const av = m.user?.avatar ? getUserAvatar(m.user.id, m.user.avatar, 32) : null;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;transition:background .1s;font-size:12px" onmousedown="ebMentionInsert('${m.user.id}','${esc(name).replace(/'/g,"\\'")}')">
+      ${av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%">` : '<div style="width:22px;height:22px;border-radius:50%;background:var(--bg2)"></div>'}
+      <span style="color:var(--bright);font-weight:600">${esc(name)}</span>
+      <span style="color:var(--muted);font-size:10px">${esc(tag)}</span>
+    </div>`;
+  }).join('');
+}
+
+function ebMentionInsert(userId, displayName) {
+  const textarea = document.getElementById('ebDesc');
+  const dropdown = document.getElementById('ebMentionDropdown');
+  const cursor = textarea.selectionStart;
+  const before = textarea.value.slice(0, cursor);
+  const after = textarea.value.slice(cursor);
+  const newBefore = before.replace(/@\w*$/, `<@${userId}> `);
+  textarea.value = newBefore + after;
+  textarea.selectionStart = textarea.selectionEnd = newBefore.length;
+  dropdown.style.display = 'none';
+  textarea.focus();
+  ebUpdatePreview();
 }
 
 async function ebGuildChanged() {
@@ -2809,9 +2926,13 @@ async function ebGuildChanged() {
   const sel = document.getElementById('ebChannel');
   if (!guildId || !sel) return;
   sel.innerHTML = '<option value="">Chargement...</option>';
-  const channels = await discordGet(`/guilds/${guildId}/channels`);
+  const [channels, members] = await Promise.all([
+    discordGet(`/guilds/${guildId}/channels`),
+    discordGet(`/guilds/${guildId}/members?limit=1000`),
+  ]);
   const text = Array.isArray(channels) ? channels.filter(c => c.type === 0).sort((a, b) => a.position - b.position) : [];
   sel.innerHTML = '<option value="">Channel</option>' + text.map(c => `<option value="${c.id}">#${esc(c.name)}</option>`).join('');
+  _ebMembers = Array.isArray(members) ? members : [];
 }
 
 let _ebFieldCount = 0;
@@ -2840,6 +2961,8 @@ function ebGetData() {
   if (image) data.image = { url: image };
   const thumb = document.getElementById('ebThumbnail')?.value;
   if (thumb) data.thumbnail = { url: thumb };
+  const video = document.getElementById('ebVideo')?.value;
+  if (video) data.video = { url: video };
   const fields = [];
   document.querySelectorAll('#ebFields > div').forEach(row => {
     const name = row.querySelector('.eb-field-name')?.value;
@@ -2855,7 +2978,11 @@ function ebUpdatePreview() {
   const el = document.getElementById('ebPreview');
   if (!el) return;
   const color = document.getElementById('ebColor')?.value || '#3b82f6';
-  const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/`(.+?)`/g, '<code style="background:#202225;padding:2px 4px;border-radius:3px;font-size:11px">$1</code>').replace(/\n/g, '<br>');
+  const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/`(.+?)`/g, '<code style="background:#202225;padding:2px 4px;border-radius:3px;font-size:11px">$1</code>').replace(/&lt;@(\d+)&gt;/g, (_, id) => {
+    const m = _ebMembers.find(m => m.user?.id === id);
+    const name = m ? (m.nick || m.user?.global_name || m.user?.username) : id;
+    return `<span style="background:rgba(88,101,242,.3);color:#dee0fc;padding:0 2px;border-radius:3px;font-weight:500">@${esc(name)}</span>`;
+  }).replace(/\n/g, '<br>');
   el.innerHTML = `
     <div style="display:flex">
       <div style="width:4px;background:${color};border-radius:4px 0 0 4px;flex-shrink:0"></div>
@@ -2865,6 +2992,10 @@ function ebUpdatePreview() {
         ${d.description ? `<div style="font-size:13px;color:#dcddde;line-height:1.5;margin-bottom:8px">${md(d.description)}</div>` : ''}
         ${d.fields ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">${d.fields.map(f => `<div><div style="font-size:11px;font-weight:700;color:#fff">${esc(f.name)}</div><div style="font-size:12px;color:#dcddde">${esc(f.value)}</div></div>`).join('')}</div>` : ''}
         ${d.image ? `<img src="${esc(d.image.url)}" style="max-width:100%;border-radius:4px;margin-top:4px" onerror="this.style.display='none'">` : ''}
+        ${d.video ? (() => {
+          const ytMatch = d.video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+          return ytMatch ? `<div style="margin-top:8px;border-radius:4px;overflow:hidden"><iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen style="border-radius:4px"></iframe></div>` : `<a href="${esc(d.video.url)}" style="color:#00aff4;font-size:12px;margin-top:4px;display:block">🎬 ${esc(d.video.url)}</a>`;
+        })() : ''}
         ${d.footer ? `<div style="font-size:10px;color:#72767d;margin-top:8px">${esc(d.footer.text)}</div>` : ''}
       </div>
       ${d.thumbnail ? `<img src="${esc(d.thumbnail.url)}" style="width:60px;height:60px;border-radius:4px;margin:12px 12px 0 0;object-fit:cover" onerror="this.style.display='none'">` : ''}
@@ -2878,7 +3009,12 @@ async function ebSend() {
   const embed = ebGetData();
   if (!embed.title && !embed.description) { if (status) { status.textContent = currentLang === 'fr' ? 'Ajoute au moins un titre ou une description' : 'Add at least a title or description'; status.style.color = 'var(--red)'; } return; }
   if (status) { status.textContent = currentLang === 'fr' ? 'Envoi...' : 'Sending...'; status.style.color = 'var(--accent)'; }
-  const res = await discordPost(`/channels/${channelId}/messages`, { embeds: [embed] });
+  const payload = { embeds: [embed] };
+  const desc = embed.description || '';
+  const mentions = desc.match(/<@\d+>/g);
+  if (mentions) payload.content = mentions.join(' ');
+  if (embed.video) { payload.content = (payload.content ? payload.content + '\n' : '') + embed.video.url; delete embed.video; }
+  const res = await discordPost(`/channels/${channelId}/messages`, payload);
   if (res.error) { if (status) { status.textContent = `Erreur: ${res.error}`; status.style.color = 'var(--red)'; } }
   else { if (status) { status.textContent = currentLang === 'fr' ? 'Embed envoye !' : 'Embed sent!'; status.style.color = 'var(--green)'; } }
 }
