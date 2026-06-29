@@ -53,6 +53,7 @@ function testerShowPage(name) {
     't-testlab': tLoadTestLab,
     't-botinfo': tLoadBotInfo,
     't-changelog': tLoadChangelog,
+    't-update': tLoadUpdate,
   };
   const loader = loaders[name];
   if (loader) loader(content);
@@ -631,7 +632,7 @@ async function tLoadBotInfo(el) {
 
 // ═══ CHANGELOG ═════════════════════════════════════════════════════════════
 
-function tLoadChangelog(el) {
+function tLoadChangelog(el, append) {
   const logs = [
     { version: 'v2.3.1', date: '29/06/2026', tag: 'Patch', color: 'var(--cyan)', items: [
       'Design Liquid Chrome sur toute l\'app',
@@ -665,7 +666,8 @@ function tLoadChangelog(el) {
       'Chat, bugs, taches, annonces',
     ]},
   ];
-  el.innerHTML = `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>` +
+  const header = append ? '' : `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>`;
+  const content =
     logs.map(log => `
       <div class="card fade-in" style="margin-bottom:10px;padding:16px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -677,6 +679,58 @@ function tLoadChangelog(el) {
           ${log.items.map(i => `<li>${esc(i)}</li>`).join('')}
         </ul>
       </div>`).join('');
+  if (append) el.innerHTML += content;
+  else el.innerHTML = header + content;
+}
+
+// ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
+
+const T_APP_VERSION = '2.3.1';
+let _tUpdateInfo = null;
+
+async function tCheckForUpdate() {
+  try {
+    const res = await fetch('https://api.github.com/repos/Tib688/SilverApp/releases/latest', { signal: AbortSignal.timeout(5000) });
+    const data = await res.json();
+    if (!data.tag_name) return;
+    const latest = data.tag_name.replace(/^v/i, '');
+    _tUpdateInfo = {
+      version: latest,
+      name: data.name || `v${latest}`,
+      body: data.body || '',
+      url: data.html_url,
+      download: data.assets?.length ? data.assets[0].browser_download_url : data.html_url,
+      date: data.published_at ? new Date(data.published_at).toLocaleDateString('fr-FR') : '',
+      isNew: latest !== T_APP_VERSION,
+    };
+    const badge = document.getElementById('tUpdateBadge');
+    if (badge && _tUpdateInfo.isNew) badge.style.display = 'inline-block';
+  } catch {}
+}
+
+function tLoadUpdate(el) {
+  const v = _tUpdateInfo;
+  const hasUpdate = v && v.isNew;
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>Mise a jour</h2><p>Silver App ${T_APP_VERSION}</p></div>
+    <div class="card fade-in" style="padding:24px;margin-bottom:16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,${hasUpdate ? 'rgba(160,144,208,.4)' : 'rgba(48,208,96,.3)'},transparent);"></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:48px;height:48px;border-radius:14px;background:${hasUpdate ? 'rgba(160,144,208,.08)' : 'rgba(48,208,96,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="font-size:22px">${hasUpdate ? '⬆' : '✓'}</span>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:500;background:var(--chrome-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${hasUpdate ? 'Nouvelle version disponible' : 'A jour'}</div>
+          <div style="font-size:12px;color:#555568;margin-top:4px">
+            ${hasUpdate ? `Version actuelle: <span style="color:#707088">${T_APP_VERSION}</span> → Derniere: <span style="color:#a090d0">${v.version}</span>` : `Version <span style="color:#30d060">${T_APP_VERSION}</span>`}
+          </div>
+        </div>
+        ${hasUpdate ? `<button class="btn btn-primary" style="padding:10px 24px;font-size:13px" onclick="silver.openExternal('${v.download}')">Telecharger</button>` : ''}
+      </div>
+    </div>
+    ${hasUpdate && v.body ? `<div class="card fade-in" style="padding:20px;margin-bottom:16px"><div style="font-size:12px;font-weight:500;color:#707088;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Notes de mise a jour</div><div style="font-size:12px;color:#9090a8;line-height:1.8;white-space:pre-wrap">${esc(v.body)}</div></div>` : ''}
+    <div style="font-size:12px;font-weight:500;color:#555568;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Changelog</div>`;
+  tLoadChangelog(el, true);
 }
 
 // ═══ LOGOUT ═════════════════════════════════════════════════════════════════
@@ -701,3 +755,5 @@ async function tLogout() {
 
 // Init
 testerShowPage('t-home');
+tCheckForUpdate();
+setInterval(tCheckForUpdate, 1800000);

@@ -16,6 +16,7 @@ const i18n = {
     statusMessages: 'Messages de statut', addStatus: 'Ajouter', removeStatus: 'Retirer',
     applyChanges: 'Appliquer', currentRotation: 'Rotation actuelle',
     autoRefresh: 'Auto-refresh', exportBackup: 'Exporter backup', importBackup: 'Importer backup',
+    update: 'Mise a jour', upToDate: 'A jour', newUpdate: 'Nouvelle version disponible',
     embedBuilder: 'Embed Builder', heatmap: 'Heatmap', quickActions: 'Actions rapides',
     preview: 'Apercu', sendEmbed: 'Envoyer', saveTemplate: 'Sauver template', loadTemplate: 'Charger template',
     noActivity: 'Aucune activite', exportCsv: 'Exporter CSV', favorites: 'Favoris',
@@ -63,6 +64,7 @@ const i18n = {
     statusMessages: 'Status messages', addStatus: 'Add', removeStatus: 'Remove',
     applyChanges: 'Apply', currentRotation: 'Current rotation',
     autoRefresh: 'Auto-refresh', exportBackup: 'Export backup', importBackup: 'Import backup',
+    update: 'Update', upToDate: 'Up to date', newUpdate: 'New version available',
     embedBuilder: 'Embed Builder', heatmap: 'Heatmap', quickActions: 'Quick actions',
     preview: 'Preview', sendEmbed: 'Send', saveTemplate: 'Save template', loadTemplate: 'Load template',
     noActivity: 'No activity', exportCsv: 'Export CSV', favorites: 'Favorites',
@@ -194,6 +196,7 @@ const pageLoaders = {
   stats: loadStats,
   channels: loadChannels,
   changelog: loadChangelog,
+  update: loadUpdate,
   serverlist: loadServerList,
   analytics: loadAnalytics,
   botprofile: loadBotProfile,
@@ -3468,9 +3471,84 @@ async function loadServerList(el) {
   }
 }
 
+// ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
+
+const APP_VERSION = '2.3.1';
+let _updateInfo = null;
+let _updateChecked = false;
+
+async function checkForUpdate() {
+  try {
+    const res = await fetch('https://api.github.com/repos/Tib688/SilverApp/releases/latest', { signal: AbortSignal.timeout(5000) });
+    const data = await res.json();
+    if (!data.tag_name) return;
+    const latest = data.tag_name.replace(/^v/i, '');
+    _updateInfo = {
+      version: latest,
+      name: data.name || `v${latest}`,
+      body: data.body || '',
+      url: data.html_url,
+      download: data.assets?.length ? data.assets[0].browser_download_url : data.html_url,
+      date: data.published_at ? new Date(data.published_at).toLocaleDateString('fr-FR') : '',
+      isNew: latest !== APP_VERSION,
+    };
+    _updateChecked = true;
+    updateBadge();
+  } catch { _updateChecked = true; }
+}
+
+function updateBadge() {
+  const badge = document.getElementById('updateBadge');
+  if (badge && _updateInfo?.isNew) {
+    badge.style.display = 'inline-block';
+  }
+  if (_updateInfo?.isNew) {
+    showNotif(t('newUpdate'), `Silver App ${_updateInfo.name}`);
+    showDesktopNotif('Silver App', `${t('newUpdate')}: ${_updateInfo.name}`);
+  }
+}
+
+function loadUpdate(el) {
+  const v = _updateInfo;
+  const hasUpdate = v && v.isNew;
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>${t('update')}</h2><p>Silver App ${APP_VERSION}</p></div>
+
+    <!-- Update status card -->
+    <div class="card fade-in" style="padding:24px;margin-bottom:16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,${hasUpdate ? 'rgba(160,144,208,.4)' : 'rgba(48,208,96,.3)'},transparent);"></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:48px;height:48px;border-radius:14px;background:${hasUpdate ? 'rgba(160,144,208,.08)' : 'rgba(48,208,96,.06)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="font-size:22px">${hasUpdate ? '⬆' : '✓'}</span>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:500;background:var(--chrome-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${hasUpdate ? t('newUpdate') : t('upToDate')}</div>
+          <div style="font-size:12px;color:#555568;margin-top:4px">
+            ${hasUpdate ? `Version actuelle: <span style="color:#707088">${APP_VERSION}</span> → Derniere: <span style="color:#a090d0">${v.version}</span>` : `Version <span style="color:#30d060">${APP_VERSION}</span> — vous etes a jour`}
+          </div>
+          ${v?.date ? `<div style="font-size:10px;color:#404058;margin-top:2px">${v.date}</div>` : ''}
+        </div>
+        ${hasUpdate ? `<button class="btn btn-primary" style="padding:10px 24px;font-size:13px" onclick="silver.openExternal('${v.download}')">Telecharger ${v.name}</button>` : ''}
+      </div>
+    </div>
+
+    ${hasUpdate && v.body ? `
+    <div class="card fade-in" style="padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:500;color:#707088;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Notes de mise a jour</div>
+      <div style="font-size:12px;color:#9090a8;line-height:1.8;white-space:pre-wrap">${esc(v.body)}</div>
+    </div>` : ''}
+
+    <div style="font-size:12px;font-weight:500;color:#555568;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Changelog</div>
+    <div id="updateChangelogContent"></div>`;
+
+  loadChangelogInto(document.getElementById('updateChangelogContent'));
+}
+
 // ═══ CHANGELOG ══════════════════════════════════════════════════════════════
 
-function loadChangelog(el) {
+function loadChangelog(el) { loadChangelogInto(el); }
+
+function loadChangelogInto(el) {
   const logs = [
     { version: 'v2.3', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
       { title: '🪞 Liquid Chrome Design', items: [
@@ -3788,7 +3866,7 @@ const pageSections = {
   bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
   suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs',
   database: 'secSysteme', logs: 'secSysteme', history: 'secSysteme',
-  changelog: 'secSysteme', console: 'secSysteme', settings: 'secSysteme',
+  changelog: 'secSysteme', console: 'secSysteme', update: 'secSysteme', settings: 'secSysteme',
 };
 
 function updateBreadcrumbs(name) {
@@ -3868,3 +3946,5 @@ function disconnect() {
 showPage('home');
 renderFavorites();
 if ('Notification' in window && Notification.permission === 'default' && _desktopNotifs) Notification.requestPermission();
+checkForUpdate();
+setInterval(checkForUpdate, 1800000);
