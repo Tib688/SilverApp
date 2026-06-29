@@ -3443,6 +3443,29 @@ async function loadServerList(el) {
 
 function loadChangelog(el) {
   const logs = [
+    { version: 'v2.2.5', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
+      'Comptage exact des messages par channel via API search Discord',
+      'Plus de limite a 100 messages dans les stats channels',
+    ]},
+    { version: 'v2.2.4', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
+      'Pagination complete des messages Discord (comptage reel)',
+      'Indicateur de progression pendant le comptage',
+      'Nombres formates avec separateurs',
+    ]},
+    { version: 'v2.2.3', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
+      'Stats filtrees : seuls les serveurs actifs (bot present) sont affiches',
+      'Donnees conservees en DB : si le bot revient, les stats reviennent',
+    ]},
+    { version: 'v2.2.2', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
+      'Correction matching guild_id (noms de serveurs manquants)',
+      'Source unique user_xp pour XP et messages',
+      'Moyennes calculees sur les utilisateurs actifs',
+    ]},
+    { version: 'v2.2.1', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
+      'FAB (bouton +) plus petit et discret',
+      'Fix guild_id matching avec trim()',
+      'Build script avec version dans le nom du setup',
+    ]},
     { version: 'v2.2', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
       { title: '📊 Analytics & Heatmap', items: [
         'Graphiques Chart.js (activite, bugs, XP, testeurs, croissance)',
@@ -3452,120 +3475,118 @@ function loadChangelog(el) {
       ]},
       { title: '🎨 Embed Builder', items: [
         'Editeur visuel d\'embeds Discord avec preview live',
-        'Champs dynamiques, couleur, auteur, footer, images',
+        '@mention autocomplete dans la description',
+        'Drag & drop / coller images + URL video YouTube',
         'Systeme de templates sauvegardables',
-        'Envoi direct dans n\'importe quel channel',
       ]},
       { title: '🤖 Bot Profil', items: [
         'Changer le nom et l\'avatar du bot depuis l\'app',
         'Editeur de statuts rotatifs (texte, type, intervalle)',
         'Preview live du statut en temps reel',
-        'Variables dynamiques ({servers}, {version})',
       ]},
       { title: '🖥️ Console', items: [
         'Terminal integre avec logs du bot en direct',
-        'Filtres par niveau (Error, Warning, Info)',
-        'Recherche dans les logs + auto-refresh 3s',
-        'Coloration syntaxique des niveaux',
+        'Filtres par niveau + recherche + auto-refresh',
       ]},
       { title: '🔔 Notifications Desktop', items: [
         'Notifications natives Windows/macOS',
         'Alertes bugs, messages, suggestions en temps reel',
-        'Toggle ON/OFF dans les parametres',
       ]},
       { title: '💾 Backup & Restore', items: [
-        'Export complet en JSON (config, preferences, donnees)',
-        'Import et restauration en un clic',
-        'Transfert facile entre machines',
+        'Export/import complet en JSON',
       ]},
       { title: '⚡ UI & Experience', items: [
-        'Mode compact (tableaux et cartes condenses)',
-        'Bouton Quick Actions flottant (FAB)',
-        'Raccourcis clavier complets (Shift+? pour la liste)',
-        'Profil membre detaille en modal',
-        'Export CSV sur les tableaux',
-        'Page Serveurs avec liens d\'invitation permanents',
+        'Mode compact, Quick Actions (FAB), raccourcis clavier',
+        'Profil membre en modal, export CSV, page Serveurs',
       ]},
     ]},
-    { version: 'v2.1', date: '23/06/2026', tag: 'Nouveau', color: 'var(--green)', sections: [
+    { version: 'v2.1', date: '23/06/2026', tag: 'Majeur', color: 'var(--green)', sections: [
       { title: '🎨 Interface', items: [
         'Page Home avec branding Silver Bot + lien Discord',
-        'Sidebar retractable (mode icones uniquement)',
-        'Transitions de page animees (fade in/out)',
-        'Skeleton loading (placeholders animes)',
-        'Compteurs animes avec easing cubique',
-        'Hover parallax 3D sur les stat cards',
-        'Status rings animes (online/offline/idle)',
-        'Fil d\'ariane (breadcrumbs) dynamique',
-        'Confetti sur actions reussies',
-        'Tableaux triables (clic sur en-tetes)',
-        'Bordures gradient animees',
+        'Sidebar retractable (mode icones)',
+        'Transitions, skeleton loading, parallax 3D, confetti',
+        'Breadcrumbs, tableaux triables, bordures gradient',
       ]},
       { title: '🚀 Fonctionnalites', items: [
-        'Multi-langue FR/EN (switch instantane)',
-        'Statistiques par channel Discord',
-        '@mention autocomplete dans Controle Bot',
-        'Messages envoyes en texte normal (plus d\'embed)',
+        'Multi-langue FR/EN',
+        'Stats par channel, @mention autocomplete',
         'Bouton deconnexion Owner + Testeur',
-        'Nombre de membres reel via Discord API',
       ]},
       { title: '👥 Dashboard Testeur', items: [
-        'Page Home testeur avec branding complet',
-        'Page Overview testeur (stats + annonces recentes)',
-        'Chat et DM repares (affichage + envoi)',
-        'Test Lab avec gestion d\'erreurs',
+        'Pages Home + Overview testeur',
+        'Chat et DM repares, Test Lab',
       ]},
       { title: '🖥️ Technique', items: [
-        'Support macOS (build via GitHub Actions)',
-        'Installeur NSIS Windows (anti-virus friendly)',
-        'Correction precision BigInt (IDs Discord)',
-        'Backend auto-detection local/distant',
-        'Lien Discord ouvre navigateur/app natif',
+        'Support macOS, installeur NSIS, fix BigInt',
       ]},
     ]},
     { version: 'v2.0', date: '21/06/2026', tag: 'Majeur', color: 'var(--blue)', sections: [
       { title: '⚡ Core', items: [
-        'Migration complete vers Electron',
-        'Backend FastAPI heberge sur Nowheberg',
-        'Dashboard Owner + Testeur',
-        'Ping API en temps reel',
+        'Migration complete vers Electron + FastAPI',
+        'Dashboard Owner + Testeur sur Nowheberg',
       ]},
       { title: '📋 Modules', items: [
-        'Chat testeurs avec upload fichiers',
-        'Test Lab simulateur de commandes',
-        'Bugs Reports + Taches + Annonces',
-        'Leaderboard 2 colonnes (membres + serveurs)',
-        'Suggestions testeurs',
-        'Bot Info live depuis Discord API',
-        'Controle Bot (embeds, slowmode, purge)',
-        'Comparateur de membres',
-        'Statistiques avancees',
+        'Chat testeurs, Test Lab, Bugs, Taches, Annonces',
+        'Leaderboard, Suggestions, Bot Info, Controle Bot',
+        'Comparateur de membres, Statistiques avancees',
       ]},
       { title: '🎨 Design', items: [
-        'Themes couleur personnalisables',
-        'Mode maintenance',
-        'Liquid Glass (mode Apple)',
-        'Panneau serveur detaille',
-        'Recherche globale (Ctrl+K)',
-        'Session tracker + Historique connexions',
+        'Themes couleur, Liquid Glass, recherche Ctrl+K',
+        'Mode maintenance, session tracker',
+      ]},
+    ]},
+    { version: 'v1.2', date: '15/06/2026', tag: 'Majeur', color: 'var(--gold)', sections: [
+      { title: '🚀 Fonctionnalites', items: [
+        'Dashboard web Flask avec login par token',
+        'Vue des serveurs et membres du bot',
+        'Statistiques basiques (XP, messages)',
+        'Envoi de messages via le bot',
+      ]},
+    ]},
+    { version: 'v1.1', date: '05/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
+      'Amelioration de l\'interface web',
+      'Ajout des warns et moderation basique',
+      'Correction de bugs de connexion',
+    ]},
+    { version: 'v1.0', date: '28/05/2026', tag: 'Initial', color: 'var(--accent)', sections: [
+      { title: '🎉 Premiere version', items: [
+        'Silver Bot cree avec discord.py',
+        'Systeme d\'XP et de niveaux',
+        'Commandes de moderation (ban, kick, warn)',
+        'Dashboard web basique (Flask)',
+        'Base de donnees MySQL',
       ]},
     ]},
   ];
+
+  function logToText(log) {
+    let txt = `${log.version} — ${log.date} (${log.tag})\n`;
+    if (log.items) { log.items.forEach(i => txt += `  - ${i}\n`); }
+    if (log.sections) { log.sections.forEach(s => { txt += `  ${s.title}\n`; s.items.forEach(i => txt += `    - ${i}\n`); }); }
+    return txt;
+  }
+
   el.innerHTML = `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>` +
-    logs.map(log => `
-      <div class="card fade-in" style="margin-bottom:16px;padding:20px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <span class="badge" style="font-size:13px;padding:5px 14px;background:${log.color};color:#fff;font-weight:600;border-radius:6px">${log.version}</span>
+    logs.map((log, idx) => `
+      <div class="card fade-in" style="margin-bottom:${log.sections ? 16 : 10}px;padding:${log.sections ? 20 : 14}px;position:relative">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:${log.sections ? 14 : 8}px">
+          <span class="badge" style="font-size:${log.sections ? 13 : 11}px;padding:${log.sections ? '5px 14px' : '3px 10px'};background:${log.color};color:#fff;font-weight:600;border-radius:6px">${log.version}</span>
           <span style="font-size:10px;padding:3px 8px;border-radius:4px;background:${log.color}22;color:${log.color};font-weight:500">${log.tag}</span>
           <span style="font-size:11px;color:var(--muted);margin-left:auto">${log.date}</span>
         </div>
-        ${log.sections.map(s => `
+        ${log.sections ? log.sections.map(s => `
           <div style="margin-bottom:12px">
             <div style="font-size:12px;font-weight:600;color:var(--bright);margin-bottom:6px">${s.title}</div>
             <ul style="margin:0;padding-left:18px;color:var(--text);font-size:12px;line-height:1.9">
               ${s.items.map(c => `<li>${esc(c)}</li>`).join('')}
             </ul>
-          </div>`).join('')}
+          </div>`).join('') : `
+          <ul style="margin:0;padding-left:18px;color:var(--text);font-size:12px;line-height:1.9">
+            ${log.items.map(c => `<li>${esc(c)}</li>`).join('')}
+          </ul>`}
+        <button onclick="navigator.clipboard.writeText(${esc(JSON.stringify(logToText(log)))});this.innerHTML='✓';setTimeout(()=>this.innerHTML='<svg width=\\'12\\' height=\\'12\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\'/><path d=\\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\\'/></svg>',1500)" style="position:absolute;bottom:10px;right:12px;background:none;border:none;color:var(--dim);cursor:pointer;padding:4px;border-radius:4px;transition:color .15s;opacity:.5" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" title="Copier">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </button>
       </div>`).join('');
 }
 

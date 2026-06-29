@@ -1,6 +1,6 @@
 {
   "name": "silverapp",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Silver Bot Dashboard",
   "main": "main.js",
   "scripts": {
