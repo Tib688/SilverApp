@@ -694,8 +694,19 @@ function tLoadChangelog(el, append) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const T_APP_VERSION = '2.3.3';
+const T_APP_VERSION = '2.3.4';
 let _tUpdateInfo = null;
+
+function _tIsNewerVersion(remote, local) {
+  const r = remote.replace(/^v/i, '').split('.').map(Number);
+  const l = local.replace(/^v/i, '').split('.').map(Number);
+  for (let i = 0; i < Math.max(r.length, l.length); i++) {
+    const rv = r[i] || 0, lv = l[i] || 0;
+    if (rv > lv) return true;
+    if (rv < lv) return false;
+  }
+  return false;
+}
 
 async function tCheckForUpdate() {
   try {
@@ -710,7 +721,7 @@ async function tCheckForUpdate() {
       url: data.html_url,
       download: data.assets?.length ? data.assets[0].browser_download_url : data.html_url,
       date: data.published_at ? new Date(data.published_at).toLocaleDateString('fr-FR') : '',
-      isNew: latest !== T_APP_VERSION,
+      isNew: _tIsNewerVersion(latest, T_APP_VERSION),
     };
     const badge = document.getElementById('tUpdateBadge');
     if (badge && _tUpdateInfo.isNew) badge.style.display = 'inline-block';
