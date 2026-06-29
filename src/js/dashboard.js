@@ -3473,7 +3473,7 @@ async function loadServerList(el) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const APP_VERSION = '2.3.4';
+const APP_VERSION = '2.3.1';
 let _updateInfo = null;
 let _updateChecked = false;
 
