@@ -1,5 +1,7 @@
 node_modules/
 dist/
+App/
+_build_temp/
 backend/venv/
 backend/uploads/
 backend/__pycache__/

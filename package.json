@@ -1,11 +1,11 @@
 {
   "name": "silverapp",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Silver Bot Dashboard",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable"
+    "build": "node build.js"
   },
   "author": "Tib",
   "license": "UNLICENSED",
@@ -29,7 +29,11 @@
       "perMachine": false,
       "allowToChangeInstallationDirectory": false,
       "shortcutName": "Silver App",
-      "uninstallDisplayName": "Silver App"
+      "uninstallDisplayName": "Silver App",
+      "include": "build/installer.nsh"
+    },
+    "directories": {
+      "output": "App"
     },
     "files": [
       "main.js",

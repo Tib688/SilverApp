@@ -307,7 +307,7 @@ async function loadOverview(el) {
   const [guilds, xp, msgs, testers, bugs] = await Promise.all([
     getCachedGuilds(),
     dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
-    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats'),
+    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM user_xp'),
     dbScalar('SELECT COUNT(*) FROM tester_codes'),
     dbScalar("SELECT COUNT(*) FROM tester_bugs WHERE status='open'"),
   ]);
@@ -395,15 +395,16 @@ async function loadLeaderboard(el) {
     getCachedGuilds(),
   ]);
   const guildMap = {};
-  guilds.forEach(g => guildMap[g.id] = g);
+  guilds.forEach(g => guildMap[String(g.id).trim()] = g);
 
   // Render servers immediately (no API call needed)
   if (serverRows.length && !serverRows[0]?.error) {
     document.getElementById('lbServers').innerHTML = buildTable(['#', 'Serveur', 'XP Total'],
       serverRows.map((r, i) => {
-        const g = guildMap[r.guild_id];
+        const gid = String(r.guild_id).trim();
+        const g = guildMap[gid];
         const icon = g && g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:26px;height:26px;border-radius:50%">` : '';
-        const name = g ? esc(g.name) : `...${r.guild_id.slice(-4)}`;
+        const name = g ? esc(g.name) : `<span style="color:var(--muted)">${gid}</span>`;
         const rank = `<span style="font-weight:700;color:${i < 3 ? 'var(--gold)' : 'var(--dim)'}">#${i+1}</span>`;
         const cell = `<div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="navigator.clipboard.writeText('${r.guild_id}');this.querySelector('.lb-copy').textContent='Copie !';setTimeout(()=>this.querySelector('.lb-copy').textContent='',1500)">
           ${icon}<span style="font-size:12px;color:var(--bright)">${name}</span>
@@ -509,14 +510,15 @@ async function searchMember() {
   if (gstats.length) {
     const guilds = await getCachedGuilds();
     const guildMap = {};
-    guilds.forEach(g => guildMap[g.id] = g);
+    guilds.forEach(g => guildMap[String(g.id).trim()] = g);
 
     html += sectionHeader(`Activite par serveur (${gstats.length})`);
     html += buildTable(['Serveur', 'XP', 'Chat', 'Voice', 'Messages', 'Vocal'],
       gstats.map(g => {
-        const guild = guildMap[g.guild_id];
+        const gid = String(g.guild_id).trim();
+        const guild = guildMap[gid];
         const icon = guild && guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=32" style="width:20px;height:20px;border-radius:6px">` : '';
-        const name = guild ? esc(guild.name) : g.guild_id;
+        const name = guild ? esc(guild.name) : `<span style="color:var(--muted)">${gid}</span>`;
         const cell = `<div style="display:flex;align-items:center;gap:8px">${icon}<span style="font-size:12px;color:var(--bright)">${name}</span></div>`;
         return [cell, (g.xp||0).toLocaleString('fr-FR'), g.chat_xp||0, g.voice_xp||0, g.messages_count||0, `${g.voice_minutes||0}m`];
       }));
@@ -2221,17 +2223,18 @@ async function loadStats(el) {
     <div id="statsContent"><div class="loading"><div class="spinner"></div></div></div>`;
   const [totalXp, totalMsgs, totalWarns, topDay, activeGuilds, guilds] = await Promise.all([
     dbScalar('SELECT COALESCE(SUM(xp),0) FROM user_xp'),
-    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM global_user_stats'),
+    dbScalar('SELECT COALESCE(SUM(messages_count),0) FROM user_xp'),
     dbScalar('SELECT COUNT(*) FROM warnings'),
     dbQuery('SELECT DATE(created_at) as d, COUNT(*) as c FROM warnings GROUP BY d ORDER BY c DESC LIMIT 1'),
     dbScalar('SELECT COUNT(DISTINCT guild_id) FROM user_xp'),
     getCachedGuilds(),
   ]);
-  let totalUsers = 0;
+  let totalMembers = 0;
   const guildDetails = await Promise.all(guilds.map(g => discordGet(`/guilds/${g.id}?with_counts=true`)));
-  guildDetails.forEach(g => { if (g && !g.error) totalUsers += g.approximate_member_count || 0; });
-  const avgXp = totalUsers > 0 ? Math.round(totalXp / totalUsers) : 0;
-  const avgMsgs = totalUsers > 0 ? Math.round(totalMsgs / totalUsers) : 0;
+  guildDetails.forEach(g => { if (g && !g.error) totalMembers += g.approximate_member_count || 0; });
+  const activeUsers = await dbScalar('SELECT COUNT(DISTINCT CAST(user_id AS CHAR)) FROM user_xp');
+  const avgXp = activeUsers > 0 ? Math.round(totalXp / activeUsers) : 0;
+  const avgMsgs = activeUsers > 0 ? Math.round(totalMsgs / activeUsers) : 0;
   const peakDay = topDay.length && !topDay[0]?.error ? topDay[0] : null;
 
   let html = `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
@@ -2241,22 +2244,23 @@ async function loadStats(el) {
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Serveurs actifs</div><div class="stat-value">${activeGuilds}</div></div>
   </div>`;
   html += `<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Membres</div><div class="stat-value">${totalUsers}</div></div>
+    <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Membres</div><div class="stat-value">${totalMembers}</div></div>
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Warns Total</div><div class="stat-value">${totalWarns}</div></div>
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Msgs Moyen/User</div><div class="stat-value">${avgMsgs}</div></div>
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:#c084fc"></div><div class="stat-label">Jour le + actif</div><div class="stat-value" style="font-size:12px">${peakDay ? peakDay.d : '—'}</div></div>
   </div>`;
 
-  const xpByGuild = await dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp, SUM(messages_count) as msgs, COUNT(DISTINCT user_id) as users FROM user_xp GROUP BY guild_id ORDER BY xp DESC LIMIT 10');
+  const xpByGuild = await dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp, SUM(messages_count) as msgs, COUNT(DISTINCT CAST(user_id AS CHAR)) as users FROM user_xp GROUP BY guild_id ORDER BY xp DESC LIMIT 10');
   if (xpByGuild.length && !xpByGuild[0]?.error) {
     const guilds = await getCachedGuilds();
-    const gm = {}; guilds.forEach(g => gm[g.id] = g);
+    const gm = {}; guilds.forEach(g => gm[String(g.id).trim()] = g);
     html += sectionHeader('Repartition par serveur');
     html += buildTable(['Serveur', 'XP', 'Messages', 'Membres'],
       xpByGuild.map(r => {
-        const g = gm[r.guild_id];
+        const gid = String(r.guild_id).trim();
+        const g = gm[gid];
         const icon = g && g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:20px;height:20px;border-radius:6px">` : '';
-        const name = g ? esc(g.name) : `...${r.guild_id.slice(-4)}`;
+        const name = g ? esc(g.name) : `<span style="color:var(--muted)">${gid}</span>`;
         return [`<div style="display:flex;align-items:center;gap:8px">${icon}<span>${name}</span></div>`, (r.xp||0).toLocaleString('fr-FR'), r.msgs||0, r.users||0];
       }));
   }
@@ -3331,8 +3335,8 @@ function initQuickActions() {
       <div class="fab-item" onclick="showPage('console');fabToggle()">🖥 ${t('console')}</div>
       <div class="fab-item" onclick="showShortcutsHelp();fabToggle()">⌨ ${t('shortcuts')}</div>
     </div>
-    <button id="fabBtn" onclick="fabToggle()" style="width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s,background .2s;display:flex;align-items:center;justify-content:center">+</button>`;
-  fab.style.cssText = 'position:fixed;bottom:48px;right:20px;z-index:100';
+    <button id="fabBtn" onclick="fabToggle()" style="width:32px;height:32px;border-radius:50%;background:var(--border-light);border:none;color:var(--dim);font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:all .2s;display:flex;align-items:center;justify-content:center;opacity:.5" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'">+</button>`;
+  fab.style.cssText = 'position:fixed;bottom:36px;right:14px;z-index:100';
   document.body.appendChild(fab);
 }
 
