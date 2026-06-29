@@ -228,7 +228,7 @@ async function loadHome(el) {
       </div>
 
       <h1 style="font-size:28px;font-weight:800;color:var(--bright);letter-spacing:-.03em">${esc(b.username || 'Silver Bot')}</h1>
-      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.1</p>
+      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.3</p>
 
       <div style="display:flex;gap:8px;margin-top:16px">
         <span class="badge badge-green" style="padding:5px 14px;font-size:11px">En ligne</span>
@@ -760,7 +760,7 @@ async function loadSettings(el) {
       <div class="card settings-section">
         <div class="control-section-title">Application</div>
         <div class="settings-info-grid">
-          <div><span class="settings-label">Version</span><span class="settings-value">v2.2.0</span></div>
+          <div><span class="settings-label">Version</span><span class="settings-value">v2.3.0</span></div>
           <div><span class="settings-label">Framework</span><span class="settings-value">Electron</span></div>
           <div><span class="settings-label">Backend</span><span class="settings-value">FastAPI</span></div>
           <div><span class="settings-label">GitHub</span><span class="settings-value">Tib688/SilverApp</span></div>
@@ -2560,7 +2560,7 @@ function bpStartPreview() {
     _bpPreviewIdx++;
     const el = document.getElementById('bpPreviewStatus');
     if (el) {
-      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.2');
+      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.3');
       const prefix = s.type === 'streaming' ? '🟣 Streaming' : s.type === 'playing' ? '🎮 Playing' : s.type === 'watching' ? '👀 Watching' : '🎵 Listening';
       el.textContent = `${prefix}: ${text}`;
       el.style.opacity = '0'; setTimeout(() => { if (el) el.style.opacity = '1'; }, 100);
