@@ -3586,6 +3586,28 @@ function loadChangelog(el) { loadChangelogInto(el); }
 
 function loadChangelogInto(el) {
   const logs = [
+    { version: 'v2.3.3', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '⬆️ Mise a jour in-app avec barre de progression',
+      '📥 Telechargement du setup directement dans l\'app',
+      '🚀 Lancement auto du setup + fermeture de l\'app',
+      '🔄 Fallback telechargement manuel si erreur',
+    ]},
+    { version: 'v2.3.2', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🔔 Systeme de detection de mise a jour via GitHub Releases',
+      '📋 Page Mise a jour avec changelog integre',
+      '💜 Badge violet quand nouvelle version disponible',
+      '🔄 Check auto au lancement + toutes les 30 min',
+    ]},
+    { version: 'v2.3.1', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🔑 Page login en Liquid Chrome',
+      '🖥️ Splash screen au lancement',
+      '🔍 Recherche Ctrl+K redesignee (recents, toutes pages)',
+      '⌨️ Inputs, boutons, selects, tables en chrome',
+      '💀 Skeleton loading chrome',
+      '🕐 Horloge stylisee avec separateurs pulsants',
+      '🧭 Breadcrumbs discrets',
+      '💬 Fix chat/DM/TestLab testeur + avatars Discord',
+    ]},
     { version: 'v2.3', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
       { title: '🪞 Liquid Chrome Design', items: [
         'Nouveau theme visuel Liquid Chrome — noir profond + argent metallique',
