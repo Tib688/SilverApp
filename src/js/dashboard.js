@@ -274,7 +274,7 @@ async function loadHome(el) {
       <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
       </div>
-      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.2.6 · Electron · FastAPI · MySQL</p>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3 · Electron · FastAPI · MySQL</p>
     </div>`;
 }
 
@@ -324,20 +324,24 @@ async function loadOverview(el) {
   document.getElementById('pillTickets').textContent = bugs;
 
   if (guilds.length) {
+    const detailMap = {};
+    guildDetails.forEach((d, i) => { if (d && !d.error) detailMap[guilds[i].id] = d; });
     let html = sectionHeader(`Serveurs (${guilds.length})`);
     html += '<div class="card">';
     guilds.forEach(g => {
       const icon = g.icon
         ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64">`
         : g.name[0].toUpperCase();
+      const detail = detailMap[g.id];
+      const members = detail ? detail.approximate_member_count || 0 : '?';
+      const online = detail ? detail.approximate_presence_count || 0 : '?';
       html += `
         <div class="server-item" style="cursor:pointer" onclick="showServerDetail('${g.id}','${esc(g.name).replace(/'/g,"\\'")}')">
           <div class="server-icon">${typeof icon === 'string' && icon.length === 1 ? icon : icon}</div>
           <div class="server-info">
             <div class="name">${esc(g.name)}</div>
-            <div class="id">${g.id}</div>
+            <div class="id"><span style="color:var(--green)">●</span> ${online} en ligne · ${members} membres</div>
           </div>
-          <span class="server-copy" style="font-size:10px;color:var(--muted)">Copier ID</span>
         </div>`;
     });
     html += '</div>';
@@ -3443,28 +3447,34 @@ async function loadServerList(el) {
 
 function loadChangelog(el) {
   const logs = [
-    { version: 'v2.2.5', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
-      'Comptage exact des messages par channel via API search Discord',
-      'Plus de limite a 100 messages dans les stats channels',
+    { version: 'v2.2.6', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '📝 Changelog complet avec mises a jour mineures et pre-2.0',
+      '📋 Bouton copier sur chaque entree du changelog',
+      '👥 Affichage membres et en ligne par serveur dans Overview',
+      '🔄 Mise a jour des numeros de version partout dans l\'app',
     ]},
-    { version: 'v2.2.4', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
-      'Pagination complete des messages Discord (comptage reel)',
-      'Indicateur de progression pendant le comptage',
-      'Nombres formates avec separateurs',
+    { version: 'v2.2.5', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🔍 Comptage exact des messages via API search Discord',
+      '♾️ Plus aucune limite — meme 1 million de messages sont comptes',
     ]},
-    { version: 'v2.2.3', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
-      'Stats filtrees : seuls les serveurs actifs (bot present) sont affiches',
-      'Donnees conservees en DB : si le bot revient, les stats reviennent',
+    { version: 'v2.2.4', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '📊 Pagination complete des messages Discord',
+      '⏳ Indicateur de progression pendant le comptage',
+      '🔢 Nombres formates avec separateurs (5 447 au lieu de 5447)',
     ]},
-    { version: 'v2.2.2', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
-      'Correction matching guild_id (noms de serveurs manquants)',
-      'Source unique user_xp pour XP et messages',
-      'Moyennes calculees sur les utilisateurs actifs',
+    { version: 'v2.2.3', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '👻 Serveurs quittes masques des stats (donnees conservees en DB)',
+      '🔄 Si le bot revient sur un serveur, ses stats reapparaissent',
     ]},
-    { version: 'v2.2.1', date: '29/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
-      'FAB (bouton +) plus petit et discret',
-      'Fix guild_id matching avec trim()',
-      'Build script avec version dans le nom du setup',
+    { version: 'v2.2.2', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🔗 Fix matching guild_id — plus d\'IDs bruts a la place des noms',
+      '📈 Source unique user_xp pour XP et messages (donnees fiables)',
+      '🧮 Moyennes calculees sur les utilisateurs actifs',
+    ]},
+    { version: 'v2.2.1', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '✨ FAB (bouton +) plus petit et discret',
+      '🏗️ Build script avec version dans le nom du setup',
+      '📁 Nouveau systeme de dossiers App/latest/versions/',
     ]},
     { version: 'v2.2', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
       { title: '📊 Analytics & Heatmap', items: [
@@ -3543,10 +3553,10 @@ function loadChangelog(el) {
         'Envoi de messages via le bot',
       ]},
     ]},
-    { version: 'v1.1', date: '05/06/2026', tag: 'Mineur', color: 'var(--cyan)', items: [
-      'Amelioration de l\'interface web',
-      'Ajout des warns et moderation basique',
-      'Correction de bugs de connexion',
+    { version: 'v1.1', date: '05/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🎨 Amelioration de l\'interface web',
+      '⚠️ Ajout des warns et moderation basique',
+      '🐛 Correction de bugs de connexion',
     ]},
     { version: 'v1.0', date: '28/05/2026', tag: 'Initial', color: 'var(--accent)', sections: [
       { title: '🎉 Premiere version', items: [
@@ -3559,12 +3569,13 @@ function loadChangelog(el) {
     ]},
   ];
 
-  function logToText(log) {
+  const _clTexts = logs.map(log => {
     let txt = `${log.version} — ${log.date} (${log.tag})\n`;
-    if (log.items) { log.items.forEach(i => txt += `  - ${i}\n`); }
-    if (log.sections) { log.sections.forEach(s => { txt += `  ${s.title}\n`; s.items.forEach(i => txt += `    - ${i}\n`); }); }
+    if (log.items) log.items.forEach(i => txt += `  - ${i}\n`);
+    if (log.sections) log.sections.forEach(s => { txt += `  ${s.title}\n`; s.items.forEach(i => txt += `    - ${i}\n`); });
     return txt;
-  }
+  });
+  window._clTexts = _clTexts;
 
   el.innerHTML = `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>` +
     logs.map((log, idx) => `
@@ -3584,10 +3595,19 @@ function loadChangelog(el) {
           <ul style="margin:0;padding-left:18px;color:var(--text);font-size:12px;line-height:1.9">
             ${log.items.map(c => `<li>${esc(c)}</li>`).join('')}
           </ul>`}
-        <button onclick="navigator.clipboard.writeText(${esc(JSON.stringify(logToText(log)))});this.innerHTML='✓';setTimeout(()=>this.innerHTML='<svg width=\\'12\\' height=\\'12\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><rect x=\\'9\\' y=\\'9\\' width=\\'13\\' height=\\'13\\' rx=\\'2\\'/><path d=\\'M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1\\'/></svg>',1500)" style="position:absolute;bottom:10px;right:12px;background:none;border:none;color:var(--dim);cursor:pointer;padding:4px;border-radius:4px;transition:color .15s;opacity:.5" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" title="Copier">
+        <button onclick="clCopy(${idx},this)" style="position:absolute;bottom:10px;right:12px;background:none;border:none;color:var(--dim);cursor:pointer;padding:4px;border-radius:4px;transition:color .15s;opacity:.5" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" title="Copier">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         </button>
       </div>`).join('');
+}
+
+function clCopy(idx, btn) {
+  const txt = window._clTexts?.[idx];
+  if (!txt) return;
+  navigator.clipboard.writeText(txt);
+  const svg = btn.innerHTML;
+  btn.innerHTML = '<span style="font-size:11px">✓</span>';
+  setTimeout(() => btn.innerHTML = svg, 1500);
 }
 
 // ═══ LOGS ACTIVITE ══════════════════════════════════════════════════════════
