@@ -391,20 +391,27 @@ async function loadLeaderboard(el) {
 
   const [memberRows, serverRows, guilds] = await Promise.all([
     dbQuery('SELECT CAST(user_id AS CHAR) AS user_id, SUM(xp) as xp, SUM(messages_count) as msgs FROM user_xp GROUP BY user_id ORDER BY xp DESC LIMIT 50'),
-    dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp FROM user_xp GROUP BY guild_id ORDER BY xp DESC LIMIT 50'),
+    dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp FROM user_xp GROUP BY guild_id ORDER BY xp DESC'),
     getCachedGuilds(),
   ]);
   const guildMap = {};
   guilds.forEach(g => guildMap[String(g.id).trim()] = g);
+  // Fetch missing guilds
+  for (const r of serverRows) {
+    const gid = String(r.guild_id).trim();
+    if (!guildMap[gid]) {
+      const info = await discordGet(`/guilds/${gid}`);
+      if (info && !info.error) guildMap[gid] = info;
+    }
+  }
 
-  // Render servers immediately (no API call needed)
   if (serverRows.length && !serverRows[0]?.error) {
     document.getElementById('lbServers').innerHTML = buildTable(['#', 'Serveur', 'XP Total'],
       serverRows.map((r, i) => {
         const gid = String(r.guild_id).trim();
         const g = guildMap[gid];
         const icon = g && g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:26px;height:26px;border-radius:50%">` : '';
-        const name = g ? esc(g.name) : `<span style="color:var(--muted)">${gid}</span>`;
+        const name = g ? esc(g.name) : `<span style="color:var(--muted)">Serveur quitte</span>`;
         const rank = `<span style="font-weight:700;color:${i < 3 ? 'var(--gold)' : 'var(--dim)'}">#${i+1}</span>`;
         const cell = `<div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="navigator.clipboard.writeText('${r.guild_id}');this.querySelector('.lb-copy').textContent='Copie !';setTimeout(()=>this.querySelector('.lb-copy').textContent='',1500)">
           ${icon}<span style="font-size:12px;color:var(--bright)">${name}</span>
@@ -511,6 +518,13 @@ async function searchMember() {
     const guilds = await getCachedGuilds();
     const guildMap = {};
     guilds.forEach(g => guildMap[String(g.id).trim()] = g);
+    for (const g of gstats) {
+      const gid = String(g.guild_id).trim();
+      if (!guildMap[gid]) {
+        const info = await discordGet(`/guilds/${gid}`);
+        if (info && !info.error) guildMap[gid] = info;
+      }
+    }
 
     html += sectionHeader(`Activite par serveur (${gstats.length})`);
     html += buildTable(['Serveur', 'XP', 'Chat', 'Voice', 'Messages', 'Vocal'],
@@ -518,7 +532,7 @@ async function searchMember() {
         const gid = String(g.guild_id).trim();
         const guild = guildMap[gid];
         const icon = guild && guild.icon ? `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=32" style="width:20px;height:20px;border-radius:6px">` : '';
-        const name = guild ? esc(guild.name) : `<span style="color:var(--muted)">${gid}</span>`;
+        const name = guild ? esc(guild.name) : `<span style="color:var(--muted)">Serveur quitte</span>`;
         const cell = `<div style="display:flex;align-items:center;gap:8px">${icon}<span style="font-size:12px;color:var(--bright)">${name}</span></div>`;
         return [cell, (g.xp||0).toLocaleString('fr-FR'), g.chat_xp||0, g.voice_xp||0, g.messages_count||0, `${g.voice_minutes||0}m`];
       }));
@@ -2250,18 +2264,26 @@ async function loadStats(el) {
     <div class="card stat-card slide-in"><div class="stat-bar" style="background:#c084fc"></div><div class="stat-label">Jour le + actif</div><div class="stat-value" style="font-size:12px">${peakDay ? peakDay.d : '—'}</div></div>
   </div>`;
 
-  const xpByGuild = await dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp, SUM(messages_count) as msgs, COUNT(DISTINCT CAST(user_id AS CHAR)) as users FROM user_xp GROUP BY guild_id ORDER BY xp DESC LIMIT 10');
+  const xpByGuild = await dbQuery('SELECT CAST(guild_id AS CHAR) AS guild_id, SUM(xp) as xp, SUM(messages_count) as msgs, COUNT(DISTINCT CAST(user_id AS CHAR)) as users FROM user_xp GROUP BY guild_id ORDER BY xp DESC');
   if (xpByGuild.length && !xpByGuild[0]?.error) {
     const guilds = await getCachedGuilds();
     const gm = {}; guilds.forEach(g => gm[String(g.id).trim()] = g);
+    // Fetch missing guild info
+    for (const r of xpByGuild) {
+      const gid = String(r.guild_id).trim();
+      if (!gm[gid]) {
+        const info = await discordGet(`/guilds/${gid}`);
+        if (info && !info.error) gm[gid] = info;
+      }
+    }
     html += sectionHeader('Repartition par serveur');
     html += buildTable(['Serveur', 'XP', 'Messages', 'Membres'],
       xpByGuild.map(r => {
         const gid = String(r.guild_id).trim();
         const g = gm[gid];
         const icon = g && g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=32" style="width:20px;height:20px;border-radius:6px">` : '';
-        const name = g ? esc(g.name) : `<span style="color:var(--muted)">${gid}</span>`;
-        return [`<div style="display:flex;align-items:center;gap:8px">${icon}<span>${name}</span></div>`, (r.xp||0).toLocaleString('fr-FR'), r.msgs||0, r.users||0];
+        const name = g ? esc(g.name) : `<span style="color:var(--muted)">Serveur quitte</span>`;
+        return [`<div style="display:flex;align-items:center;gap:8px">${icon}<span>${name}</span></div>`, (r.xp||0).toLocaleString('fr-FR'), (r.msgs||0).toLocaleString('fr-FR'), r.users||0];
       }));
   }
   document.getElementById('statsContent').innerHTML = html;
