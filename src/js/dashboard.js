@@ -2299,15 +2299,36 @@ async function channelGuildChanged() {
   const catMap = {};
   categories.forEach(c => catMap[c.id] = c.name);
 
-  const channelData = await Promise.all(textChannels.slice(0, 20).map(async ch => {
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> <span id="channelCountStatus" style="font-size:11px;color:var(--dim)">Comptage des messages...</span></div>';
+
+  async function countChannelMessages(channelId) {
+    let total = 0;
+    const users = new Set();
+    let before = null;
+    let recent = null;
+    while (true) {
+      const url = `/channels/${channelId}/messages?limit=100` + (before ? `&before=${before}` : '');
+      const msgs = await discordGet(url);
+      if (!Array.isArray(msgs) || msgs.length === 0) break;
+      if (!recent) recent = msgs[0];
+      msgs.forEach(m => { if (m.author?.id) users.add(m.author.id); });
+      total += msgs.length;
+      if (msgs.length < 100) break;
+      before = msgs[msgs.length - 1].id;
+    }
+    return { total, users: users.size, recent };
+  }
+
+  const channelData = [];
+  for (let i = 0; i < textChannels.length; i++) {
+    const ch = textChannels[i];
+    const statusEl = document.getElementById('channelCountStatus');
+    if (statusEl) statusEl.textContent = `Comptage: #${ch.name} (${i + 1}/${textChannels.length})`;
     try {
-      const msgs = await discordGet(`/channels/${ch.id}/messages?limit=100`);
-      if (!Array.isArray(msgs)) return { ch, count: 0, users: 0, recent: null };
-      const uniqueUsers = new Set(msgs.map(m => m.author?.id)).size;
-      const recent = msgs.length ? msgs[0] : null;
-      return { ch, count: msgs.length, users: uniqueUsers, recent };
-    } catch { return { ch, count: 0, users: 0, recent: null }; }
-  }));
+      const { total, users, recent } = await countChannelMessages(ch.id);
+      channelData.push({ ch, count: total, users, recent });
+    } catch { channelData.push({ ch, count: 0, users: 0, recent: null }); }
+  }
 
   channelData.sort((a, b) => b.count - a.count);
   const totalMsgs = channelData.reduce((s, d) => s + d.count, 0);
@@ -2328,7 +2349,7 @@ async function channelGuildChanged() {
       const pct = totalMsgs > 0 ? Math.round(d.count / totalMsgs * 100) : 0;
       const bar = `<div style="display:flex;align-items:center;gap:6px"><div style="width:80px;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px"></div></div><span style="font-size:10px;color:var(--muted)">${pct}%</span></div>`;
       const rank = `<span style="font-weight:700;color:${i < 3 ? 'var(--gold)' : 'var(--dim)'}">#${i + 1}</span>`;
-      return [rank, `<span style="color:var(--bright)">#${esc(d.ch.name)}</span>`, esc(cat), d.count, d.users, bar];
+      return [rank, `<span style="color:var(--bright)">#${esc(d.ch.name)}</span>`, esc(cat), d.count.toLocaleString('fr-FR'), d.users.toLocaleString('fr-FR'), bar];
     }));
 
   if (voiceChannels.length) {
