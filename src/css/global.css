@@ -368,46 +368,46 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
 
 .btn {
-  padding: 9px 18px;
-  border: none;
+  padding: 10px 20px;
+  border: .5px solid var(--chrome-border);
   border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--transition);
-  letter-spacing: .01em;
+  letter-spacing: .02em;
 }
 
-.btn-primary { background: var(--accent); color: #000; }
-.btn-primary:hover { background: var(--silver); transform: translateY(-1px); box-shadow: var(--glow); }
+.btn-primary { background: linear-gradient(145deg, rgba(200,200,230,.1), rgba(200,200,230,.04)); color: #c0c0d8; border: .5px solid rgba(200,200,220,.12); }
+.btn-primary:hover { background: linear-gradient(145deg, rgba(200,200,230,.15), rgba(200,200,230,.06)); transform: translateY(-1px); }
 
-.btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { background: var(--card-hover); border-color: var(--border-light); }
+.btn-secondary { background: rgba(200,200,230,.03); color: #707088; border: .5px solid rgba(200,200,220,.06); }
+.btn-secondary:hover { background: rgba(200,200,230,.06); color: #9090a8; }
 
-.btn-danger { background: rgba(239,68,68,.06); color: var(--red); border: 1px solid rgba(239,68,68,.1); }
-.btn-danger:hover { background: rgba(239,68,68,.12); }
+.btn-danger { background: rgba(230,80,80,.05); color: #e07070; border: .5px solid rgba(230,80,80,.08); }
+.btn-danger:hover { background: rgba(230,80,80,.1); }
 
-.btn-red { background: var(--red); color: #fff; border: none; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
-.btn-red:hover { opacity: .85; }
+.btn-red { background: linear-gradient(145deg, rgba(230,80,80,.15), rgba(230,80,80,.08)); color: #e88; border: .5px solid rgba(230,80,80,.12); padding: 10px 20px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.btn-red:hover { background: rgba(230,80,80,.2); }
 
 input, textarea, select {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: rgba(200,200,230,.03);
+  border: .5px solid rgba(200,200,220,.08);
   border-radius: var(--radius-sm);
-  color: var(--bright);
+  color: #c0c0d0;
   font-family: inherit;
   font-size: 13px;
-  padding: 9px 13px;
+  padding: 10px 14px;
   outline: none;
   transition: all var(--transition);
   width: 100%;
 }
 
-input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,149,176,.06); }
-input::placeholder, textarea::placeholder { color: var(--muted); }
+input:focus, textarea:focus, select:focus { border-color: rgba(200,200,220,.18); box-shadow: 0 0 0 3px rgba(160,140,200,.04); }
+input::placeholder, textarea::placeholder { color: #353548; }
 select { color-scheme: dark; }
-select option { background: var(--card); color: var(--bright); }
+select option { background: #0c0c16; color: #c0c0d0; }
 [data-theme="light"] select { color-scheme: light; }
 
 .card {
@@ -465,13 +465,14 @@ select option { background: var(--card); color: var(--bright); }
   100% { background-position: 400px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, var(--card) 25%, var(--border-light) 37%, var(--card) 63%);
+  background: linear-gradient(90deg, #0c0c16 25%, rgba(200,200,230,.04) 37%, #0c0c16 63%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: var(--radius);
+  border: .5px solid rgba(200,200,220,.03);
 }
-.skeleton-card { height: 78px; }
-.skeleton-row { height: 38px; border-radius: var(--radius-sm); margin-bottom: 6px; }
+.skeleton-card { height: 82px; border-radius: 18px; }
+.skeleton-row { height: 40px; border-radius: var(--radius-sm); margin-bottom: 8px; }
 .skeleton-text { height: 14px; width: 55%; border-radius: 4px; margin-bottom: 8px; }
 .skeleton-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
 .skeleton-list { display: flex; flex-direction: column; gap: 6px; }

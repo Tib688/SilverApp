@@ -129,7 +129,13 @@ function updateStaticUI() {
 // Clock
 setInterval(() => {
   const el = document.getElementById('clock');
-  if (el) el.textContent = new Date().toLocaleTimeString(currentLang === 'fr' ? 'fr-FR' : 'en-US');
+  if (el) {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    el.innerHTML = `<span style="color:#707088">${h}</span><span style="color:#404058;animation:pulse 1s infinite">:</span><span style="color:#707088">${m}</span><span style="color:#404058">:</span><span style="color:#505068">${s}</span>`;
+  }
 }, 1000);
 
 // Page system
@@ -1925,15 +1931,15 @@ function buildTable(headers, rows) {
   const tid = `tbl${++_tableCounter}`;
   window['_td_' + tid] = rows;
   let html = `<div class="card" style="padding:0;overflow:hidden"><table id="${tid}" style="width:100%;border-collapse:collapse">`;
-  html += '<thead><tr>' + headers.map((h, i) => `<th class="sortable" onclick="sortTable('${tid}',${i})" style="text-align:left;padding:10px 14px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg2);border-bottom:1px solid var(--border);cursor:pointer">${h}<span class="sort-icon" style="margin-left:4px;font-size:9px;opacity:.3">↕</span></th>`).join('') + '</tr></thead>';
+  html += '<thead><tr>' + headers.map((h, i) => `<th class="sortable" onclick="sortTable('${tid}',${i})" style="text-align:left;padding:12px 16px;font-size:10px;font-weight:500;color:#555568;text-transform:uppercase;letter-spacing:.8px;background:linear-gradient(180deg,#0c0c16,#0a0a10);border-bottom:.5px solid rgba(200,200,220,.05);cursor:pointer">${h}<span class="sort-icon" style="margin-left:4px;font-size:9px;opacity:.3">↕</span></th>`).join('') + '</tr></thead>';
   html += '<tbody>' + renderTbody(rows) + '</tbody></table></div>';
   return html;
 }
 
 function renderTbody(rows) {
   return rows.map((row, i) => {
-    const bg = i % 2 === 0 ? 'transparent' : 'var(--bg2)';
-    return '<tr style="transition:background .1s">' + row.map(val => `<td style="padding:10px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.02);background:${bg}">${val}</td>`).join('') + '</tr>';
+    const bg = i % 2 === 0 ? 'transparent' : 'rgba(200,200,230,.015)';
+    return '<tr style="transition:background .15s" onmouseenter="this.style.background=\'rgba(200,200,230,.03)\'" onmouseleave="this.style.background=\'' + bg + '\'">' + row.map(val => `<td style="padding:12px 16px;font-size:12px;border-bottom:.5px solid rgba(200,200,220,.03);background:${bg};color:#9090a8">${val}</td>`).join('') + '</tr>';
   }).join('');
 }
 
@@ -2173,18 +2179,33 @@ async function showServerDetail(guildId, guildName) {
 
 // ═══ RECHERCHE GLOBALE (Ctrl+K) ═════════════════════════════════════════════
 
+let _recentSearches = JSON.parse(localStorage.getItem('silverapp_recent_searches') || '[]');
+
 function openSearch() {
   if (document.getElementById('globalSearchOverlay')) return;
   const overlay = document.createElement('div');
   overlay.id = 'globalSearchOverlay';
   overlay.className = 'search-overlay';
-  overlay.innerHTML = `<div class="search-box">
-    <input type="text" id="globalSearchInput" placeholder="Rechercher membre, serveur, page..." autofocus oninput="globalSearchUpdate()">
-    <div id="globalSearchResults" class="search-results"></div>
+  overlay.innerHTML = `<div class="search-box" style="background:linear-gradient(160deg,#0c0c16,#08080e);border:.5px solid rgba(200,200,220,.08);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:.5px solid rgba(200,200,220,.04)">
+      <span style="color:#555568;font-size:14px">&#128269;</span>
+      <input type="text" id="globalSearchInput" placeholder="${currentLang === 'fr' ? 'Rechercher...' : 'Search...'}" autofocus oninput="globalSearchUpdate()" style="background:none;border:none;color:#c0c0d0;font-size:14px;flex:1;outline:none;padding:0">
+      <kbd style="background:rgba(200,200,230,.05);border:.5px solid rgba(200,200,220,.08);border-radius:6px;padding:2px 8px;font-size:10px;color:#555568;font-family:monospace">ESC</kbd>
+    </div>
+    <div id="globalSearchResults" class="search-results" style="max-height:320px;overflow-y:auto;padding:8px">
+      ${_recentSearches.length ? `<div style="padding:6px 12px;font-size:9px;color:#404058;text-transform:uppercase;letter-spacing:1px">${currentLang === 'fr' ? 'Recents' : 'Recent'}</div>` + _recentSearches.slice(0, 5).map(r => `<div class="search-result-item" onclick="document.getElementById('globalSearchOverlay').remove();showPage('${r}')" style="border-radius:10px">${t(r)}</div>`).join('') : `<div style="padding:20px;text-align:center;color:#404058;font-size:11px">${currentLang === 'fr' ? 'Tape pour rechercher' : 'Type to search'}</div>`}
+    </div>
   </div>`;
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
   document.body.appendChild(overlay);
   document.getElementById('globalSearchInput').focus();
+}
+
+function _addRecentSearch(page) {
+  _recentSearches = _recentSearches.filter(r => r !== page);
+  _recentSearches.unshift(page);
+  _recentSearches = _recentSearches.slice(0, 8);
+  localStorage.setItem('silverapp_recent_searches', JSON.stringify(_recentSearches));
 }
 
 async function globalSearchUpdate() {
@@ -2193,15 +2214,19 @@ async function globalSearchUpdate() {
   if (!q) { results.innerHTML = ''; return; }
   let html = '';
   const pages = [
-    ['overview','Vue d\'ensemble'],['leaderboard','Leaderboard'],['members','Membres'],['compare','Comparateur'],
-    ['control','Controle Bot'],['botinfo','Bot Info'],['chat','Chat Testeurs'],['bugs','Bugs Reports'],
-    ['tasks','Taches'],['announcements','Annonces'],['suggestions','Suggestions'],['testlab','Test Lab'],
-    ['forgot','Codes oublies'],['database','Base de donnees'],['history','Historique'],['settings','Parametres'],
-    ['stats','Statistiques'],['changelog','Changelog'],
+    ['home','Accueil'],['overview','Vue d\'ensemble'],['analytics','Analytics'],['leaderboard','Leaderboard'],
+    ['members','Membres'],['compare','Comparateur'],['stats','Statistiques'],['heatmap','Heatmap'],
+    ['serverlist','Serveurs'],['channels','Stats Channels'],['control','Controle Bot'],['botinfo','Bot Info'],
+    ['botprofile','Bot Profil'],['embedbuilder','Embed Builder'],['uptime','Uptime'],
+    ['chat','Chat Testeurs'],['bugs','Bugs Reports'],['tasks','Taches'],['announcements','Annonces'],
+    ['suggestions','Suggestions'],['testlab','Test Lab'],['forgot','Codes oublies'],
+    ['database','Base de donnees'],['console','Console'],['logs','Logs'],['history','Historique'],
+    ['changelog','Changelog'],['settings','Parametres'],
   ];
   const matchedPages = pages.filter(([,name]) => name.toLowerCase().includes(q));
   if (matchedPages.length) {
-    html += matchedPages.map(([id, name]) => `<div class="search-result-item" onclick="document.getElementById('globalSearchOverlay').remove();showPage('${id}')">${name}</div>`).join('');
+    html += `<div style="padding:6px 12px;font-size:9px;color:#404058;text-transform:uppercase;letter-spacing:1px">Pages</div>`;
+    html += matchedPages.map(([id, name]) => `<div class="search-result-item" style="border-radius:10px" onclick="_addRecentSearch('${id}');document.getElementById('globalSearchOverlay').remove();showPage('${id}')">${name}</div>`).join('');
   }
   if (/^\d{10,}$/.test(q)) {
     html += `<div class="search-result-item" onclick="document.getElementById('globalSearchOverlay').remove();showPage('members');setTimeout(()=>{document.getElementById('memberSearch').value='${q}';searchMember()},100)">Rechercher membre ${q}</div>`;

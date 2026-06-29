@@ -1144,17 +1144,17 @@
 .breadcrumbs {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 24px;
+  gap: 8px;
+  padding: 6px 40px;
   font-size: 10px;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  color: #404058;
+  border-bottom: .5px solid var(--chrome-border);
+  background: transparent;
 }
 .breadcrumb-item { cursor: pointer; transition: color .15s; }
-.breadcrumb-item:hover { color: var(--text); }
-.breadcrumb-item.active { color: var(--accent); font-weight: 600; }
-.breadcrumb-sep { color: var(--muted); font-size: 8px; }
+.breadcrumb-item:hover { color: #707088; }
+.breadcrumb-item.active { color: #9090a8; font-weight: 500; }
+.breadcrumb-sep { color: #303045; font-size: 8px; }
 
 /* ═══ SORTABLE TABLE ═══ */
 th.sortable { cursor: pointer; user-select: none; transition: color .15s; position: relative; }

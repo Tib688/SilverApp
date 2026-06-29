@@ -14,7 +14,7 @@ function createWindow() {
     minHeight: 600,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#0f1117',
+    backgroundColor: '#020204',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -23,8 +23,9 @@ function createWindow() {
     icon: path.join(__dirname, 'icon.ico'),
   });
 
-  mainWindow.loadFile('src/pages/login.html');
+  mainWindow.loadFile('src/pages/splash.html');
   mainWindow.on('closed', () => { mainWindow = null; });
+  setTimeout(() => { if (mainWindow) mainWindow.loadFile('src/pages/login.html'); }, 2000);
 }
 
 // Window controls
