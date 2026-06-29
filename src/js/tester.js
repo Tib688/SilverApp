@@ -634,6 +634,10 @@ async function tLoadBotInfo(el) {
 
 function tLoadChangelog(el, append) {
   const logs = [
+    { version: 'v2.3.4', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🔍 Fix detection mise a jour (comparaison semver)',
+      '✅ Plus de faux positif update',
+    ]},
     { version: 'v2.3.3', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
       '⬆️ Mise a jour in-app avec barre de progression',
       '📥 Telechargement direct sans ouvrir le navigateur',

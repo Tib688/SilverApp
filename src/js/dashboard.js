@@ -3597,6 +3597,10 @@ function loadChangelog(el) { loadChangelogInto(el); }
 
 function loadChangelogInto(el) {
   const logs = [
+    { version: 'v2.3.4', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🔍 Fix detection de mise a jour — comparaison semver numerique',
+      '✅ Plus de faux positif : "a jour" seulement si version GitHub superieure',
+    ]},
     { version: 'v2.3.3', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
       '⬆️ Mise a jour in-app avec barre de progression',
       '📥 Telechargement du setup directement dans l\'app',
