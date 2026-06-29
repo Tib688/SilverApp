@@ -11,26 +11,13 @@
 - Horloge stylisee avec separateurs pulsants
 - Breadcrumbs discrets
 
-### ⬆️ v2.3.2-2.3.3 — Mise a jour in-app
+### ⬆️ Mise a jour in-app
 - Detection auto des nouvelles versions via GitHub Releases
 - Page Mise a jour avec changelog integre
 - Badge violet quand update disponible
 - Telechargement + installation directement dans l'app
 - Barre de progression avec pourcentage + taille
 - Lancement auto du setup + fermeture de l'app
-
-### 📊 v2.2 — Analytics & Outils
-- 5 graphiques Chart.js (activite, bugs, XP, testeurs, croissance)
-- Heatmap d'activite style GitHub sur 90 jours
-- Embed Builder visuel avec preview live, @mentions, drag & drop images, video YouTube
-- Bot Profil (changer nom, avatar, statuts rotatifs)
-- Console bot en direct avec filtres et auto-refresh
-- Notifications desktop natives (bugs, messages, suggestions)
-- Backup/Restore JSON complet
-- Mode compact, Quick Actions (FAB), raccourcis clavier
-- Profil membre en modal, export CSV
-- Page Serveurs avec liens d'invitation permanents
-- Recherche Ctrl+K redesignee avec recents
 
 ### 🔧 Fixes
 - Comptage exact des messages par channel (API search Discord)
