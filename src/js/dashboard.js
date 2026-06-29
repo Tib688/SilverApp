@@ -2301,31 +2301,17 @@ async function channelGuildChanged() {
 
   container.innerHTML = '<div class="loading"><div class="spinner"></div> <span id="channelCountStatus" style="font-size:11px;color:var(--dim)">Comptage des messages...</span></div>';
 
-  async function countChannelMessages(channelId) {
-    let total = 0;
-    const users = new Set();
-    let before = null;
-    let recent = null;
-    while (true) {
-      const url = `/channels/${channelId}/messages?limit=100` + (before ? `&before=${before}` : '');
-      const msgs = await discordGet(url);
-      if (!Array.isArray(msgs) || msgs.length === 0) break;
-      if (!recent) recent = msgs[0];
-      msgs.forEach(m => { if (m.author?.id) users.add(m.author.id); });
-      total += msgs.length;
-      if (msgs.length < 100) break;
-      before = msgs[msgs.length - 1].id;
-    }
-    return { total, users: users.size, recent };
-  }
-
   const channelData = [];
   for (let i = 0; i < textChannels.length; i++) {
     const ch = textChannels[i];
     const statusEl = document.getElementById('channelCountStatus');
     if (statusEl) statusEl.textContent = `Comptage: #${ch.name} (${i + 1}/${textChannels.length})`;
     try {
-      const { total, users, recent } = await countChannelMessages(ch.id);
+      const search = await discordGet(`/guilds/${guildId}/messages/search?channel_id=${ch.id}`);
+      const total = search?.total_results || 0;
+      const recentMsgs = await discordGet(`/channels/${ch.id}/messages?limit=50`);
+      const users = Array.isArray(recentMsgs) ? new Set(recentMsgs.map(m => m.author?.id)).size : 0;
+      const recent = Array.isArray(recentMsgs) && recentMsgs.length ? recentMsgs[0] : null;
       channelData.push({ ch, count: total, users, recent });
     } catch { channelData.push({ ch, count: 0, users: 0, recent: null }); }
   }
