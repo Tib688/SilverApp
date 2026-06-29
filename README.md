@@ -1,4 +1,4 @@
-## Changelog v2.3.1 - 29/06/2026
+## Changelog v2.3.1 - 30/06/2026
 
 ### ⬆️ Mise a jour in-app
 - Telechargement + installation directement dans l'app
