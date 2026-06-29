@@ -1166,6 +1166,27 @@ th.sortable.sort-desc .sort-icon { opacity: 1; }
   border-bottom: .5px solid var(--g-border) !important;
 }
 
+/* Compact mode */
+[data-compact="true"] .card { padding: 8px 12px; }
+[data-compact="true"] .stat-card { padding: 10px; }
+[data-compact="true"] .stat-value { font-size: 18px; }
+[data-compact="true"] .stat-label { font-size: 9px; }
+[data-compact="true"] .stats-grid { gap: 6px; }
+[data-compact="true"] .page-header h2 { font-size: 16px; }
+[data-compact="true"] .page-header p { font-size: 10px; }
+[data-compact="true"] table td, [data-compact="true"] table th { padding: 4px 8px; font-size: 11px; }
+[data-compact="true"] .nav-item { padding: 5px 12px; font-size: 11px; }
+[data-compact="true"] .welcome-banner { padding: 14px 20px; }
+[data-compact="true"] .sidebar-brand { padding: 10px 14px 8px; }
+[data-compact="true"] .server-item { padding: 6px 10px; }
+[data-compact="true"] .botinfo-server-card { padding: 8px 10px; }
+
+/* Console */
+.console-output { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.console-output::-webkit-scrollbar { width: 6px; }
+.console-output::-webkit-scrollbar-track { background: transparent; }
+.console-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
 @media (max-width: 1000px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .control-grid { grid-template-columns: 1fr; }

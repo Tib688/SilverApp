@@ -324,6 +324,57 @@ async def voice_stop(body: VoiceBody):
 async def voice_ambiance_list():
     return []
 
+# ── Bot logs ──────────────────────────────────────────────────────────────
+import json as _json
+
+@app.get("/bot/logs")
+async def bot_logs(lines: int = 100):
+    log_paths = [
+        _bot_dir_local / "bot.log",
+        _bot_dir_remote / "bot.log",
+        _server_dir / "bot.log",
+    ]
+    for lp in log_paths:
+        if lp.exists():
+            try:
+                content = lp.read_text(encoding="utf-8", errors="replace")
+                return {"lines": content.strip().split("\n")[-lines:]}
+            except:
+                pass
+    return {"lines": []}
+
+# ── Backup / restore ─────────────────────────────────────────────────────
+
+@app.get("/backup/export")
+async def backup_export():
+    cfg = await import_config()
+    tables_data = {}
+    try:
+        conn = pymysql.connect(**DB, cursorclass=pymysql.cursors.DictCursor)
+        with conn.cursor() as c:
+            c.execute("SHOW TABLES")
+            tables = [list(r.values())[0] for r in c.fetchall()]
+            for t in tables:
+                if t.startswith('_'): continue
+                try:
+                    c.execute(f"SELECT * FROM `{t}` LIMIT 500")
+                    tables_data[t] = c.fetchall()
+                except:
+                    pass
+        conn.close()
+    except:
+        pass
+    return {"config": cfg, "tables": tables_data, "exported_at": str(datetime.now()) if 'datetime' in dir() else "now"}
+
+class RestoreBody(BaseModel):
+    config: dict = {}
+
+@app.post("/backup/restore-config")
+async def backup_restore(body: RestoreBody):
+    if body.config:
+        await save_config(body.config)
+    return {"ok": True}
+
 if __name__ == "__main__":
     ensure_columns()
     import os

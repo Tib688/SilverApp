@@ -1,6 +1,43 @@
-# Silver App v2.1
+# Silver App v2.2
 
 > Dashboard Electron pour Silver Bot — par Tib
+
+---
+
+## Changelog v2.2 — 29/06/2026
+
+### 📊 Analytics
+- **Graphiques Chart.js** — activite testeurs, bugs/taches, XP gagne, croissance
+- **Top Testeurs** — doughnut chart des contributeurs les plus actifs
+- **Donnees sur 30 jours** avec courbes, barres et cumuls
+
+### 🤖 Bot Profil
+- **Changer nom et avatar** du bot directement depuis l'app
+- **Editeur de statuts rotatifs** — texte, type (streaming/playing/watching), intervalle
+- **Preview live** du statut en temps reel dans l'app
+- **Variables dynamiques** ({servers}, {version}) dans les messages de statut
+
+### 🖥️ Console
+- **Terminal integre** avec logs du bot en direct
+- **Filtres** par niveau (Error, Warning, Info)
+- **Recherche** dans les logs + auto-refresh 3s
+- **Coloration syntaxique** par niveau de log
+
+### 🔔 Notifications Desktop
+- **Notifications natives** Windows/macOS
+- **Alertes temps reel** — bugs, messages testeurs, suggestions
+- **Toggle ON/OFF** dans les parametres
+
+### 💾 Backup & Restore
+- **Export complet en JSON** (config, preferences, donnees)
+- **Import et restauration** en un clic
+- **Transfert facile** entre machines (Windows ↔ Mac)
+
+### ⚡ UI & Performance
+- **Mode compact** — tableaux et cartes condenses, toggle dans parametres
+- **Page Serveurs** — tous les serveurs avec liens d'invitation permanents
+- **Cache intelligent** ameliore
+- **Transitions** et animations optimisees
 
 ---
 
@@ -73,9 +110,9 @@
 ## Installation
 
 ### Windows
-Telecharger `Silver.App.Setup.2.1.0.exe` depuis [Releases](https://github.com/Tib688/SilverApp/releases), lancer l'installeur.
+Telecharger `Silver.App.Setup.2.2.0.exe` depuis [Releases](https://github.com/Tib688/SilverApp/releases), lancer l'installeur.
 
 ### macOS
-Telecharger `Silver.App-2.1.0-mac.zip` depuis [Releases](https://github.com/Tib688/SilverApp/releases), extraire, puis :
+Telecharger le .zip macOS depuis [Releases](https://github.com/Tib688/SilverApp/releases), extraire, puis :
 1. Clic droit sur **Silver App.app** → **Ouvrir** → **Ouvrir**
 2. Si "app endommagee" : `xattr -cr Silver\ App.app` dans le Terminal

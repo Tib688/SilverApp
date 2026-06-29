@@ -7,7 +7,15 @@ const i18n = {
     uptime: 'Uptime', chat: 'Chat Testeurs', bugs: 'Bugs Reports', tasks: 'Taches',
     announcements: 'Annonces', suggestions: 'Suggestions', testlab: 'Test Lab',
     forgot: 'Codes oublies', database: 'Base de donnees', logs: 'Logs', history: 'Historique',
-    changelog: 'Changelog', settings: 'Parametres', channels: 'Stats Channels',
+    changelog: 'Changelog', settings: 'Parametres', channels: 'Stats Channels', serverlist: 'Serveurs',
+    analytics: 'Analytics', botprofile: 'Bot Profil', console: 'Console',
+    compact: 'Mode compact', backup: 'Backup', restore: 'Restaurer',
+    activityChart: 'Activite', commandsChart: 'Commandes', growthChart: 'Croissance',
+    last7d: '7 derniers jours', last30d: '30 derniers jours',
+    botName: 'Nom du bot', botAvatar: 'Avatar', botStatus: 'Statut',
+    statusMessages: 'Messages de statut', addStatus: 'Ajouter', removeStatus: 'Retirer',
+    applyChanges: 'Appliquer', currentRotation: 'Rotation actuelle',
+    autoRefresh: 'Auto-refresh', exportBackup: 'Exporter backup', importBackup: 'Importer backup',
     welcome: 'Welcome, Tib !', ownerSub: 'Owner', realtime: 'Donnees en temps reel',
     servers: 'Serveurs', users: 'Membres', testers: 'Testeurs', openBugs: 'Bugs ouverts',
     xpTotal: 'XP Total', messages: 'Messages', level: 'Niveau', warns: 'Avertissements',
@@ -41,7 +49,15 @@ const i18n = {
     uptime: 'Uptime', chat: 'Testers Chat', bugs: 'Bug Reports', tasks: 'Tasks',
     announcements: 'Announcements', suggestions: 'Suggestions', testlab: 'Test Lab',
     forgot: 'Forgotten Codes', database: 'Database', logs: 'Logs', history: 'History',
-    changelog: 'Changelog', settings: 'Settings', channels: 'Channel Stats',
+    changelog: 'Changelog', settings: 'Settings', channels: 'Channel Stats', serverlist: 'Servers',
+    analytics: 'Analytics', botprofile: 'Bot Profile', console: 'Console',
+    compact: 'Compact mode', backup: 'Backup', restore: 'Restore',
+    activityChart: 'Activity', commandsChart: 'Commands', growthChart: 'Growth',
+    last7d: 'Last 7 days', last30d: 'Last 30 days',
+    botName: 'Bot name', botAvatar: 'Avatar', botStatus: 'Status',
+    statusMessages: 'Status messages', addStatus: 'Add', removeStatus: 'Remove',
+    applyChanges: 'Apply', currentRotation: 'Current rotation',
+    autoRefresh: 'Auto-refresh', exportBackup: 'Export backup', importBackup: 'Import backup',
     welcome: 'Welcome, Tib!', ownerSub: 'Owner', realtime: 'Real-time data',
     servers: 'Servers', users: 'Users', testers: 'Testers', openBugs: 'Open bugs',
     xpTotal: 'Total XP', messages: 'Messages', level: 'Level', warns: 'Warnings',
@@ -162,6 +178,10 @@ const pageLoaders = {
   stats: loadStats,
   channels: loadChannels,
   changelog: loadChangelog,
+  serverlist: loadServerList,
+  analytics: loadAnalytics,
+  botprofile: loadBotProfile,
+  console: loadConsole,
   logs: loadLogs,
   uptime: loadUptime,
 };
@@ -700,11 +720,30 @@ async function loadSettings(el) {
         <div id="settingsSessions"><div class="loading"><div class="spinner"></div></div></div>
       </div>
 
+      <!-- Backup -->
+      <div class="card settings-section">
+        <div class="control-section-title">Backup & Restore</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="backupExport()">${t('exportBackup')}</button>
+          <button class="btn btn-secondary" style="flex:1" onclick="backupImport()">${t('importBackup')}</button>
+        </div>
+        <p style="font-size:10px;color:var(--muted);margin-top:8px">${currentLang === 'fr' ? 'Exporte la config, les preferences et les donnees en JSON.' : 'Exports config, preferences and data as JSON.'}</p>
+      </div>
+
+      <!-- Compact + Notifs -->
+      <div class="card settings-section">
+        <div class="control-section-title">Options</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="compactBtn" class="btn btn-secondary" style="flex:1" onclick="toggleCompact()">${t('compact')}: ${_compactMode ? 'ON' : 'OFF'}</button>
+          <button id="desktopNotifBtn" class="btn btn-secondary" style="flex:1" onclick="toggleDesktopNotifs()">Notifications: ${_desktopNotifs ? 'ON' : 'OFF'}</button>
+        </div>
+      </div>
+
       <!-- App info -->
       <div class="card settings-section">
         <div class="control-section-title">Application</div>
         <div class="settings-info-grid">
-          <div><span class="settings-label">Version</span><span class="settings-value">v2.0.0</span></div>
+          <div><span class="settings-label">Version</span><span class="settings-value">v2.2.0</span></div>
           <div><span class="settings-label">Framework</span><span class="settings-value">Electron</span></div>
           <div><span class="settings-label">Backend</span><span class="settings-value">FastAPI</span></div>
           <div><span class="settings-label">GitHub</span><span class="settings-value">Tib688/SilverApp</span></div>
@@ -2295,10 +2334,532 @@ async function channelGuildChanged() {
   container.innerHTML = html;
 }
 
+// ═══ ANALYTICS (Chart.js) ══════════════════════════════════════════════════
+
+const _chartDefaults = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af', font: { size: 11 } } } }, scales: { x: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' } }, y: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true } } };
+
+async function loadAnalytics(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>${t('analytics')}</h2><p>${t('last30d')}</p></div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card fade-in" style="padding:16px;height:280px"><canvas id="chartActivity"></canvas></div>
+      <div class="card fade-in" style="padding:16px;height:280px"><canvas id="chartBugs"></canvas></div>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card fade-in" style="padding:16px;height:280px"><canvas id="chartMessages"></canvas></div>
+      <div class="card fade-in" style="padding:16px;height:280px"><canvas id="chartTesters"></canvas></div>
+    </div>
+    <div class="card fade-in" style="padding:16px;height:300px;margin-bottom:14px"><canvas id="chartGrowth"></canvas></div>`;
+
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  const labels = days.map(d => d.slice(5));
+
+  const [msgsByDay, bugsByDay, tasksByDay, xpByDay, chatByDay] = await Promise.all([
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_chat WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY d ORDER BY d"),
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_bugs WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY d ORDER BY d"),
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_tasks WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY d ORDER BY d"),
+    dbQuery("SELECT DATE(updated_at) as d, SUM(xp) as c FROM user_xp WHERE updated_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY d ORDER BY d"),
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_announcements WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY d ORDER BY d"),
+  ]);
+
+  function fillDays(rows) {
+    const map = {};
+    (Array.isArray(rows) && !rows[0]?.error ? rows : []).forEach(r => {
+      const key = String(r.d).slice(0, 10);
+      map[key] = Number(r.c) || 0;
+    });
+    return days.map(d => map[d] || 0);
+  }
+
+  const gradient = (ctx, c1, c2) => {
+    const g = ctx.createLinearGradient(0, 0, 0, 250);
+    g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
+  };
+
+  if (typeof Chart === 'undefined') { el.innerHTML += '<div class="coming-soon"><p>Chart.js non charge</p></div>'; return; }
+
+  const ctx1 = document.getElementById('chartActivity');
+  if (ctx1) new Chart(ctx1, { type: 'line', data: { labels, datasets: [
+    { label: 'Messages Chat', data: fillDays(msgsByDay), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)', tension: .4, fill: true },
+    { label: 'Annonces', data: fillDays(chatByDay), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.1)', tension: .4, fill: true },
+  ]}, options: { ..._chartDefaults, plugins: { ...(_chartDefaults.plugins), title: { display: true, text: currentLang === 'fr' ? 'Activite Testeurs' : 'Tester Activity', color: '#f5f5f5' } } } });
+
+  const ctx2 = document.getElementById('chartBugs');
+  if (ctx2) new Chart(ctx2, { type: 'bar', data: { labels, datasets: [
+    { label: 'Bugs', data: fillDays(bugsByDay), backgroundColor: 'rgba(239,68,68,.6)', borderRadius: 4 },
+    { label: 'Taches', data: fillDays(tasksByDay), backgroundColor: 'rgba(59,130,246,.6)', borderRadius: 4 },
+  ]}, options: { ..._chartDefaults, plugins: { ...(_chartDefaults.plugins), title: { display: true, text: currentLang === 'fr' ? 'Bugs & Taches' : 'Bugs & Tasks', color: '#f5f5f5' } } } });
+
+  const ctx3 = document.getElementById('chartMessages');
+  const xpData = fillDays(xpByDay);
+  if (ctx3) new Chart(ctx3, { type: 'line', data: { labels, datasets: [
+    { label: 'XP gagne', data: xpData, borderColor: '#eab308', backgroundColor: 'rgba(234,179,8,.1)', tension: .3, fill: true, pointRadius: 2 },
+  ]}, options: { ..._chartDefaults, plugins: { ...(_chartDefaults.plugins), title: { display: true, text: currentLang === 'fr' ? 'XP Gagne par Jour' : 'XP Earned per Day', color: '#f5f5f5' } } } });
+
+  const ctx4 = document.getElementById('chartTesters');
+  const [testerActivity] = await Promise.all([
+    dbQuery("SELECT sender_name as name, COUNT(*) as c FROM tester_chat GROUP BY sender_name ORDER BY c DESC LIMIT 8"),
+  ]);
+  const tNames = (Array.isArray(testerActivity) && !testerActivity[0]?.error ? testerActivity : []).map(r => r.name || '?');
+  const tCounts = (Array.isArray(testerActivity) && !testerActivity[0]?.error ? testerActivity : []).map(r => Number(r.c));
+  const tColors = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#ec4899'];
+  if (ctx4) new Chart(ctx4, { type: 'doughnut', data: { labels: tNames, datasets: [{ data: tCounts, backgroundColor: tColors.slice(0, tNames.length) }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: currentLang === 'fr' ? 'Top Testeurs' : 'Top Testers', color: '#f5f5f5' }, legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 10 } } } } } });
+
+  const ctx5 = document.getElementById('chartGrowth');
+  const cumMsgs = fillDays(msgsByDay);
+  let acc = 0; const cumulative = cumMsgs.map(v => acc += v);
+  if (ctx5) new Chart(ctx5, { type: 'line', data: { labels, datasets: [
+    { label: currentLang === 'fr' ? 'Messages cumules' : 'Cumulative messages', data: cumulative, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,.1)', tension: .4, fill: true, pointRadius: 0 },
+  ]}, options: { ..._chartDefaults, plugins: { ...(_chartDefaults.plugins), title: { display: true, text: currentLang === 'fr' ? 'Croissance des Messages' : 'Message Growth', color: '#f5f5f5' } } } });
+}
+
+// ═══ BOT PROFILE ══════════════════════════════════════════════════════════
+
+let _botProfileStatuses = [
+  { text: '👀 Watching {servers} servers', type: 'streaming' },
+  { text: '⚡ {version} — Made by Tib', type: 'streaming' },
+];
+let _botProfileInterval = 10;
+
+async function loadBotProfile(el) {
+  const bot = await discordGet('/users/@me');
+  if (bot.error) { el.innerHTML = '<div class="coming-soon"><div class="icon">●</div><p>API Discord inaccessible</p></div>'; return; }
+  const avatar = getBotAvatar(bot, 256);
+  const saved = JSON.parse(localStorage.getItem('silverapp_bot_statuses') || 'null');
+  if (saved) { _botProfileStatuses = saved.statuses || _botProfileStatuses; _botProfileInterval = saved.interval || 10; }
+
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>${t('botprofile')}</h2><p>${currentLang === 'fr' ? 'Personnaliser le profil et le statut du bot' : 'Customize bot profile and status'}</p></div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+
+      <!-- Profil -->
+      <div class="card fade-in" style="padding:20px">
+        <div class="control-section-title">${currentLang === 'fr' ? 'Profil du Bot' : 'Bot Profile'}</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div style="position:relative">
+            <img src="${avatar}" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--accent)">
+            <div id="bpAvatarPreview" style="display:none;position:absolute;inset:0;border-radius:50%;overflow:hidden"><img style="width:100%;height:100%;object-fit:cover"></div>
+          </div>
+          <div style="flex:1">
+            <label style="font-size:11px;color:var(--dim);margin-bottom:4px;display:block">${t('botName')}</label>
+            <input type="text" id="bpName" value="${esc(bot.username)}" style="width:100%;margin-bottom:8px">
+            <label style="font-size:11px;color:var(--dim);margin-bottom:4px;display:block">${t('botAvatar')}</label>
+            <input type="file" id="bpAvatarFile" accept="image/*" style="font-size:11px" onchange="bpPreviewAvatar(this)">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="bpApplyProfile()">${t('applyChanges')}</button>
+        <div id="bpProfileStatus" class="control-status"></div>
+      </div>
+
+      <!-- Statut actuel -->
+      <div class="card fade-in" style="padding:20px">
+        <div class="control-section-title">${t('currentRotation')}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--dim)">${currentLang === 'fr' ? 'Intervalle (sec)' : 'Interval (sec)'}</span>
+          <input type="number" id="bpInterval" value="${_botProfileInterval}" min="5" max="300" style="width:80px">
+        </div>
+        <div id="bpStatusList" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="bpNewStatus" placeholder="${currentLang === 'fr' ? 'Nouveau statut... ({servers}, {version})' : 'New status... ({servers}, {version})'}" style="flex:1">
+          <select id="bpNewType" style="width:120px">
+            <option value="streaming">Streaming</option>
+            <option value="playing">Playing</option>
+            <option value="watching">Watching</option>
+            <option value="listening">Listening</option>
+          </select>
+          <button class="btn btn-primary" onclick="bpAddStatus()">${t('addStatus')}</button>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="bpSaveStatuses()">${currentLang === 'fr' ? 'Sauvegarder la rotation' : 'Save rotation'}</button>
+        <div id="bpStatusMsg" class="control-status"></div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card fade-in" style="padding:20px;margin-top:14px">
+      <div class="control-section-title">${currentLang === 'fr' ? 'Apercu du statut en direct' : 'Live status preview'}</div>
+      <div id="bpPreviewArea" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border-radius:var(--radius-sm)">
+        <img src="${avatar}" style="width:40px;height:40px;border-radius:50%">
+        <div>
+          <div style="font-weight:600;color:var(--bright);font-size:13px">${esc(bot.username)}</div>
+          <div id="bpPreviewStatus" style="font-size:11px;color:var(--accent)"></div>
+        </div>
+        <span class="dot dot-green dot-pulse" style="margin-left:auto;width:8px;height:8px"></span>
+      </div>
+    </div>`;
+
+  bpRenderStatusList();
+  bpStartPreview();
+}
+
+function bpRenderStatusList() {
+  const el = document.getElementById('bpStatusList');
+  if (!el) return;
+  el.innerHTML = _botProfileStatuses.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg2);border-radius:6px;margin-bottom:4px">
+      <span style="font-size:10px;color:var(--dim);width:18px">#${i + 1}</span>
+      <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--blue);color:#fff">${s.type}</span>
+      <span style="flex:1;font-size:12px;color:var(--text);font-family:monospace">${esc(s.text)}</span>
+      <button onclick="_botProfileStatuses.splice(${i},1);bpRenderStatusList()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px">×</button>
+    </div>`).join('') || `<div style="font-size:11px;color:var(--muted);padding:8px">${currentLang === 'fr' ? 'Aucun statut configure' : 'No status configured'}</div>`;
+}
+
+function bpAddStatus() {
+  const text = document.getElementById('bpNewStatus')?.value?.trim();
+  const type = document.getElementById('bpNewType')?.value || 'streaming';
+  if (!text) return;
+  _botProfileStatuses.push({ text, type });
+  document.getElementById('bpNewStatus').value = '';
+  bpRenderStatusList();
+}
+
+function bpSaveStatuses() {
+  _botProfileInterval = parseInt(document.getElementById('bpInterval')?.value) || 10;
+  localStorage.setItem('silverapp_bot_statuses', JSON.stringify({ statuses: _botProfileStatuses, interval: _botProfileInterval }));
+  const el = document.getElementById('bpStatusMsg');
+  if (el) { el.textContent = currentLang === 'fr' ? 'Rotation sauvegardee ! (Appliquer sur le bot via Nowheberg)' : 'Rotation saved! (Apply on bot via Nowheberg)'; el.style.color = 'var(--green)'; }
+}
+
+let _bpPreviewIdx = 0;
+let _bpPreviewTimer = null;
+function bpStartPreview() {
+  clearInterval(_bpPreviewTimer);
+  _bpPreviewIdx = 0;
+  function tick() {
+    if (!_botProfileStatuses.length) return;
+    const s = _botProfileStatuses[_bpPreviewIdx % _botProfileStatuses.length];
+    _bpPreviewIdx++;
+    const el = document.getElementById('bpPreviewStatus');
+    if (el) {
+      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.2');
+      const prefix = s.type === 'streaming' ? '🟣 Streaming' : s.type === 'playing' ? '🎮 Playing' : s.type === 'watching' ? '👀 Watching' : '🎵 Listening';
+      el.textContent = `${prefix}: ${text}`;
+      el.style.opacity = '0'; setTimeout(() => { if (el) el.style.opacity = '1'; }, 100);
+    }
+  }
+  tick();
+  _bpPreviewTimer = setInterval(tick, (_botProfileInterval || 10) * 1000);
+}
+
+function bpPreviewAvatar(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('bpAvatarPreview');
+    if (preview) { preview.style.display = 'block'; preview.querySelector('img').src = e.target.result; }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function bpApplyProfile() {
+  const status = document.getElementById('bpProfileStatus');
+  const name = document.getElementById('bpName')?.value?.trim();
+  const fileInput = document.getElementById('bpAvatarFile');
+  const data = {};
+  if (name) data.username = name;
+  if (fileInput?.files?.[0]) {
+    const reader = new FileReader();
+    const base64 = await new Promise(resolve => {
+      reader.onload = e => resolve(e.target.result);
+      reader.readAsDataURL(fileInput.files[0]);
+    });
+    data.avatar = base64;
+  }
+  if (!Object.keys(data).length) { if (status) status.textContent = currentLang === 'fr' ? 'Rien a modifier' : 'Nothing to change'; return; }
+  if (status) { status.textContent = currentLang === 'fr' ? 'Application...' : 'Applying...'; status.style.color = 'var(--accent)'; }
+  const res = await discordPatch('/users/@me', data);
+  if (res.error) { if (status) { status.textContent = `Erreur: ${res.error}`; status.style.color = 'var(--red)'; } }
+  else { if (status) { status.textContent = currentLang === 'fr' ? 'Profil mis a jour !' : 'Profile updated!'; status.style.color = 'var(--green)'; } }
+}
+
+// ═══ CONSOLE BOT ══════════════════════════════════════════════════════════
+
+let _consoleAutoRefresh = null;
+
+async function loadConsole(el) {
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>${t('console')}</h2><p>${currentLang === 'fr' ? 'Logs du bot en temps reel' : 'Real-time bot logs'}</p></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <button class="btn btn-primary" onclick="consoleRefresh()">Refresh</button>
+      <button class="btn btn-secondary" id="consoleAutoBtn" onclick="consoleToggleAuto()">Auto-refresh: OFF</button>
+      <select id="consoleFilter" onchange="consoleRefresh()" style="max-width:150px">
+        <option value="">Tout</option>
+        <option value="ERROR">Erreurs</option>
+        <option value="WARNING">Warnings</option>
+        <option value="INFO">Info</option>
+      </select>
+      <input type="text" id="consoleSearch" placeholder="${currentLang === 'fr' ? 'Rechercher...' : 'Search...'}" style="flex:1" oninput="consoleRefresh()">
+      <button class="btn btn-secondary" onclick="consoleClear()">${currentLang === 'fr' ? 'Effacer' : 'Clear'}</button>
+    </div>
+    <div id="consoleOutput" class="console-output" style="background:#0a0a0a;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-family:'Fira Code',Consolas,monospace;font-size:11px;line-height:1.7;max-height:500px;overflow-y:auto;color:#d4d4d4;white-space:pre-wrap;word-break:break-all">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>`;
+  consoleRefresh();
+}
+
+async function consoleRefresh() {
+  const out = document.getElementById('consoleOutput');
+  if (!out) return;
+  try {
+    const res = await fetch(`${BACKEND}/bot/logs?lines=200`).then(r => r.json());
+    let lines = res.lines || [];
+    const filter = document.getElementById('consoleFilter')?.value;
+    const search = document.getElementById('consoleSearch')?.value?.toLowerCase();
+    if (filter) lines = lines.filter(l => l.includes(`[${filter}]`));
+    if (search) lines = lines.filter(l => l.toLowerCase().includes(search));
+    if (!lines.length) { out.innerHTML = `<span style="color:var(--muted)">${currentLang === 'fr' ? 'Aucun log disponible' : 'No logs available'}</span>`; return; }
+    out.innerHTML = lines.map(l => {
+      let color = '#d4d4d4';
+      if (l.includes('[ERROR]')) color = '#ef4444';
+      else if (l.includes('[WARNING]')) color = '#eab308';
+      else if (l.includes('[INFO]')) color = '#3b82f6';
+      return `<div style="color:${color};padding:1px 0">${esc(l)}</div>`;
+    }).join('');
+    out.scrollTop = out.scrollHeight;
+  } catch {
+    out.innerHTML = `<span style="color:var(--red)">${currentLang === 'fr' ? 'Impossible de charger les logs' : 'Cannot load logs'}</span>`;
+  }
+}
+
+function consoleToggleAuto() {
+  const btn = document.getElementById('consoleAutoBtn');
+  if (_consoleAutoRefresh) {
+    clearInterval(_consoleAutoRefresh);
+    _consoleAutoRefresh = null;
+    if (btn) btn.textContent = 'Auto-refresh: OFF';
+  } else {
+    _consoleAutoRefresh = setInterval(consoleRefresh, 3000);
+    if (btn) btn.textContent = 'Auto-refresh: ON';
+  }
+}
+
+function consoleClear() {
+  const out = document.getElementById('consoleOutput');
+  if (out) out.innerHTML = `<span style="color:var(--muted)">Console cleared</span>`;
+}
+
+// ═══ BACKUP SYSTEM ═══════════════════════════════════════════════════════
+
+async function backupExport() {
+  try {
+    const res = await fetch(`${BACKEND}/backup/export`).then(r => r.json());
+    const appData = {
+      version: '2.2',
+      exported_at: new Date().toISOString(),
+      config: res.config || {},
+      settings: {
+        theme: localStorage.getItem('silverapp_theme') || 'default',
+        mode: localStorage.getItem('silverapp_mode') || 'dark',
+        lang: localStorage.getItem('silverapp_lang') || 'fr',
+        glass: localStorage.getItem('silverapp_glass') || 'false',
+        sidebar: localStorage.getItem('silverapp_sidebar') || 'false',
+        compact: localStorage.getItem('silverapp_compact') || 'false',
+        bot_statuses: JSON.parse(localStorage.getItem('silverapp_bot_statuses') || 'null'),
+        widgets: JSON.parse(localStorage.getItem('silverapp_widgets') || 'null'),
+      },
+      tables: res.tables || {},
+    };
+    const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `silverapp-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    showNotif(currentLang === 'fr' ? 'Backup' : 'Backup', currentLang === 'fr' ? 'Backup exporte avec succes' : 'Backup exported successfully');
+  } catch (e) {
+    showNotif('Erreur', e.message);
+  }
+}
+
+function backupImport() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.version) { showNotif('Erreur', 'Fichier invalide'); return; }
+      if (data.settings) {
+        if (data.settings.theme) localStorage.setItem('silverapp_theme', data.settings.theme);
+        if (data.settings.mode) localStorage.setItem('silverapp_mode', data.settings.mode);
+        if (data.settings.lang) localStorage.setItem('silverapp_lang', data.settings.lang);
+        if (data.settings.glass) localStorage.setItem('silverapp_glass', data.settings.glass);
+        if (data.settings.compact) localStorage.setItem('silverapp_compact', data.settings.compact);
+        if (data.settings.bot_statuses) localStorage.setItem('silverapp_bot_statuses', JSON.stringify(data.settings.bot_statuses));
+        if (data.settings.widgets) localStorage.setItem('silverapp_widgets', JSON.stringify(data.settings.widgets));
+      }
+      if (data.config && data.config.token) {
+        await fetch(`${BACKEND}/backup/restore-config`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ config: data.config }),
+        });
+      }
+      showNotif(currentLang === 'fr' ? 'Backup' : 'Backup', currentLang === 'fr' ? 'Configuration restauree ! Rechargement...' : 'Config restored! Reloading...');
+      setTimeout(() => location.reload(), 1500);
+    } catch { showNotif('Erreur', 'Fichier corrompu'); }
+  };
+  input.click();
+}
+
+// ═══ COMPACT MODE ═════════════════════════════════════════════════════════
+
+let _compactMode = localStorage.getItem('silverapp_compact') === 'true';
+
+function toggleCompact() {
+  _compactMode = !_compactMode;
+  localStorage.setItem('silverapp_compact', _compactMode);
+  document.documentElement.setAttribute('data-compact', _compactMode);
+  const btn = document.getElementById('compactBtn');
+  if (btn) btn.textContent = `${t('compact')}: ${_compactMode ? 'ON' : 'OFF'}`;
+}
+
+(function() {
+  if (_compactMode) document.documentElement.setAttribute('data-compact', 'true');
+})();
+
+// ═══ NOTIFICATIONS DESKTOP ═══════════════════════════════════════════════
+
+let _desktopNotifs = localStorage.getItem('silverapp_desktop_notifs') !== 'false';
+
+function toggleDesktopNotifs() {
+  _desktopNotifs = !_desktopNotifs;
+  localStorage.setItem('silverapp_desktop_notifs', _desktopNotifs);
+  if (_desktopNotifs && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+  const btn = document.getElementById('desktopNotifBtn');
+  if (btn) btn.textContent = `Notifications: ${_desktopNotifs ? 'ON' : 'OFF'}`;
+}
+
+function showDesktopNotif(title, body) {
+  if (!_desktopNotifs) return;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: getBotAvatar(_botInfoCache, 64) || undefined });
+  }
+}
+
+// ═══ SERVEURS ══════════════════════════════════════════════════════════════
+
+async function loadServerList(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>${t('serverlist')}</h2><p>${currentLang === 'fr' ? 'Tous les serveurs du bot avec liens d\'invitation' : 'All bot servers with invite links'}</p></div>
+    <div id="serverListContent"><div class="skeleton-grid">${'<div class="skeleton-card"></div>'.repeat(4)}</div></div>`;
+
+  const guilds = await getCachedGuilds();
+  if (!guilds.length) {
+    document.getElementById('serverListContent').innerHTML = '<div class="coming-soon"><div class="icon">🌐</div><p>Aucun serveur</p></div>';
+    return;
+  }
+
+  const details = await Promise.all(guilds.map(g => discordGet(`/guilds/${g.id}?with_counts=true`)));
+
+  const container = document.getElementById('serverListContent');
+  container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px" id="serverCards"></div>`;
+  const grid = document.getElementById('serverCards');
+
+  for (let i = 0; i < guilds.length; i++) {
+    const g = guilds[i];
+    const d = details[i] || {};
+    const icon = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64` : '';
+    const members = d.approximate_member_count || '?';
+    const online = d.approximate_presence_count || '?';
+    const card = document.createElement('div');
+    card.className = 'card fade-in';
+    card.style.cssText = 'padding:16px;display:flex;flex-direction:column;gap:12px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--card-hover);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+          ${icon ? `<img src="${icon}" width="48" height="48" style="border-radius:12px">` : `<span style="font-size:18px;font-weight:700;color:var(--bright)">${esc(g.name.charAt(0))}</span>`}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:var(--bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.name)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">
+            <span style="color:var(--green)">● ${online}</span> en ligne · ${members} membres
+          </div>
+        </div>
+        ${g.owner ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--gold);color:#000;font-weight:600">OWNER</span>' : ''}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center" id="invite-${g.id}">
+        <div class="spinner" style="width:14px;height:14px;border-width:2px"></div>
+        <span style="font-size:11px;color:var(--muted)">${currentLang === 'fr' ? 'Generation du lien...' : 'Generating link...'}</span>
+      </div>`;
+    grid.appendChild(card);
+
+    // Fetch invite async per server
+    (async (guildId) => {
+      const inviteEl = document.getElementById(`invite-${guildId}`);
+      try {
+        const channels = await discordGet(`/guilds/${guildId}/channels`);
+        const textChannels = Array.isArray(channels) ? channels.filter(c => c.type === 0) : [];
+        if (!textChannels.length) {
+          inviteEl.innerHTML = `<span style="font-size:11px;color:var(--red)">${currentLang === 'fr' ? 'Aucun channel texte' : 'No text channel'}</span>`;
+          return;
+        }
+        const invites = await discordGet(`/guilds/${guildId}/invites`);
+        const permanent = Array.isArray(invites) ? invites.find(inv => inv.max_age === 0) : null;
+        let inviteCode;
+        if (permanent) {
+          inviteCode = permanent.code;
+        } else {
+          const created = await discordPost(`/channels/${textChannels[0].id}/invites`, { max_age: 0, max_uses: 0, unique: false });
+          inviteCode = created?.code;
+        }
+        if (inviteCode) {
+          const link = `https://discord.gg/${inviteCode}`;
+          inviteEl.innerHTML = `
+            <input type="text" value="${link}" readonly style="flex:1;background:var(--card-hover);border:1px solid var(--border);color:var(--text);font-size:11px;padding:6px 10px;border-radius:6px;outline:none;font-family:monospace">
+            <button onclick="navigator.clipboard.writeText('${link}');this.textContent='✓';setTimeout(()=>this.textContent='${currentLang === 'fr' ? 'Copier' : 'Copy'}',1500)" style="background:var(--blue);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:500">${currentLang === 'fr' ? 'Copier' : 'Copy'}</button>
+            <button onclick="silver.openExternal('${link}')" style="background:var(--green);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:500">${currentLang === 'fr' ? 'Rejoindre' : 'Join'}</button>`;
+        } else {
+          inviteEl.innerHTML = `<span style="font-size:11px;color:var(--red)">${currentLang === 'fr' ? 'Impossible de creer l\'invite' : 'Cannot create invite'}</span>`;
+        }
+      } catch {
+        inviteEl.innerHTML = `<span style="font-size:11px;color:var(--red)">Erreur</span>`;
+      }
+    })(g.id);
+  }
+}
+
 // ═══ CHANGELOG ══════════════════════════════════════════════════════════════
 
 function loadChangelog(el) {
   const logs = [
+    { version: 'v2.2', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
+      { title: '📊 Analytics', items: [
+        'Graphiques Chart.js (activite, bugs, XP, testeurs, croissance)',
+        'Donnees sur 30 jours avec courbes et barres',
+        'Doughnut chart des top testeurs',
+      ]},
+      { title: '🤖 Bot Profil', items: [
+        'Changer le nom et l\'avatar du bot depuis l\'app',
+        'Editeur de statuts rotatifs (texte, type, intervalle)',
+        'Preview live du statut en temps reel',
+        'Variables dynamiques ({servers}, {version})',
+      ]},
+      { title: '🖥️ Console', items: [
+        'Terminal integre avec logs du bot en direct',
+        'Filtres par niveau (Error, Warning, Info)',
+        'Recherche dans les logs + auto-refresh',
+        'Coloration syntaxique des niveaux',
+      ]},
+      { title: '🔔 Notifications Desktop', items: [
+        'Notifications natives Windows/macOS',
+        'Alertes bugs, messages, suggestions en temps reel',
+        'Toggle ON/OFF dans les parametres',
+      ]},
+      { title: '💾 Backup & Restore', items: [
+        'Export complet en JSON (config, preferences, donnees)',
+        'Import et restauration en un clic',
+        'Transfert facile entre machines',
+      ]},
+      { title: '⚡ UI & Performance', items: [
+        'Mode compact (tableaux et cartes condenses)',
+        'Page Serveurs avec liens d\'invitation permanents',
+        'Cache intelligent ameliore',
+        'Transitions et animations optimisees',
+      ]},
+    ]},
     { version: 'v2.1', date: '23/06/2026', tag: 'Nouveau', color: 'var(--green)', sections: [
       { title: '🎨 Interface', items: [
         'Page Home avec branding Silver Bot + lien Discord',
@@ -2454,9 +3015,9 @@ async function checkNotifications() {
       dbScalar("SELECT COUNT(*) FROM tester_chat"),
       dbScalar("SELECT COUNT(*) FROM tester_suggestions WHERE status='pending'"),
     ]);
-    if (_lastBugCount !== null && bugs > _lastBugCount) showNotif('Nouveau bug', `${bugs - _lastBugCount} nouveau(x) bug(s) signale(s)`);
-    if (_lastMsgCount !== null && msgs > _lastMsgCount) showNotif('Nouveau message', `${msgs - _lastMsgCount} nouveau(x) message(s)`);
-    if (_lastSugCount !== null && sugs > _lastSugCount) showNotif('Nouvelle suggestion', `${sugs - _lastSugCount} nouvelle(s) suggestion(s)`);
+    if (_lastBugCount !== null && bugs > _lastBugCount) { showNotif('Nouveau bug', `${bugs - _lastBugCount} nouveau(x) bug(s) signale(s)`); showDesktopNotif('Silver App — Nouveau bug', `${bugs - _lastBugCount} nouveau(x) bug(s) signale(s)`); }
+    if (_lastMsgCount !== null && msgs > _lastMsgCount) { showNotif('Nouveau message', `${msgs - _lastMsgCount} nouveau(x) message(s)`); showDesktopNotif('Silver App — Message', `${msgs - _lastMsgCount} nouveau(x) message(s)`); }
+    if (_lastSugCount !== null && sugs > _lastSugCount) { showNotif('Nouvelle suggestion', `${sugs - _lastSugCount} nouvelle(s) suggestion(s)`); showDesktopNotif('Silver App — Suggestion', `${sugs - _lastSugCount} nouvelle(s) suggestion(s)`); }
     _lastBugCount = bugs; _lastMsgCount = msgs; _lastSugCount = sugs;
   } catch {}
 }
@@ -2517,12 +3078,13 @@ function exportCurrentPage() {
 
 const pageSections = {
   home: 'Silver Bot', overview: 'secPrincipal', leaderboard: 'secPrincipal', members: 'secPrincipal',
-  compare: 'secPrincipal', stats: 'secPrincipal', channels: 'secPrincipal', control: 'secControle',
-  botinfo: 'secControle', uptime: 'secControle', chat: 'secTesteurs',
+  compare: 'secPrincipal', stats: 'secPrincipal', channels: 'secPrincipal', serverlist: 'secPrincipal',
+  analytics: 'secPrincipal', control: 'secControle',
+  botinfo: 'secControle', botprofile: 'secControle', uptime: 'secControle', chat: 'secTesteurs',
   bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
   suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs',
   database: 'secSysteme', logs: 'secSysteme', history: 'secSysteme',
-  changelog: 'secSysteme', settings: 'secSysteme',
+  changelog: 'secSysteme', console: 'secSysteme', settings: 'secSysteme',
 };
 
 function updateBreadcrumbs(name) {
