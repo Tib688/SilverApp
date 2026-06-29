@@ -685,7 +685,7 @@ function tLoadChangelog(el, append) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const T_APP_VERSION = '2.3.1';
+const T_APP_VERSION = '2.3.2';
 let _tUpdateInfo = null;
 
 async function tCheckForUpdate() {
