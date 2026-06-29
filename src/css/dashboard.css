@@ -1181,6 +1181,32 @@ th.sortable.sort-desc .sort-icon { opacity: 1; }
 [data-compact="true"] .server-item { padding: 6px 10px; }
 [data-compact="true"] .botinfo-server-card { padding: 8px 10px; }
 
+/* Favorites bar */
+.fav-chip {
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  color: var(--bright);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .15s;
+  font-weight: 500;
+}
+.fav-chip:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Quick Actions FAB */
+.fab-item {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background .1s;
+  white-space: nowrap;
+}
+.fab-item:hover { background: var(--card-hover); color: var(--bright); }
+
 /* Console */
 .console-output { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .console-output::-webkit-scrollbar { width: 6px; }

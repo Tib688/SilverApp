@@ -6,10 +6,17 @@
 
 ## Changelog v2.2 — 29/06/2026
 
-### 📊 Analytics
+### 📊 Analytics & Heatmap
 - **Graphiques Chart.js** — activite testeurs, bugs/taches, XP gagne, croissance
 - **Top Testeurs** — doughnut chart des contributeurs les plus actifs
+- **Heatmap d'activite** style GitHub sur 90 jours (serie, jours actifs, moyenne)
 - **Donnees sur 30 jours** avec courbes, barres et cumuls
+
+### 🎨 Embed Builder
+- **Editeur visuel** d'embeds Discord avec preview live
+- **Champs dynamiques** — couleur, auteur, footer, images, thumbnail
+- **Templates sauvegardables** — creer et reutiliser des modeles
+- **Envoi direct** dans n'importe quel channel
 
 ### 🤖 Bot Profil
 - **Changer nom et avatar** du bot directement depuis l'app
@@ -33,11 +40,13 @@
 - **Import et restauration** en un clic
 - **Transfert facile** entre machines (Windows ↔ Mac)
 
-### ⚡ UI & Performance
+### ⚡ UI & Experience
 - **Mode compact** — tableaux et cartes condenses, toggle dans parametres
+- **Bouton Quick Actions** flottant (FAB) — acces rapide aux pages cles
+- **Raccourcis clavier** complets (Shift+? pour la liste)
+- **Profil membre** detaille en modal (clic sur un membre)
+- **Export CSV** sur tous les tableaux de donnees
 - **Page Serveurs** — tous les serveurs avec liens d'invitation permanents
-- **Cache intelligent** ameliore
-- **Transitions** et animations optimisees
 
 ---
 

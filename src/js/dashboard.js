@@ -16,6 +16,11 @@ const i18n = {
     statusMessages: 'Messages de statut', addStatus: 'Ajouter', removeStatus: 'Retirer',
     applyChanges: 'Appliquer', currentRotation: 'Rotation actuelle',
     autoRefresh: 'Auto-refresh', exportBackup: 'Exporter backup', importBackup: 'Importer backup',
+    embedBuilder: 'Embed Builder', heatmap: 'Heatmap', quickActions: 'Actions rapides',
+    preview: 'Apercu', sendEmbed: 'Envoyer', saveTemplate: 'Sauver template', loadTemplate: 'Charger template',
+    noActivity: 'Aucune activite', exportCsv: 'Exporter CSV', favorites: 'Favoris',
+    addFav: 'Ajouter aux favoris', removeFav: 'Retirer des favoris',
+    shortcuts: 'Raccourcis clavier', memberProfile: 'Profil membre',
     welcome: 'Welcome, Tib !', ownerSub: 'Owner', realtime: 'Donnees en temps reel',
     servers: 'Serveurs', users: 'Membres', testers: 'Testeurs', openBugs: 'Bugs ouverts',
     xpTotal: 'XP Total', messages: 'Messages', level: 'Niveau', warns: 'Avertissements',
@@ -58,6 +63,11 @@ const i18n = {
     statusMessages: 'Status messages', addStatus: 'Add', removeStatus: 'Remove',
     applyChanges: 'Apply', currentRotation: 'Current rotation',
     autoRefresh: 'Auto-refresh', exportBackup: 'Export backup', importBackup: 'Import backup',
+    embedBuilder: 'Embed Builder', heatmap: 'Heatmap', quickActions: 'Quick actions',
+    preview: 'Preview', sendEmbed: 'Send', saveTemplate: 'Save template', loadTemplate: 'Load template',
+    noActivity: 'No activity', exportCsv: 'Export CSV', favorites: 'Favorites',
+    addFav: 'Add to favorites', removeFav: 'Remove from favorites',
+    shortcuts: 'Keyboard shortcuts', memberProfile: 'Member profile',
     welcome: 'Welcome, Tib!', ownerSub: 'Owner', realtime: 'Real-time data',
     servers: 'Servers', users: 'Users', testers: 'Testers', openBugs: 'Open bugs',
     xpTotal: 'Total XP', messages: 'Messages', level: 'Level', warns: 'Warnings',
@@ -182,6 +192,8 @@ const pageLoaders = {
   analytics: loadAnalytics,
   botprofile: loadBotProfile,
   console: loadConsole,
+  embedbuilder: loadEmbedBuilder,
+  heatmap: loadHeatmap,
   logs: loadLogs,
   uptime: loadUptime,
 };
@@ -262,7 +274,7 @@ async function loadHome(el) {
       <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
       </div>
-      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.1 · Electron · FastAPI · MySQL</p>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.2 · Electron · FastAPI · MySQL</p>
     </div>`;
 }
 
@@ -2740,6 +2752,465 @@ function showDesktopNotif(title, body) {
   }
 }
 
+// ═══ EMBED BUILDER ════════════════════════════════════════════════════════
+
+let _embedTemplates = JSON.parse(localStorage.getItem('silverapp_embed_templates') || '[]');
+
+async function loadEmbedBuilder(el) {
+  const guilds = await getCachedGuilds();
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>${t('embedBuilder')}</h2><p>${currentLang === 'fr' ? 'Creer et envoyer des embeds visuellement' : 'Create and send embeds visually'}</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <!-- Editor -->
+      <div class="card fade-in" style="padding:18px">
+        <div class="control-section-title">${currentLang === 'fr' ? 'Editeur' : 'Editor'}</div>
+        <div style="display:grid;gap:10px">
+          <div style="display:flex;gap:8px">
+            <select id="ebGuild" onchange="ebGuildChanged()" style="flex:1"><option value="">Serveur</option>${guilds.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>
+            <select id="ebChannel" style="flex:1"><option value="">Channel</option></select>
+          </div>
+          <input type="text" id="ebTitle" placeholder="Titre" oninput="ebUpdatePreview()">
+          <textarea id="ebDesc" placeholder="Description (supporte **bold**, *italic*, \`code\`)" rows="4" style="resize:vertical" oninput="ebUpdatePreview()"></textarea>
+          <div style="display:flex;gap:8px">
+            <input type="color" id="ebColor" value="#3b82f6" style="width:50px;height:34px;border:none;cursor:pointer;border-radius:6px" oninput="ebUpdatePreview()">
+            <input type="text" id="ebAuthor" placeholder="Auteur (optionnel)" style="flex:1" oninput="ebUpdatePreview()">
+          </div>
+          <input type="text" id="ebFooter" placeholder="Footer (optionnel)" oninput="ebUpdatePreview()">
+          <input type="text" id="ebImage" placeholder="URL image (optionnel)" oninput="ebUpdatePreview()">
+          <input type="text" id="ebThumbnail" placeholder="URL thumbnail (optionnel)" oninput="ebUpdatePreview()">
+          <div class="control-section-title" style="margin-top:8px">Fields</div>
+          <div id="ebFields"></div>
+          <button class="btn btn-secondary" style="font-size:11px" onclick="ebAddField()">+ Ajouter un field</button>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary" style="flex:1" onclick="ebSend()">${t('sendEmbed')}</button>
+            <button class="btn btn-secondary" onclick="ebSaveTemplate()">${t('saveTemplate')}</button>
+          </div>
+          <div id="ebStatus" class="control-status"></div>
+          ${_embedTemplates.length ? `
+            <div class="control-section-title" style="margin-top:4px">Templates</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">${_embedTemplates.map((t, i) => `
+              <button class="btn btn-secondary" style="font-size:10px;padding:4px 10px" onclick="ebLoadTemplate(${i})">${esc(t.name || 'Template ' + (i+1))}</button>
+            `).join('')}</div>` : ''}
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="card fade-in" style="padding:18px">
+        <div class="control-section-title">${t('preview')}</div>
+        <div id="ebPreview" style="background:#2f3136;border-radius:8px;padding:0;overflow:hidden"></div>
+      </div>
+    </div>`;
+  ebUpdatePreview();
+}
+
+async function ebGuildChanged() {
+  const guildId = document.getElementById('ebGuild')?.value;
+  const sel = document.getElementById('ebChannel');
+  if (!guildId || !sel) return;
+  sel.innerHTML = '<option value="">Chargement...</option>';
+  const channels = await discordGet(`/guilds/${guildId}/channels`);
+  const text = Array.isArray(channels) ? channels.filter(c => c.type === 0).sort((a, b) => a.position - b.position) : [];
+  sel.innerHTML = '<option value="">Channel</option>' + text.map(c => `<option value="${c.id}">#${esc(c.name)}</option>`).join('');
+}
+
+let _ebFieldCount = 0;
+function ebAddField() {
+  const container = document.getElementById('ebFields');
+  if (!container) return;
+  const idx = _ebFieldCount++;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:start';
+  div.innerHTML = `<input type="text" placeholder="Nom" class="eb-field-name" oninput="ebUpdatePreview()"><input type="text" placeholder="Valeur" class="eb-field-value" oninput="ebUpdatePreview()"><button onclick="this.parentElement.remove();ebUpdatePreview()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:6px">×</button>`;
+  container.appendChild(div);
+}
+
+function ebGetData() {
+  const color = document.getElementById('ebColor')?.value || '#3b82f6';
+  const data = {
+    title: document.getElementById('ebTitle')?.value || '',
+    description: document.getElementById('ebDesc')?.value || '',
+    color: parseInt(color.replace('#', ''), 16),
+  };
+  const author = document.getElementById('ebAuthor')?.value;
+  if (author) data.author = { name: author };
+  const footer = document.getElementById('ebFooter')?.value;
+  if (footer) data.footer = { text: footer };
+  const image = document.getElementById('ebImage')?.value;
+  if (image) data.image = { url: image };
+  const thumb = document.getElementById('ebThumbnail')?.value;
+  if (thumb) data.thumbnail = { url: thumb };
+  const fields = [];
+  document.querySelectorAll('#ebFields > div').forEach(row => {
+    const name = row.querySelector('.eb-field-name')?.value;
+    const value = row.querySelector('.eb-field-value')?.value;
+    if (name && value) fields.push({ name, value, inline: true });
+  });
+  if (fields.length) data.fields = fields;
+  return data;
+}
+
+function ebUpdatePreview() {
+  const d = ebGetData();
+  const el = document.getElementById('ebPreview');
+  if (!el) return;
+  const color = document.getElementById('ebColor')?.value || '#3b82f6';
+  const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/`(.+?)`/g, '<code style="background:#202225;padding:2px 4px;border-radius:3px;font-size:11px">$1</code>').replace(/\n/g, '<br>');
+  el.innerHTML = `
+    <div style="display:flex">
+      <div style="width:4px;background:${color};border-radius:4px 0 0 4px;flex-shrink:0"></div>
+      <div style="padding:12px 14px;flex:1;min-width:0">
+        ${d.author ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:11px;color:#dcddde;font-weight:600">${esc(d.author.name)}</span></div>` : ''}
+        ${d.title ? `<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">${esc(d.title)}</div>` : ''}
+        ${d.description ? `<div style="font-size:13px;color:#dcddde;line-height:1.5;margin-bottom:8px">${md(d.description)}</div>` : ''}
+        ${d.fields ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">${d.fields.map(f => `<div><div style="font-size:11px;font-weight:700;color:#fff">${esc(f.name)}</div><div style="font-size:12px;color:#dcddde">${esc(f.value)}</div></div>`).join('')}</div>` : ''}
+        ${d.image ? `<img src="${esc(d.image.url)}" style="max-width:100%;border-radius:4px;margin-top:4px" onerror="this.style.display='none'">` : ''}
+        ${d.footer ? `<div style="font-size:10px;color:#72767d;margin-top:8px">${esc(d.footer.text)}</div>` : ''}
+      </div>
+      ${d.thumbnail ? `<img src="${esc(d.thumbnail.url)}" style="width:60px;height:60px;border-radius:4px;margin:12px 12px 0 0;object-fit:cover" onerror="this.style.display='none'">` : ''}
+    </div>`;
+}
+
+async function ebSend() {
+  const channelId = document.getElementById('ebChannel')?.value;
+  const status = document.getElementById('ebStatus');
+  if (!channelId) { if (status) { status.textContent = currentLang === 'fr' ? 'Selectionne un serveur et un channel' : 'Select a server and channel'; status.style.color = 'var(--red)'; } return; }
+  const embed = ebGetData();
+  if (!embed.title && !embed.description) { if (status) { status.textContent = currentLang === 'fr' ? 'Ajoute au moins un titre ou une description' : 'Add at least a title or description'; status.style.color = 'var(--red)'; } return; }
+  if (status) { status.textContent = currentLang === 'fr' ? 'Envoi...' : 'Sending...'; status.style.color = 'var(--accent)'; }
+  const res = await discordPost(`/channels/${channelId}/messages`, { embeds: [embed] });
+  if (res.error) { if (status) { status.textContent = `Erreur: ${res.error}`; status.style.color = 'var(--red)'; } }
+  else { if (status) { status.textContent = currentLang === 'fr' ? 'Embed envoye !' : 'Embed sent!'; status.style.color = 'var(--green)'; } }
+}
+
+function ebSaveTemplate() {
+  const data = ebGetData();
+  const name = prompt(currentLang === 'fr' ? 'Nom du template:' : 'Template name:');
+  if (!name) return;
+  data.name = name;
+  data._color_hex = document.getElementById('ebColor')?.value || '#3b82f6';
+  _embedTemplates.push(data);
+  localStorage.setItem('silverapp_embed_templates', JSON.stringify(_embedTemplates));
+  showNotif('Template', currentLang === 'fr' ? 'Template sauvegarde !' : 'Template saved!');
+}
+
+function ebLoadTemplate(idx) {
+  const t = _embedTemplates[idx];
+  if (!t) return;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('ebTitle', t.title);
+  set('ebDesc', t.description);
+  set('ebColor', t._color_hex || '#3b82f6');
+  set('ebAuthor', t.author?.name);
+  set('ebFooter', t.footer?.text);
+  set('ebImage', t.image?.url);
+  set('ebThumbnail', t.thumbnail?.url);
+  const container = document.getElementById('ebFields');
+  if (container) container.innerHTML = '';
+  _ebFieldCount = 0;
+  (t.fields || []).forEach(f => {
+    ebAddField();
+    const rows = container.querySelectorAll(':scope > div');
+    const last = rows[rows.length - 1];
+    if (last) { last.querySelector('.eb-field-name').value = f.name; last.querySelector('.eb-field-value').value = f.value; }
+  });
+  ebUpdatePreview();
+}
+
+// ═══ HEATMAP ACTIVITE ════════════════════════════════════════════════════
+
+async function loadHeatmap(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>Heatmap</h2><p>${currentLang === 'fr' ? 'Activite quotidienne sur 90 jours' : 'Daily activity over 90 days'}</p></div>
+    <div id="heatmapContent"><div class="loading"><div class="spinner"></div></div></div>`;
+
+  const [chatData, bugData, taskData] = await Promise.all([
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_chat WHERE created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY) GROUP BY d"),
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_bugs WHERE created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY) GROUP BY d"),
+    dbQuery("SELECT DATE(created_at) as d, COUNT(*) as c FROM tester_tasks WHERE created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY) GROUP BY d"),
+  ]);
+
+  const activityMap = {};
+  [chatData, bugData, taskData].forEach(rows => {
+    (Array.isArray(rows) && !rows[0]?.error ? rows : []).forEach(r => {
+      const key = String(r.d).slice(0, 10);
+      activityMap[key] = (activityMap[key] || 0) + Number(r.c);
+    });
+  });
+
+  const days = [];
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const maxVal = Math.max(1, ...Object.values(activityMap));
+  const getColor = (count) => {
+    if (!count) return 'var(--border)';
+    const intensity = Math.min(count / maxVal, 1);
+    if (intensity < 0.25) return '#0e4429';
+    if (intensity < 0.5) return '#006d32';
+    if (intensity < 0.75) return '#26a641';
+    return '#39d353';
+  };
+
+  const weekdays = currentLang === 'fr' ? ['Lun','','Mer','','Ven','','Dim'] : ['Mon','','Wed','','Fri','','Sun'];
+  const weeks = Math.ceil(days.length / 7);
+
+  let totalActivity = Object.values(activityMap).reduce((a, b) => a + b, 0);
+  let activeDays = Object.keys(activityMap).length;
+  let streak = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (activityMap[days[i]]) streak++; else break;
+  }
+
+  let html = `
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">${currentLang === 'fr' ? 'Total actions' : 'Total actions'}</div><div class="stat-value">${totalActivity}</div></div>
+      <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">${currentLang === 'fr' ? 'Jours actifs' : 'Active days'}</div><div class="stat-value">${activeDays}/90</div></div>
+      <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">${currentLang === 'fr' ? 'Serie actuelle' : 'Current streak'}</div><div class="stat-value">${streak}j</div></div>
+      <div class="card stat-card slide-in"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">${currentLang === 'fr' ? 'Moy/jour' : 'Avg/day'}</div><div class="stat-value">${activeDays ? Math.round(totalActivity / activeDays) : 0}</div></div>
+    </div>
+
+    <div class="card fade-in" style="padding:20px;overflow-x:auto">
+      <div style="display:flex;gap:3px">
+        <div style="display:flex;flex-direction:column;gap:3px;margin-right:6px;justify-content:space-between;padding:2px 0">
+          ${weekdays.map(d => `<div style="font-size:9px;color:var(--muted);height:13px;line-height:13px">${d}</div>`).join('')}
+        </div>
+        <div style="display:flex;gap:3px">`;
+
+  let dayIdx = new Date(days[0]).getDay();
+  dayIdx = dayIdx === 0 ? 6 : dayIdx - 1;
+  let currentWeek = [];
+  for (let i = 0; i < dayIdx; i++) currentWeek.push(null);
+
+  days.forEach((d, i) => {
+    currentWeek.push(d);
+    if (currentWeek.length === 7 || i === days.length - 1) {
+      while (currentWeek.length < 7) currentWeek.push(null);
+      html += `<div style="display:flex;flex-direction:column;gap:3px">`;
+      currentWeek.forEach(day => {
+        if (!day) { html += `<div style="width:13px;height:13px"></div>`; return; }
+        const count = activityMap[day] || 0;
+        html += `<div style="width:13px;height:13px;border-radius:2px;background:${getColor(count)};cursor:default" title="${day}: ${count} action${count !== 1 ? 's' : ''}"></div>`;
+      });
+      html += `</div>`;
+      currentWeek = [];
+    }
+  });
+
+  html += `</div></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:12px;justify-content:flex-end">
+        <span style="font-size:10px;color:var(--muted)">${currentLang === 'fr' ? 'Moins' : 'Less'}</span>
+        <div style="width:13px;height:13px;border-radius:2px;background:var(--border)"></div>
+        <div style="width:13px;height:13px;border-radius:2px;background:#0e4429"></div>
+        <div style="width:13px;height:13px;border-radius:2px;background:#006d32"></div>
+        <div style="width:13px;height:13px;border-radius:2px;background:#26a641"></div>
+        <div style="width:13px;height:13px;border-radius:2px;background:#39d353"></div>
+        <span style="font-size:10px;color:var(--muted)">${currentLang === 'fr' ? 'Plus' : 'More'}</span>
+      </div>
+    </div>`;
+
+  document.getElementById('heatmapContent').innerHTML = html;
+}
+
+// ═══ FAVORIS ══════════════════════════════════════════════════════════════
+
+let _favorites = JSON.parse(localStorage.getItem('silverapp_favorites') || '[]');
+
+function toggleFavorite(page) {
+  const idx = _favorites.indexOf(page);
+  if (idx >= 0) _favorites.splice(idx, 1);
+  else _favorites.push(page);
+  localStorage.setItem('silverapp_favorites', JSON.stringify(_favorites));
+  renderFavorites();
+}
+
+function renderFavorites() {
+  const container = document.getElementById('favoritesBar');
+  if (!container) return;
+  if (!_favorites.length) { container.style.display = 'none'; return; }
+  container.style.display = 'flex';
+  container.innerHTML = _favorites.map(p => `<button class="fav-chip" onclick="showPage('${p}')">${t(p)}</button>`).join('');
+}
+
+// ═══ RACCOURCIS CLAVIER ══════════════════════════════════════════════════
+
+const _shortcuts = {
+  'ctrl+k': () => { const s = document.querySelector('.search-input'); if (s) s.focus(); },
+  'ctrl+1': () => showPage('overview'),
+  'ctrl+2': () => showPage('analytics'),
+  'ctrl+3': () => showPage('members'),
+  'ctrl+4': () => showPage('control'),
+  'ctrl+5': () => showPage('chat'),
+  'ctrl+6': () => showPage('settings'),
+  'ctrl+b': () => showPage('bugs'),
+  'ctrl+shift+c': () => showPage('console'),
+  'ctrl+shift+e': () => showPage('embedbuilder'),
+  'escape': () => {
+    const modal = document.querySelector('.server-modal-overlay');
+    if (modal) modal.remove();
+    const memberModal = document.getElementById('memberProfileModal');
+    if (memberModal) memberModal.remove();
+    const shortcutModal = document.getElementById('shortcutsModal');
+    if (shortcutModal) shortcutModal.remove();
+  },
+  'shift+?': () => showShortcutsHelp(),
+};
+
+document.addEventListener('keydown', e => {
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+    if (e.key === 'Escape') e.target.blur();
+    return;
+  }
+  let key = '';
+  if (e.ctrlKey) key += 'ctrl+';
+  if (e.shiftKey) key += 'shift+';
+  key += e.key.toLowerCase();
+  const handler = _shortcuts[key];
+  if (handler) { e.preventDefault(); handler(); }
+});
+
+function showShortcutsHelp() {
+  if (document.getElementById('shortcutsModal')) { document.getElementById('shortcutsModal').remove(); return; }
+  const pairs = [
+    ['Ctrl+K', currentLang === 'fr' ? 'Recherche' : 'Search'],
+    ['Ctrl+1-6', currentLang === 'fr' ? 'Navigation rapide' : 'Quick navigation'],
+    ['Ctrl+B', 'Bugs'],
+    ['Ctrl+Shift+C', 'Console'],
+    ['Ctrl+Shift+E', 'Embed Builder'],
+    ['Escape', currentLang === 'fr' ? 'Fermer modal' : 'Close modal'],
+    ['Shift+?', currentLang === 'fr' ? 'Aide raccourcis' : 'Shortcuts help'],
+  ];
+  const modal = document.createElement('div');
+  modal.id = 'shortcutsModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:380px;animation:fadeIn .2s ease">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="color:var(--bright);font-size:15px;margin:0">${t('shortcuts')}</h3>
+      <button onclick="this.closest('#shortcutsModal').remove()" style="background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer">×</button>
+    </div>
+    ${pairs.map(([k, v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <kbd style="background:var(--bg2);padding:3px 8px;border-radius:4px;font-size:11px;font-family:monospace;color:var(--bright);border:1px solid var(--border)">${k}</kbd>
+      <span style="font-size:12px;color:var(--text)">${v}</span>
+    </div>`).join('')}
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+// ═══ PROFIL MEMBRE MODAL ════════════════════════════════════════════════
+
+async function showMemberProfile(userId, guildId) {
+  if (document.getElementById('memberProfileModal')) document.getElementById('memberProfileModal').remove();
+  const modal = document.createElement('div');
+  modal.id = 'memberProfileModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center';
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:420px;animation:fadeIn .2s ease"><div class="loading"><div class="spinner"></div></div></div>`;
+  document.body.appendChild(modal);
+
+  const [member, xpData] = await Promise.all([
+    guildId ? discordGet(`/guilds/${guildId}/members/${userId}`) : discordGet(`/users/${userId}`),
+    dbQuery(`SELECT COALESCE(SUM(xp),0) as xp, COALESCE(SUM(messages_count),0) as msgs, COALESCE(MAX(level),0) as lvl FROM user_xp WHERE CAST(user_id AS CHAR) = '${userId}'`),
+  ]);
+
+  const user = member?.user || member;
+  if (!user || user.error) { modal.querySelector('div > div').innerHTML = `<p style="color:var(--red)">Membre introuvable</p>`; return; }
+
+  const avatar = getUserAvatar(user.id, user.avatar, 128);
+  const xp = xpData?.[0] || {};
+  const nick = member?.nick || user.global_name || user.username;
+  const roles = member?.roles || [];
+  const joinedAt = member?.joined_at ? new Date(member.joined_at).toLocaleDateString('fr-FR') : '—';
+  const created = new Date(Number((BigInt(user.id) >> 22n) + 1420070400000n)).toLocaleDateString('fr-FR');
+
+  modal.querySelector('div > div').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <img src="${avatar}" style="width:64px;height:64px;border-radius:50%;border:3px solid var(--accent)">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--bright)">${esc(nick)}</div>
+          <div style="font-size:12px;color:var(--dim)">${esc(user.username)}${user.discriminator && user.discriminator !== '0' ? '#' + user.discriminator : ''}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${user.id}</div>
+        </div>
+      </div>
+      <button onclick="this.closest('#memberProfileModal').remove()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div class="card" style="padding:10px;text-align:center"><div style="font-size:9px;color:var(--muted)">XP</div><div style="font-size:16px;font-weight:700;color:var(--purple)">${(xp.xp || 0).toLocaleString()}</div></div>
+      <div class="card" style="padding:10px;text-align:center"><div style="font-size:9px;color:var(--muted)">Messages</div><div style="font-size:16px;font-weight:700;color:var(--blue)">${(xp.msgs || 0).toLocaleString()}</div></div>
+      <div class="card" style="padding:10px;text-align:center"><div style="font-size:9px;color:var(--muted)">Niveau</div><div style="font-size:16px;font-weight:700;color:var(--gold)">${xp.lvl || 0}</div></div>
+      <div class="card" style="padding:10px;text-align:center"><div style="font-size:9px;color:var(--muted)">Roles</div><div style="font-size:16px;font-weight:700;color:var(--green)">${roles.length}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+      <div><span style="color:var(--muted)">${currentLang === 'fr' ? 'Rejoint le' : 'Joined'}</span> <span style="color:var(--bright)">${joinedAt}</span></div>
+      <div><span style="color:var(--muted)">${currentLang === 'fr' ? 'Cree le' : 'Created'}</span> <span style="color:var(--bright)">${created}</span></div>
+    </div>`;
+}
+
+// ═══ EXPORT CSV ══════════════════════════════════════════════════════════
+
+function exportTableAsCSV(tableEl, filename) {
+  if (!tableEl) return;
+  const rows = [];
+  tableEl.querySelectorAll('tr').forEach(tr => {
+    const cols = [];
+    tr.querySelectorAll('th, td').forEach(td => cols.push('"' + td.textContent.replace(/"/g, '""').trim() + '"'));
+    rows.push(cols.join(','));
+  });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename || 'export.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showNotif('Export', currentLang === 'fr' ? 'CSV exporte !' : 'CSV exported!');
+}
+
+function addCSVExportButton(containerId, filename) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const table = container.querySelector('table');
+  if (!table) return;
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary';
+  btn.style.cssText = 'font-size:10px;padding:4px 10px;margin-top:8px';
+  btn.textContent = t('exportCsv');
+  btn.onclick = () => exportTableAsCSV(table, filename);
+  container.appendChild(btn);
+}
+
+// ═══ QUICK ACTIONS (FAB) ════════════════════════════════════════════════
+
+function initQuickActions() {
+  if (document.getElementById('fabMenu')) return;
+  const fab = document.createElement('div');
+  fab.id = 'fabMenu';
+  fab.innerHTML = `
+    <div id="fabItems" style="display:none;position:absolute;bottom:60px;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px;box-shadow:0 8px 32px rgba(0,0,0,.4);min-width:180px">
+      <div class="fab-item" onclick="showPage('control');fabToggle()">⚡ ${currentLang === 'fr' ? 'Envoyer un message' : 'Send message'}</div>
+      <div class="fab-item" onclick="showPage('embedbuilder');fabToggle()">🎨 ${t('embedBuilder')}</div>
+      <div class="fab-item" onclick="showPage('bugs');fabToggle()">🐛 ${currentLang === 'fr' ? 'Voir les bugs' : 'View bugs'}</div>
+      <div class="fab-item" onclick="showPage('analytics');fabToggle()">📊 ${t('analytics')}</div>
+      <div class="fab-item" onclick="showPage('console');fabToggle()">🖥 ${t('console')}</div>
+      <div class="fab-item" onclick="showShortcutsHelp();fabToggle()">⌨ ${t('shortcuts')}</div>
+    </div>
+    <button id="fabBtn" onclick="fabToggle()" style="width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:transform .2s,background .2s;display:flex;align-items:center;justify-content:center">+</button>`;
+  fab.style.cssText = 'position:fixed;bottom:48px;right:20px;z-index:100';
+  document.body.appendChild(fab);
+}
+
+function fabToggle() {
+  const items = document.getElementById('fabItems');
+  const btn = document.getElementById('fabBtn');
+  if (!items) return;
+  const open = items.style.display !== 'none';
+  items.style.display = open ? 'none' : 'block';
+  if (btn) { btn.style.transform = open ? '' : 'rotate(45deg)'; btn.style.background = open ? 'var(--accent)' : 'var(--red)'; }
+}
+
+setTimeout(initQuickActions, 500);
+
 // ═══ SERVEURS ══════════════════════════════════════════════════════════════
 
 async function loadServerList(el) {
@@ -2826,10 +3297,17 @@ async function loadServerList(el) {
 function loadChangelog(el) {
   const logs = [
     { version: 'v2.2', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
-      { title: '📊 Analytics', items: [
+      { title: '📊 Analytics & Heatmap', items: [
         'Graphiques Chart.js (activite, bugs, XP, testeurs, croissance)',
-        'Donnees sur 30 jours avec courbes et barres',
+        'Heatmap d\'activite style GitHub sur 90 jours',
+        'Serie actuelle, jours actifs, moyenne par jour',
         'Doughnut chart des top testeurs',
+      ]},
+      { title: '🎨 Embed Builder', items: [
+        'Editeur visuel d\'embeds Discord avec preview live',
+        'Champs dynamiques, couleur, auteur, footer, images',
+        'Systeme de templates sauvegardables',
+        'Envoi direct dans n\'importe quel channel',
       ]},
       { title: '🤖 Bot Profil', items: [
         'Changer le nom et l\'avatar du bot depuis l\'app',
@@ -2840,7 +3318,7 @@ function loadChangelog(el) {
       { title: '🖥️ Console', items: [
         'Terminal integre avec logs du bot en direct',
         'Filtres par niveau (Error, Warning, Info)',
-        'Recherche dans les logs + auto-refresh',
+        'Recherche dans les logs + auto-refresh 3s',
         'Coloration syntaxique des niveaux',
       ]},
       { title: '🔔 Notifications Desktop', items: [
@@ -2853,11 +3331,13 @@ function loadChangelog(el) {
         'Import et restauration en un clic',
         'Transfert facile entre machines',
       ]},
-      { title: '⚡ UI & Performance', items: [
+      { title: '⚡ UI & Experience', items: [
         'Mode compact (tableaux et cartes condenses)',
+        'Bouton Quick Actions flottant (FAB)',
+        'Raccourcis clavier complets (Shift+? pour la liste)',
+        'Profil membre detaille en modal',
+        'Export CSV sur les tableaux',
         'Page Serveurs avec liens d\'invitation permanents',
-        'Cache intelligent ameliore',
-        'Transitions et animations optimisees',
       ]},
     ]},
     { version: 'v2.1', date: '23/06/2026', tag: 'Nouveau', color: 'var(--green)', sections: [
@@ -3079,8 +3559,8 @@ function exportCurrentPage() {
 const pageSections = {
   home: 'Silver Bot', overview: 'secPrincipal', leaderboard: 'secPrincipal', members: 'secPrincipal',
   compare: 'secPrincipal', stats: 'secPrincipal', channels: 'secPrincipal', serverlist: 'secPrincipal',
-  analytics: 'secPrincipal', control: 'secControle',
-  botinfo: 'secControle', botprofile: 'secControle', uptime: 'secControle', chat: 'secTesteurs',
+  analytics: 'secPrincipal', heatmap: 'secPrincipal', control: 'secControle',
+  botinfo: 'secControle', botprofile: 'secControle', embedbuilder: 'secControle', uptime: 'secControle', chat: 'secTesteurs',
   bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
   suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs',
   database: 'secSysteme', logs: 'secSysteme', history: 'secSysteme',
@@ -3162,3 +3642,5 @@ function disconnect() {
 
 // Init
 showPage('home');
+renderFavorites();
+if ('Notification' in window && Notification.permission === 'default' && _desktopNotifs) Notification.requestPermission();
