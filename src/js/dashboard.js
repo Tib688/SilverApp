@@ -3447,6 +3447,17 @@ async function loadServerList(el) {
 
 function loadChangelog(el) {
   const logs = [
+    { version: 'v2.3', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', sections: [
+      { title: '🪞 Liquid Chrome Design', items: [
+        'Nouveau theme visuel Liquid Chrome — noir profond + argent metallique',
+        'Textes en degrade chrome sur les titres, chiffres et noms',
+        'Lignes lumineuses en haut des stat cards (reflets metalliques)',
+        'Bordures ultra-subtiles (.5px) avec inset shine',
+        'Pills Serveurs/Testeurs/Bugs en chrome unifie',
+        'Sidebar avec logo metallique et nav items chromes',
+        'Coins arrondis 16-18px, espacement genereux',
+      ]},
+    ]},
     { version: 'v2.2.6', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
       '📝 Changelog complet avec mises a jour mineures et pre-2.0',
       '📋 Bouton copier sur chaque entree du changelog',
