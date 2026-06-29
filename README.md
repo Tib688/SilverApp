@@ -1,10 +1,55 @@
-# Silver App v2.2
+## Silver App v2.3 - 29/06/2026
 
-> Dashboard Electron pour Silver Bot — par Tib
+### 🪞 v2.3 — Liquid Chrome Design
+- Nouveau theme visuel noir profond + argent metallique
+- Textes en degrade chrome sur titres, chiffres et noms
+- Lignes lumineuses sur les stat cards
+- Bordures .5px, coins arrondis 16-18px
+- Login, inputs, boutons, selects, tables tout chrome
+- Splash screen au lancement
+- Skeleton loading chrome
+- Horloge stylisee avec separateurs pulsants
+- Breadcrumbs discrets
+
+### ⬆️ v2.3.2-2.3.3 — Mise a jour in-app
+- Detection auto des nouvelles versions via GitHub Releases
+- Page Mise a jour avec changelog integre
+- Badge violet quand update disponible
+- Telechargement + installation directement dans l'app
+- Barre de progression avec pourcentage + taille
+- Lancement auto du setup + fermeture de l'app
+
+### 📊 v2.2 — Analytics & Outils
+- 5 graphiques Chart.js (activite, bugs, XP, testeurs, croissance)
+- Heatmap d'activite style GitHub sur 90 jours
+- Embed Builder visuel avec preview live, @mentions, drag & drop images, video YouTube
+- Bot Profil (changer nom, avatar, statuts rotatifs)
+- Console bot en direct avec filtres et auto-refresh
+- Notifications desktop natives (bugs, messages, suggestions)
+- Backup/Restore JSON complet
+- Mode compact, Quick Actions (FAB), raccourcis clavier
+- Profil membre en modal, export CSV
+- Page Serveurs avec liens d'invitation permanents
+- Recherche Ctrl+K redesignee avec recents
+
+### 🔧 Fixes
+- Comptage exact des messages par channel (API search Discord)
+- Serveurs quittes masques des stats (donnees conservees)
+- Fix BigInt guild_id matching partout
+- Chat/DM/TestLab testeur repares + avatars Discord
+- Source unique user_xp pour donnees fiables
+- Lien invitation testeur pointe vers releases/latest
+- APP_VERSION auto-sync dans le build
+
+### 🖥️ Technique
+- Build script automatise (node build.js)
+- Dossier App/ organise (latest, versions)
+- Support macOS via GitHub Actions
+- NSIS auto-kill app avant installation
 
 ---
 
-## Changelog v2.2 — 29/06/2026
+## Changelog v2.2 — 28/06/2026
 
 ### 📊 Analytics & Heatmap
 - **Graphiques Chart.js** — activite testeurs, bugs/taches, XP gagne, croissance
