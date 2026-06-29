@@ -854,7 +854,7 @@ async function settingsGenerateCode() {
   await dbQuery("INSERT INTO tester_codes (code, discord_id, label, created_at) VALUES (%s,%s,%s,NOW())",
     [code, discordId || null, username || null]);
 
-  const githubLink = 'https://github.com/Tib688/SilverApp/releases/tag/V2';
+  const githubLink = 'https://github.com/Tib688/SilverApp/releases/latest';
   const invitation = `Hey ! Tu as ete invite a tester **Silver Bot** !\n\nPour acceder a l'app :\n\n1. Telecharge **SilverApp.exe** ici :\n${githubLink}\n\n2. Lance l'app\n\n3. Entre ton **Discord ID** et ce code d'invitation :\n\n**Code : ${code}**\n\nA bientot sur Silver Bot !`;
   try { await navigator.clipboard.writeText(invitation); } catch {}
 
@@ -883,7 +883,7 @@ async function settingsGenerateCode() {
 }
 
 function settingsCopyInvite(code, username) {
-  const githubLink = 'https://github.com/Tib688/SilverApp/releases/tag/V2';
+  const githubLink = 'https://github.com/Tib688/SilverApp/releases/latest';
   const invitation = `Hey ! Tu as ete invite a tester **Silver Bot** !\n\nPour acceder a l'app :\n\n1. Telecharge **SilverApp.exe** ici :\n${githubLink}\n\n2. Lance l'app\n\n3. Entre ton **Discord ID** et ce code d'invitation :\n\n**Code : ${code}**\n\nA bientot sur Silver Bot !`;
   navigator.clipboard.writeText(invitation);
 }
@@ -928,7 +928,7 @@ async function forgotGenerate(requestId, discordId, username) {
   await dbQuery("UPDATE forgot_code_requests SET status='resolved' WHERE id=%s", [requestId]);
   await dbQuery("UPDATE tester_codes SET code=%s WHERE discord_id=%s", [code, discordId]);
 
-  const githubLink = 'https://github.com/Tib688/SilverApp/releases/tag/V2';
+  const githubLink = 'https://github.com/Tib688/SilverApp/releases/latest';
   const invitation = `Hey ! Voici ton nouveau code pour **Silver Bot** !\n\n1. Telecharge **SilverApp.exe** ici :\n${githubLink}\n\n2. Lance l'app\n\n3. Entre ton **Discord ID** et ce code :\n\n**Code : ${code}**\n\nA bientot sur Silver Bot !`;
 
   try { await navigator.clipboard.writeText(invitation); } catch {}
