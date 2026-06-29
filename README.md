@@ -1,3 +1,33 @@
+## Changelog v2.3.1 - 29/06/2026
+
+### ⬆️ Mise a jour in-app
+- Telechargement + installation directement dans l'app
+- Barre de progression avec pourcentage + taille MB
+- Lancement auto du setup + fermeture de l'app
+- Detection auto des nouvelles versions via GitHub Releases
+- Badge violet quand update disponible
+- Check auto au lancement + toutes les 30 min
+- Comparaison semver numerique (plus de faux positif)
+
+### 🪞 Chrome polish
+- Page login en Liquid Chrome
+- Splash screen au lancement (logo + barre animee)
+- Inputs, boutons, selects, tables en chrome
+- Skeleton loading chrome
+- Recherche Ctrl+K redesignee (recents, toutes pages)
+- Horloge stylisee avec separateurs pulsants
+- Breadcrumbs discrets
+
+### 🔧 Fixes
+- Chat/DM/TestLab testeur repares
+- Avatars Discord dans les messages + badge Owner
+- Array.isArray guards sur toutes les requetes
+- CAST receiver_id pour BigInt DM matching
+- Changelog testeur ajoute
+- Lien invitation testeur pointe vers releases/latest
+
+---
+
 ## Changelog v2.3 - 29/06/2026
 
 ### 🪞 Liquid Chrome Design
@@ -6,33 +36,39 @@
 - Lignes lumineuses sur les stat cards
 - Bordures .5px, coins arrondis 16-18px
 - Login, inputs, boutons, selects, tables tout chrome
-- Splash screen au lancement
-- Skeleton loading chrome
-- Horloge stylisee avec separateurs pulsants
-- Breadcrumbs discrets
-
-### ⬆️ Mise a jour in-app
-- Detection auto des nouvelles versions via GitHub Releases
-- Page Mise a jour avec changelog integre
-- Badge violet quand update disponible
-- Telechargement + installation directement dans l'app
-- Barre de progression avec pourcentage + taille
-- Lancement auto du setup + fermeture de l'app
-
-### 🔧 Fixes
-- Comptage exact des messages par channel (API search Discord)
+- Pills Serveurs/Testeurs/Bugs en chrome unifie
+- Sidebar metallique, splash screen au lancement
+### 📊 Analytics & Heatmap
+- 5 graphiques Chart.js (activite, bugs, XP, testeurs, croissance)
+- Heatmap d'activite style GitHub sur 90 jours
+- Doughnut chart des top testeurs
+### 🎨 Embed Builder
+- Editeur visuel d'embeds Discord avec preview live
+- @mention autocomplete dans la description
+- Drag & drop / coller images + URL video YouTube
+- Templates sauvegardables
+### 🤖 Bot Profil
+- Changer nom et avatar du bot depuis l'app
+- Editeur de statuts rotatifs avec preview live
+### 🖥️ Console
+- Terminal integre avec logs du bot en direct
+- Filtres par niveau + recherche + auto-refresh
+### 🔔 Notifications Desktop
+- Alertes natives Windows/macOS (bugs, messages, suggestions)
+### 💾 Backup & Restore
+- Export/import complet en JSON
+### ⚡ UI & Experience
+- Mode compact, Quick Actions (FAB), raccourcis clavier
+- Profil membre en modal, export CSV
+- Page Serveurs avec liens d'invitation permanents
+- Recherche Ctrl+K avec recents
+- Comptage exact des messages par channel (API search)
 - Serveurs quittes masques des stats (donnees conservees)
-- Fix BigInt guild_id matching partout
-- Chat/DM/TestLab testeur repares + avatars Discord
-- Source unique user_xp pour donnees fiables
-- Lien invitation testeur pointe vers releases/latest
-- APP_VERSION auto-sync dans le build
-
-### 🖥️ Technique
+### 🔧 Technique
 - Build script automatise (node build.js)
 - Dossier App/ organise (latest, versions)
-- Support macOS via GitHub Actions
 - NSIS auto-kill app avant installation
+- Fix BigInt guild_id, source unique user_xp
 
 ---
 
