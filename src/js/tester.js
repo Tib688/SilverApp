@@ -1,7 +1,13 @@
 // Clock
 setInterval(() => {
   const el = document.getElementById('testerClock');
-  if (el) el.textContent = new Date().toLocaleTimeString('fr-FR');
+  if (el) {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    el.innerHTML = `<span style="color:#707088">${h}</span><span style="color:#404058">:</span><span style="color:#707088">${m}</span><span style="color:#404058">:</span><span style="color:#505068">${s}</span>`;
+  }
 }, 1000);
 
 // Session info
@@ -46,6 +52,7 @@ function testerShowPage(name) {
     't-suggestions': tLoadSuggestions,
     't-testlab': tLoadTestLab,
     't-botinfo': tLoadBotInfo,
+    't-changelog': tLoadChangelog,
   };
   const loader = loaders[name];
   if (loader) loader(content);
@@ -111,7 +118,7 @@ async function tLoadHome(el) {
       <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
       </div>
-      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3 · Electron · FastAPI · MySQL</p>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.1 · Electron · FastAPI · MySQL</p>
     </div>`;
 }
 
@@ -203,29 +210,38 @@ async function tChatLoadMessages() {
   const container = document.getElementById('tChatMessages');
   if (!container) { if (tChatInterval) { clearInterval(tChatInterval); tChatInterval = null; } return; }
   const rows = await dbQuery("SELECT CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_chat ORDER BY created_at DESC LIMIT 50");
-  if (!rows || rows.error) return;
+  if (!Array.isArray(rows) || !rows.length || rows[0]?.error) {
+    if (!Array.isArray(rows) || rows[0]?.error) return;
+    container.innerHTML = '<div class="coming-soon" style="height:100%"><p style="color:#555568">Aucun message</p></div>'; return;
+  }
   rows.reverse();
-  if (!rows.length) { container.innerHTML = '<div class="coming-soon" style="height:100%"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div><p>Aucun message</p></div>'; return; }
   const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
   container.innerHTML = rows.map(r => tRenderMessage(r)).join('');
   if (wasAtBottom) container.scrollTop = container.scrollHeight;
 }
 
 function tRenderMessage(r) {
-  const isMe = r.sender_id === testerId;
+  const isMe = String(r.sender_id) === String(testerId);
+  const isOwner = r.sender_id === '1504594533521031219';
   let content = esc(r.message || '');
   if (r.file_url) {
     const ext = (r.file_name || '').split('.').pop().toLowerCase();
-    if (['png','jpg','jpeg','gif','webp'].includes(ext)) content += `<div class="chat-file-preview"><img src="${r.file_url}" onclick="window.open('${r.file_url}')"></div>`;
-    else if (['mp4','webm','mov'].includes(ext)) content += `<div class="chat-file-preview"><video src="${r.file_url}" controls style="max-width:300px;border-radius:8px"></video></div>`;
-    else content += `<div class="chat-file-link"><a href="${r.file_url}" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> ${esc(r.file_name || 'Fichier')}</a></div>`;
+    if (['png','jpg','jpeg','gif','webp'].includes(ext)) content += `<div class="chat-file-preview"><img src="${r.file_url}" onclick="window.open('${r.file_url}')" style="max-width:300px;border-radius:8px;margin-top:6px;cursor:pointer"></div>`;
+    else if (['mp4','webm','mov'].includes(ext)) content += `<div class="chat-file-preview"><video src="${r.file_url}" controls style="max-width:300px;border-radius:8px;margin-top:6px"></video></div>`;
+    else content += `<div style="margin-top:6px"><a href="${r.file_url}" target="_blank" style="color:var(--blue);font-size:11px">${esc(r.file_name || 'Fichier')}</a></div>`;
   }
-  return `<div class="chat-bubble ${isMe ? 'chat-bubble-owner' : ''}">
-    <div class="chat-bubble-header">
-      <span class="chat-bubble-name" style="color:${isMe ? 'var(--cyan)' : 'var(--accent)'}">${esc(r.sender_name || r.sender_id)}</span>
-      <span class="chat-bubble-time">${fmtDateTime(r.created_at)}</span>
+  const avatarUrl = getUserAvatar(r.sender_id, null, 32);
+  const nameColor = isOwner ? '#a090d0' : isMe ? '#50b8d0' : '#8888a0';
+  const badge = isOwner ? ' <span style="font-size:8px;background:rgba(160,144,208,.1);color:#a090d0;padding:1px 5px;border-radius:4px;margin-left:4px">Owner</span>' : '';
+  return `<div style="display:flex;gap:10px;padding:8px 12px;transition:background .1s;border-radius:10px" onmouseenter="this.style.background='rgba(200,200,230,.02)'" onmouseleave="this.style.background='transparent'">
+    <img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;flex-shrink:0;margin-top:2px;background:#12121a" onerror="this.style.display='none'">
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="font-size:12px;font-weight:500;color:${nameColor}">${esc(r.sender_name || r.sender_id)}</span>${badge}
+        <span style="font-size:9px;color:#404058;margin-left:auto">${fmtDateTime(r.created_at)}</span>
+      </div>
+      <div style="font-size:12px;color:#9090a8;line-height:1.5;word-break:break-word">${content}</div>
     </div>
-    <div class="chat-bubble-content">${content}</div>
   </div>`;
 }
 
@@ -279,10 +295,12 @@ async function tLoadDm(el) {
 async function tDmLoadMessages() {
   const container = document.getElementById('tDmMessages');
   if (!container) { if (tChatInterval) { clearInterval(tChatInterval); tChatInterval = null; } return; }
-  const rows = await dbQuery("SELECT CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_dms WHERE sender_id=%s OR receiver_id=%s ORDER BY created_at DESC LIMIT 50", [testerId, testerId]);
-  if (!rows || rows.error) return;
+  const rows = await dbQuery("SELECT CAST(sender_id AS CHAR) AS sender_id, sender_name, message, file_url, file_name, created_at FROM tester_dms WHERE (CAST(sender_id AS CHAR)=%s OR CAST(receiver_id AS CHAR)=%s) ORDER BY created_at DESC LIMIT 50", [testerId, testerId]);
+  if (!Array.isArray(rows) || !rows.length || rows[0]?.error) {
+    if (!Array.isArray(rows) || rows[0]?.error) return;
+    container.innerHTML = '<div class="coming-soon" style="height:100%"><p style="color:#555568">Aucun message</p></div>'; return;
+  }
   rows.reverse();
-  if (!rows.length) { container.innerHTML = '<div class="coming-soon" style="height:100%"><div class="icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div><p>Aucun message</p></div>'; return; }
   const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
   container.innerHTML = rows.map(r => tRenderMessage(r)).join('');
   if (wasAtBottom) container.scrollTop = container.scrollHeight;
@@ -499,7 +517,8 @@ async function tLoadTestLab(el) {
     </div>`;
   try {
     const res = await fetch(`${BACKEND}/testlab/commands`);
-    tTestlabCommands = await res.json();
+    const data = await res.json();
+    tTestlabCommands = Array.isArray(data) ? data : [];
   } catch { tTestlabCommands = []; }
   tTestlabMessages = [];
   tRenderCmdList(tTestlabCommands);
@@ -608,6 +627,56 @@ async function tLoadBotInfo(el) {
       <div class="card stat-card slide-in" style="animation-delay:.03s"><div class="stat-bar" style="background:var(--cyan)"></div><div class="stat-label">API</div><div class="stat-value" style="font-size:14px">v10</div></div>
       <div class="card stat-card slide-in" style="animation-delay:.06s"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Statut</div><div class="stat-value" style="font-size:14px">En ligne</div></div>
     </div>`;
+}
+
+// ═══ CHANGELOG ═════════════════════════════════════════════════════════════
+
+function tLoadChangelog(el) {
+  const logs = [
+    { version: 'v2.3.1', date: '29/06/2026', tag: 'Patch', color: 'var(--cyan)', items: [
+      'Design Liquid Chrome sur toute l\'app',
+      'Splash screen au lancement',
+      'Recherche Ctrl+K amelioree',
+      'Horloge stylisee, skeleton chrome',
+    ]},
+    { version: 'v2.3', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', items: [
+      'Nouveau design Liquid Chrome',
+      'Textes en degrade metallique',
+      'Bordures ultra-subtiles, coins arrondis',
+    ]},
+    { version: 'v2.2', date: '29/06/2026', tag: 'Majeur', color: 'var(--blue)', items: [
+      'Analytics avec graphiques Chart.js',
+      'Embed Builder visuel avec preview',
+      'Console bot en direct',
+      'Notifications desktop',
+      'Backup/Restore JSON',
+      'Heatmap d\'activite 90 jours',
+      'Raccourcis clavier',
+    ]},
+    { version: 'v2.1', date: '23/06/2026', tag: 'Majeur', color: 'var(--green)', items: [
+      'Page Home, sidebar retractable',
+      'Multi-langue FR/EN',
+      'Chat et DM repares',
+      'Test Lab avec gestion d\'erreurs',
+    ]},
+    { version: 'v2.0', date: '21/06/2026', tag: 'Initial', color: 'var(--accent)', items: [
+      'Migration Electron + FastAPI',
+      'Dashboard Owner + Testeur',
+      'Chat, bugs, taches, annonces',
+    ]},
+  ];
+  el.innerHTML = `<div class="page-header fade-in"><h2>Changelog</h2><p>Historique des mises a jour</p></div>` +
+    logs.map(log => `
+      <div class="card fade-in" style="margin-bottom:10px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:12px;padding:4px 12px;background:${log.color};color:#fff;font-weight:500;border-radius:8px">${log.version}</span>
+          <span style="font-size:9px;padding:2px 8px;border-radius:6px;background:${log.color}15;color:${log.color}">${log.tag}</span>
+          <span style="font-size:10px;color:#404058;margin-left:auto">${log.date}</span>
+        </div>
+        <ul style="margin:0;padding-left:16px;color:#9090a8;font-size:11px;line-height:1.9">
+          ${log.items.map(i => `<li>${esc(i)}</li>`).join('')}
+        </ul>
+      </div>`).join('');
 }
 
 // ═══ LOGOUT ═════════════════════════════════════════════════════════════════
