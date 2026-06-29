@@ -3473,7 +3473,7 @@ async function loadServerList(el) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const APP_VERSION = '2.3.2';
+const APP_VERSION = '2.3.3';
 let _updateInfo = null;
 let _updateChecked = false;
 
@@ -3528,9 +3528,20 @@ function loadUpdate(el) {
           </div>
           ${v?.date ? `<div style="font-size:10px;color:#404058;margin-top:2px">${v.date}</div>` : ''}
         </div>
-        ${hasUpdate ? `<button class="btn btn-primary" style="padding:10px 24px;font-size:13px" onclick="silver.openExternal('${v.download}')">Telecharger ${v.name}</button>` : ''}
+        ${hasUpdate ? `<div id="updateActionArea"><button class="btn btn-primary" style="padding:12px 28px;font-size:13px" onclick="startUpdate('${v.download}')">Mettre a jour</button></div>` : ''}
       </div>
     </div>
+    ${hasUpdate ? `<div id="updateProgressCard" style="display:none" class="card fade-in" style="padding:20px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:14px;padding:20px">
+        <div style="flex:1">
+          <div id="updateProgressLabel" style="font-size:13px;color:#9090a8;margin-bottom:10px">Telechargement...</div>
+          <div style="background:rgba(200,200,230,.06);border-radius:6px;height:6px;overflow:hidden">
+            <div id="updateProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#a090d0,#6070b0);border-radius:6px;transition:width .3s"></div>
+          </div>
+          <div id="updateProgressSize" style="font-size:10px;color:#404058;margin-top:6px"></div>
+        </div>
+      </div>
+    </div>` : ''}
 
     ${hasUpdate && v.body ? `
     <div class="card fade-in" style="padding:20px;margin-bottom:16px">
@@ -3542,6 +3553,31 @@ function loadUpdate(el) {
     <div id="updateChangelogContent"></div>`;
 
   loadChangelogInto(document.getElementById('updateChangelogContent'));
+}
+
+async function startUpdate(url) {
+  const area = document.getElementById('updateActionArea');
+  const card = document.getElementById('updateProgressCard');
+  if (area) area.innerHTML = `<span style="font-size:12px;color:#a090d0">Telechargement en cours...</span>`;
+  if (card) card.style.display = 'block';
+
+  silver.onDownloadProgress(data => {
+    const bar = document.getElementById('updateProgressBar');
+    const label = document.getElementById('updateProgressLabel');
+    const size = document.getElementById('updateProgressSize');
+    if (bar) bar.style.width = data.percent + '%';
+    if (label) label.textContent = data.done ? 'Installation en cours...' : `Telechargement... ${data.percent}%`;
+    if (size && data.total) size.textContent = `${(data.downloaded / 1048576).toFixed(1)} / ${(data.total / 1048576).toFixed(1)} MB`;
+    if (data.done) {
+      if (area) area.innerHTML = `<span style="font-size:12px;color:#30d060">Installation... l'app va redemarrer</span>`;
+    }
+  });
+
+  try {
+    await silver.downloadUpdate(url);
+  } catch (e) {
+    if (area) area.innerHTML = `<span style="font-size:12px;color:#e07070">Erreur: ${e}</span><button class="btn btn-primary" style="padding:8px 16px;font-size:11px;margin-left:10px" onclick="silver.openExternal('${url}')">Telecharger manuellement</button>`;
+  }
 }
 
 // ═══ CHANGELOG ══════════════════════════════════════════════════════════════

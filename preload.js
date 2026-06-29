@@ -6,4 +6,6 @@ contextBridge.exposeInMainWorld('silver', {
   close: () => ipcRenderer.send('window-close'),
   navigate: (page) => ipcRenderer.send('navigate', page),
   openExternal: (url) => ipcRenderer.send('open-external', url),
+  downloadUpdate: (url) => ipcRenderer.invoke('download-update', url),
+  onDownloadProgress: (cb) => ipcRenderer.on('download-progress', (e, data) => cb(data)),
 });
