@@ -1,6 +1,6 @@
-## Silver App v2.3 - 29/06/2026
+## Changelog v2.3 - 29/06/2026
 
-### 🪞 v2.3 — Liquid Chrome Design
+### 🪞 Liquid Chrome Design
 - Nouveau theme visuel noir profond + argent metallique
 - Textes en degrade chrome sur titres, chiffres et noms
 - Lignes lumineuses sur les stat cards
