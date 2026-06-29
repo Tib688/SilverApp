@@ -634,24 +634,13 @@ async function tLoadBotInfo(el) {
 
 function tLoadChangelog(el, append) {
   const logs = [
-    { version: 'v2.3.4', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
-      '🔍 Fix detection mise a jour (comparaison semver)',
-      '✅ Plus de faux positif update',
-    ]},
-    { version: 'v2.3.3', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
-      '⬆️ Mise a jour in-app avec barre de progression',
-      '📥 Telechargement direct sans ouvrir le navigateur',
-      '🚀 Installation auto + redemarrage',
-    ]},
-    { version: 'v2.3.2', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+    { version: 'v2.3.1', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '⬆️ Mise a jour in-app (telechargement + install auto)',
       '🔔 Detection auto des mises a jour via GitHub',
-      '📋 Page Mise a jour avec changelog integre',
-      '💜 Badge violet quand update disponible',
-    ]},
-    { version: 'v2.3.1', date: '29/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
-      '🔑 Login + inputs + tables en Liquid Chrome',
+      '🔑 Login, inputs, tables en Liquid Chrome',
       '🖥️ Splash screen, recherche amelioree',
       '💬 Fix chat, DM, TestLab + avatars Discord',
+      '✅ Comparaison semver pour updates',
     ]},
     { version: 'v2.3', date: '29/06/2026', tag: 'Majeur', color: 'var(--purple)', items: [
       'Nouveau design Liquid Chrome',
