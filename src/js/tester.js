@@ -91,7 +91,7 @@ async function tLoadHome(el) {
         <span class="dot dot-green dot-pulse" style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border:3px solid var(--bg)"></span>
       </div>
       <h1 style="font-size:28px;font-weight:800;color:var(--bright);letter-spacing:-.03em">${esc(b.username || 'Silver Bot')}</h1>
-      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.1</p>
+      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.3.2</p>
       <div style="display:flex;gap:8px;margin-top:16px">
         <span class="badge badge-green" style="padding:5px 14px;font-size:11px">En ligne</span>
         <span class="badge badge-blue" style="padding:5px 14px;font-size:11px">BOT</span>
@@ -119,7 +119,7 @@ async function tLoadHome(el) {
       <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
       </div>
-      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.1 · Electron · FastAPI · MySQL</p>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.2 · Electron · FastAPI · MySQL</p>
     </div>`;
 }
 
@@ -493,10 +493,11 @@ async function tSugLoadList() {
 
 let tTestlabCommands = [];
 let tTestlabMessages = [];
+let tTestlabSelected = null;
 
 async function tLoadTestLab(el) {
   el.innerHTML = `
-    <div class="page-header fade-in"><h2>Test Lab</h2><p>Simulateur de commandes bot</p></div>
+    <div class="page-header fade-in"><h2>Test Lab</h2><p>Execute les vraies commandes du bot, en direct sur le serveur de test</p></div>
     <div class="testlab-layout fade-in">
       <div class="testlab-sidebar">
         <div class="testlab-sidebar-header">Commandes</div>
@@ -506,11 +507,12 @@ async function tLoadTestLab(el) {
       </div>
       <div class="testlab-main">
         <div class="testlab-chat" id="tTestlabChat">
-          <div class="testlab-welcome"><div class="testlab-welcome-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="var(--muted)" opacity=".3"><path d="M7 2v2h1v5.17L3.2 16.8A2.5 2.5 0 0 0 5.24 21h13.52a2.5 2.5 0 0 0 2.04-4.2L16 9.17V4h1V2zm2 2h6v5.83l1.08 1.42H7.92L9 9.83z"/></svg></div><div class="testlab-welcome-title">Silver Bot — Test Lab</div><div class="testlab-welcome-sub">Tape une commande avec / pour tester</div></div>
+          <div class="testlab-welcome"><div class="testlab-welcome-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="var(--muted)" opacity=".3"><path d="M7 2v2h1v5.17L3.2 16.8A2.5 2.5 0 0 0 5.24 21h13.52a2.5 2.5 0 0 0 2.04-4.2L16 9.17V4h1V2zm2 2h6v5.83l1.08 1.42H7.92L9 9.83z"/></svg></div><div class="testlab-welcome-title">Silver Bot — Test Lab</div><div class="testlab-welcome-sub">Choisis une commande a gauche, ou tape / pour la chercher</div></div>
         </div>
+        <div class="testlab-params" id="tTestlabParams" style="display:none"></div>
         <div class="testlab-input-bar">
           <span class="testlab-slash">/</span>
-          <input type="text" id="tTestlabInput" placeholder="commande args..." onkeydown="tTestlabKeydown(event)" autocomplete="off">
+          <input type="text" id="tTestlabInput" placeholder="commande..." onkeydown="tTestlabKeydown(event)" oninput="tTestlabOnInput()" autocomplete="off">
           <button class="btn btn-primary" onclick="tTestlabSend()">Envoyer</button>
         </div>
         <div class="testlab-suggestions" id="tTestlabSuggestions"></div>
@@ -522,16 +524,17 @@ async function tLoadTestLab(el) {
     tTestlabCommands = Array.isArray(data) ? data : [];
   } catch { tTestlabCommands = []; }
   tTestlabMessages = [];
+  tTestlabSelected = null;
   tRenderCmdList(tTestlabCommands);
 }
 
 function tRenderCmdList(cmds) {
   document.getElementById('tTestlabCmdCount').textContent = `${cmds.length} commande${cmds.length > 1 ? 's' : ''}`;
   document.getElementById('tTestlabCmdList').innerHTML = cmds.length ? cmds.map(c => `
-    <div class="testlab-cmd-item" onclick="document.getElementById('tTestlabInput').value='${esc(c.name)} ';document.getElementById('tTestlabInput').focus()">
+    <div class="testlab-cmd-item" onclick="tTestlabSelectCmd('${esc(c.name)}')">
       <span class="testlab-cmd-name">/${esc(c.name)}</span>
       <span class="testlab-cmd-desc">${esc(c.description)}</span>
-    </div>`).join('') : '<div style="padding:12px;font-size:11px;color:var(--muted);text-align:center">Aucune commande</div>';
+    </div>`).join('') : '<div style="padding:12px;font-size:11px;color:var(--muted);text-align:center">Aucune commande — le bot est-il connecte ?</div>';
 }
 
 function tTestlabFilter() {
@@ -539,32 +542,116 @@ function tTestlabFilter() {
   tRenderCmdList(tTestlabCommands.filter(c => c.name.includes(q) || c.description.toLowerCase().includes(q)));
 }
 
+function tTestlabSelectCmd(name) {
+  const cmd = tTestlabCommands.find(c => c.name === name);
+  if (!cmd) return;
+  tTestlabSelected = cmd;
+  document.getElementById('tTestlabInput').value = '/' + name;
+  document.getElementById('tTestlabSuggestions').innerHTML = '';
+  tRenderTestlabParams(cmd);
+  document.getElementById('tTestlabInput').focus();
+}
+
+function tRenderTestlabParams(cmd) {
+  const host = document.getElementById('tTestlabParams');
+  if (!cmd.parameters || !cmd.parameters.length) { host.innerHTML = ''; host.style.display = 'none'; return; }
+  host.style.display = 'flex';
+  host.innerHTML = `<div class="testlab-params-title">/${esc(cmd.name)}<span class="testlab-params-desc">${esc(cmd.description)}</span></div>` +
+    cmd.parameters.map(p => {
+      let field;
+      const id = `tTlp_${esc(p.name)}`;
+      if (p.choices && p.choices.length) {
+        field = `<select id="${id}">${!p.required ? '<option value="">—</option>' : ''}${p.choices.map(c => `<option value="${esc(c.value)}">${esc(c.name)}</option>`).join('')}</select>`;
+      } else if (p.type === 'boolean') {
+        field = `<input type="checkbox" id="${id}">`;
+      } else if (p.type === 'integer' || p.type === 'number') {
+        field = `<input type="number" id="${id}" placeholder="${esc(p.description)}">`;
+      } else if (['user', 'role', 'channel', 'mentionable'].includes(p.type)) {
+        field = `<input type="text" id="${id}" placeholder="ID Discord (${esc(p.type)})">`;
+      } else {
+        field = `<input type="text" id="${id}" placeholder="${esc(p.description)}">`;
+      }
+      return `<div class="testlab-param-row"><div class="testlab-param-label" title="${esc(p.description)}">${esc(p.name)}${p.required ? '<span class="testlab-param-required">*</span>' : ''}</div>${field}</div>`;
+    }).join('');
+}
+
+function tTestlabOnInput() {
+  const val = document.getElementById('tTestlabInput').value.trim().replace(/^\//, '');
+  if (tTestlabSelected && val !== tTestlabSelected.name) {
+    tTestlabSelected = null;
+    document.getElementById('tTestlabParams').style.display = 'none';
+  }
+  const sg = document.getElementById('tTestlabSuggestions');
+  if (!val || (tTestlabSelected && tTestlabSelected.name === val)) { sg.innerHTML = ''; return; }
+  const matches = tTestlabCommands.filter(c => c.name.startsWith(val.toLowerCase())).slice(0, 5);
+  sg.innerHTML = matches.map(c => `<div class="testlab-suggestion-item" onclick="tTestlabSelectCmd('${esc(c.name)}')">${esc('/' + c.name)} <span style="color:var(--muted)">${esc(c.description)}</span></div>`).join('');
+}
+
 function tTestlabKeydown(e) {
   if (e.key === 'Enter') tTestlabSend();
-  if (e.key === 'Tab') { e.preventDefault(); const v = document.getElementById('tTestlabInput').value.trim().toLowerCase(); const m = tTestlabCommands.find(c => c.name.startsWith(v)); if (m) document.getElementById('tTestlabInput').value = m.name + ' '; }
-  setTimeout(() => {
-    const v = document.getElementById('tTestlabInput')?.value.trim().toLowerCase();
-    const sg = document.getElementById('tTestlabSuggestions');
-    if (!v || !sg) { if (sg) sg.innerHTML = ''; return; }
-    const matches = tTestlabCommands.filter(c => c.name.startsWith(v)).slice(0, 5);
-    sg.innerHTML = matches.map(c => `<div class="testlab-suggestion-item" onclick="document.getElementById('tTestlabInput').value='${esc(c.name)} ';document.getElementById('tTestlabInput').focus();document.getElementById('tTestlabSuggestions').innerHTML=''">${esc('/' + c.name)} <span style="color:var(--muted)">${esc(c.description)}</span></div>`).join('');
-  }, 10);
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const v = document.getElementById('tTestlabInput').value.trim().replace(/^\//, '').toLowerCase();
+    const m = tTestlabCommands.find(c => c.name.startsWith(v));
+    if (m) tTestlabSelectCmd(m.name);
+  }
+}
+
+function tTestlabParseInline(text) {
+  const params = {};
+  const re = /([\w-]+):("([^"]*)"|'([^']*)'|(\S+))/g;
+  let m;
+  while ((m = re.exec(text))) params[m[1]] = m[3] ?? m[4] ?? m[5];
+  return params;
 }
 
 async function tTestlabSend() {
   const input = document.getElementById('tTestlabInput');
-  let cmd = input.value.trim();
-  if (!cmd) return;
-  if (!cmd.startsWith('/')) cmd = '/' + cmd;
+  let raw = input.value.trim();
+  if (!raw) return;
+  if (raw.startsWith('/')) raw = raw.slice(1);
+  const spaceIdx = raw.indexOf(' ');
+  const name = spaceIdx === -1 ? raw : raw.slice(0, spaceIdx);
+  const rest = spaceIdx === -1 ? '' : raw.slice(spaceIdx + 1);
+  const cmd = tTestlabCommands.find(c => c.name === name);
+  if (!cmd) {
+    tTestlabMessages.push({ type: 'bot', error: `Commande /${esc(name)} introuvable. Choisis-la dans la liste a gauche.` });
+    tRenderTestlabChat();
+    return;
+  }
+
+  let params = {};
+  const formRendered = tTestlabSelected && tTestlabSelected.name === cmd.name && document.getElementById('tTestlabParams').innerHTML;
+  if (formRendered) {
+    for (const p of cmd.parameters) {
+      const el = document.getElementById(`tTlp_${p.name}`);
+      if (!el) continue;
+      if (p.type === 'boolean') params[p.name] = el.checked;
+      else if (el.value.trim()) params[p.name] = el.value.trim();
+    }
+  } else if (rest) {
+    params = tTestlabParseInline(rest);
+  }
+
   input.value = '';
   document.getElementById('tTestlabSuggestions').innerHTML = '';
-  tTestlabMessages.push({ type: 'user', content: cmd });
+  document.getElementById('tTestlabParams').style.display = 'none';
+  tTestlabSelected = null;
+
+  const displayParts = Object.entries(params).map(([k, v]) => `${k}:${v}`).join(' ');
+  tTestlabMessages.push({ type: 'user', content: `/${cmd.name}${displayParts ? ' ' + displayParts : ''}` });
   tRenderTestlabChat();
   try {
-    const res = await fetch(`${BACKEND}/testlab/simulate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ command: cmd, username: testerName }) });
+    const res = await fetch(`${BACKEND}/testlab/execute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd.name, params, tester_id: testerId, tester_name: testerName }),
+    });
     const data = await res.json();
-    tTestlabMessages.push({ type: 'bot', content: data.content, embed: data.embed });
-  } catch (e) { tTestlabMessages.push({ type: 'bot', content: `Erreur: ${e.message}`, embed: null }); }
+    tTestlabMessages.push({ type: 'bot', content: data.content, embeds: data.embeds, followups: data.followups, ephemeral: data.ephemeral, error: data.error });
+  } catch (e) {
+    tTestlabMessages.push({ type: 'bot', error: `Erreur reseau: ${e.message}` });
+  }
   tRenderTestlabChat();
 }
 
@@ -573,16 +660,22 @@ function tRenderTestlabChat() {
   chat.innerHTML = tTestlabMessages.map(m => {
     if (m.type === 'user') return `<div class="testlab-msg"><div class="testlab-msg-avatar">T</div><div class="testlab-msg-body"><div class="testlab-msg-name" style="color:var(--accent)">${esc(testerName)}</div><div class="testlab-msg-content">${esc(m.content)}</div></div></div>`;
     let h = '';
-    if (m.content) h += `<div class="testlab-msg-content">${esc(m.content)}</div>`;
-    if (m.embed) h += tRenderEmbed(m.embed);
+    if (m.error) h += `<div class="testlab-error-msg">⚠ ${esc(m.error)}</div>`;
+    if (m.content) h += `<div class="testlab-msg-content">${esc(m.content)}${m.ephemeral ? '<span class="testlab-ephemeral-badge">ephemere</span>' : ''}</div>`;
+    (m.embeds || []).forEach(e => h += tRenderEmbed(e));
+    (m.followups || []).forEach(f => {
+      if (f.content) h += `<div class="testlab-msg-content">${esc(f.content)}</div>`;
+      (f.embeds || []).forEach(e => h += tRenderEmbed(e));
+    });
     return `<div class="testlab-msg"><div class="testlab-msg-avatar bot-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--cyan)"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg></div><div class="testlab-msg-body"><div class="testlab-msg-name" style="color:var(--cyan)">Silver Bot</div>${h}</div></div>`;
   }).join('');
   chat.scrollTop = chat.scrollHeight;
 }
 
 function tRenderEmbed(embed) {
-  const color = embed.color ? `#${embed.color.toString(16).padStart(6, '0')}` : '#5865F2';
+  const color = embed.color ? `#${Number(embed.color).toString(16).padStart(6, '0')}` : '#5865F2';
   let h = `<div class="discord-embed" style="border-left-color:${color}">`;
+  if (embed.author && embed.author.name) h += `<div class="discord-embed-field-name" style="margin-bottom:6px">${esc(embed.author.name)}</div>`;
   if (embed.title) h += `<div class="discord-embed-title">${esc(embed.title)}</div>`;
   if (embed.description) h += `<div class="discord-embed-desc">${tFmtDiscord(embed.description)}</div>`;
   if (embed.fields && embed.fields.length) {
@@ -590,6 +683,7 @@ function tRenderEmbed(embed) {
     for (const f of embed.fields) h += `<div class="discord-embed-field${f.inline ? ' inline' : ''}"><div class="discord-embed-field-name">${esc(f.name)}</div><div class="discord-embed-field-value">${tFmtDiscord(f.value)}</div></div>`;
     h += '</div>';
   }
+  if (embed.footer && embed.footer.text) h += `<div class="discord-embed-field-name" style="margin-top:8px;opacity:.6">${esc(embed.footer.text)}</div>`;
   return h + '</div>';
 }
 
@@ -634,6 +728,12 @@ async function tLoadBotInfo(el) {
 
 function tLoadChangelog(el, append) {
   const logs = [
+    { version: 'v2.3.2', date: '30/06/2026', tag: '🧪 Test Lab', color: 'var(--cyan)', items: [
+      '🤖 Test Lab refait entierement — execute les VRAIES commandes du bot (plus de simulation)',
+      '🔌 Connexion directe au bot en ligne (meme code, meme base de donnees)',
+      '📝 Formulaire de parametres genere depuis les vraies commandes Discord',
+      '💬 Reponses, embeds multiples et erreurs reels affiches comme sur Discord',
+    ]},
     { version: 'v2.3.1', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
       '⬆️ Mise a jour in-app (telechargement + install auto)',
       '🔔 Detection auto des mises a jour via GitHub',
@@ -687,7 +787,7 @@ function tLoadChangelog(el, append) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const T_APP_VERSION = '2.3.1';
+const T_APP_VERSION = '2.3.2';
 let _tUpdateInfo = null;
 
 function _tIsNewerVersion(remote, local) {

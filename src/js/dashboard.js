@@ -237,7 +237,7 @@ async function loadHome(el) {
       </div>
 
       <h1 style="font-size:28px;font-weight:800;color:var(--bright);letter-spacing:-.03em">${esc(b.username || 'Silver Bot')}</h1>
-      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.3.1</p>
+      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.3.2</p>
 
       <div style="display:flex;gap:8px;margin-top:16px">
         <span class="badge badge-green" style="padding:5px 14px;font-size:11px">En ligne</span>
@@ -283,7 +283,7 @@ async function loadHome(el) {
       <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
       </div>
-      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.1 · Electron · FastAPI · MySQL</p>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.2 · Electron · FastAPI · MySQL</p>
     </div>`;
 }
 
@@ -769,7 +769,7 @@ async function loadSettings(el) {
       <div class="card settings-section">
         <div class="control-section-title">Application</div>
         <div class="settings-info-grid">
-          <div><span class="settings-label">Version</span><span class="settings-value">v2.3.1</span></div>
+          <div><span class="settings-label">Version</span><span class="settings-value">v2.3.2</span></div>
           <div><span class="settings-label">Framework</span><span class="settings-value">Electron</span></div>
           <div><span class="settings-label">Backend</span><span class="settings-value">FastAPI</span></div>
           <div><span class="settings-label">GitHub</span><span class="settings-value">Tib688/SilverApp</span></div>
@@ -1233,13 +1233,14 @@ async function bugSetStatus(id, status) {
 
 let testlabCommands = [];
 let testlabMessages = [];
+let testlabSelected = null;
 
 let testlabBotAvatar = null;
 let testlabUserAvatar = null;
 
 async function loadTestLab(el) {
   el.innerHTML = `
-    <div class="page-header fade-in"><h2>Test Lab</h2><p>Simulateur de commandes bot — environnement sandbox</p></div>
+    <div class="page-header fade-in"><h2>Test Lab</h2><p>Execute les vraies commandes du bot, en direct sur le serveur de test</p></div>
     <div class="testlab-layout fade-in">
       <div class="testlab-sidebar">
         <div class="testlab-sidebar-header">Commandes</div>
@@ -1254,12 +1255,13 @@ async function loadTestLab(el) {
           <div class="testlab-welcome">
             <div class="testlab-welcome-icon">⚗</div>
             <div class="testlab-welcome-title">Silver Bot — Test Lab</div>
-            <div class="testlab-welcome-sub">Tape une commande avec / pour tester le bot</div>
+            <div class="testlab-welcome-sub">Choisis une commande a gauche, ou tape / pour la chercher</div>
           </div>
         </div>
+        <div class="testlab-params" id="testlabParams" style="display:none"></div>
         <div class="testlab-input-bar">
           <span class="testlab-slash">/</span>
-          <input type="text" id="testlabInput" placeholder="commande args..." onkeydown="testlabKeydown(event)" autocomplete="off">
+          <input type="text" id="testlabInput" placeholder="commande..." onkeydown="testlabKeydown(event)" oninput="testlabOnInput()" autocomplete="off">
           <button class="btn btn-primary" onclick="testlabSend()">Envoyer</button>
         </div>
         <div class="testlab-suggestions" id="testlabSuggestions"></div>
@@ -1269,12 +1271,14 @@ async function loadTestLab(el) {
   const [res, bot, owner] = await Promise.all([
     fetch(`${BACKEND}/testlab/commands`),
     discordGet('/users/@me'),
-    discordGet('/users/1504594533521031219'),
+    discordGet(`/users/${OWNER_ID}`),
   ]);
-  testlabCommands = await res.json();
+  try { testlabCommands = await res.json(); } catch { testlabCommands = []; }
+  if (!Array.isArray(testlabCommands)) testlabCommands = [];
   testlabMessages = [];
+  testlabSelected = null;
   testlabBotAvatar = (bot && !bot.error) ? getBotAvatar(bot, 64) : null;
-  testlabUserAvatar = (owner && !owner.error) ? getUserAvatar('1504594533521031219', owner.avatar, 64) : null;
+  testlabUserAvatar = (owner && !owner.error) ? getUserAvatar(OWNER_ID, owner.avatar, 64) : null;
   renderTestlabCmdList(testlabCommands);
 }
 
@@ -1282,12 +1286,12 @@ function renderTestlabCmdList(cmds) {
   const list = document.getElementById('testlabCmdList');
   const count = document.getElementById('testlabCmdCount');
   count.textContent = `${cmds.length} commande${cmds.length > 1 ? 's' : ''}`;
-  list.innerHTML = cmds.map(c => `
-    <div class="testlab-cmd-item" onclick="testlabInsertCmd('${esc(c.name)}')">
+  list.innerHTML = cmds.length ? cmds.map(c => `
+    <div class="testlab-cmd-item" onclick="testlabSelectCmd('${esc(c.name)}')">
       <span class="testlab-cmd-name">/${esc(c.name)}</span>
       <span class="testlab-cmd-desc">${esc(c.description)}</span>
     </div>
-  `).join('');
+  `).join('') : '<div style="padding:12px;font-size:11px;color:var(--muted);text-align:center">Aucune commande — le bot est-il connecte ?</div>';
 }
 
 function testlabFilter() {
@@ -1296,58 +1300,124 @@ function testlabFilter() {
   renderTestlabCmdList(filtered);
 }
 
-function testlabInsertCmd(name) {
-  const input = document.getElementById('testlabInput');
-  input.value = name + ' ';
-  input.focus();
+function testlabSelectCmd(name) {
+  const cmd = testlabCommands.find(c => c.name === name);
+  if (!cmd) return;
+  testlabSelected = cmd;
+  document.getElementById('testlabInput').value = '/' + name;
+  document.getElementById('testlabSuggestions').innerHTML = '';
+  renderTestlabParams(cmd);
+  document.getElementById('testlabInput').focus();
+}
+
+function renderTestlabParams(cmd) {
+  const host = document.getElementById('testlabParams');
+  if (!cmd.parameters || !cmd.parameters.length) { host.innerHTML = ''; host.style.display = 'none'; return; }
+  host.style.display = 'flex';
+  host.innerHTML = `<div class="testlab-params-title">/${esc(cmd.name)}<span class="testlab-params-desc">${esc(cmd.description)}</span></div>` +
+    cmd.parameters.map(p => {
+      let field;
+      const id = `tlp_${esc(p.name)}`;
+      if (p.choices && p.choices.length) {
+        field = `<select id="${id}">${!p.required ? '<option value="">—</option>' : ''}${p.choices.map(c => `<option value="${esc(c.value)}">${esc(c.name)}</option>`).join('')}</select>`;
+      } else if (p.type === 'boolean') {
+        field = `<input type="checkbox" id="${id}">`;
+      } else if (p.type === 'integer' || p.type === 'number') {
+        field = `<input type="number" id="${id}" placeholder="${esc(p.description)}">`;
+      } else if (['user', 'role', 'channel', 'mentionable'].includes(p.type)) {
+        field = `<input type="text" id="${id}" placeholder="ID Discord (${esc(p.type)})">`;
+      } else {
+        field = `<input type="text" id="${id}" placeholder="${esc(p.description)}">`;
+      }
+      return `<div class="testlab-param-row"><div class="testlab-param-label" title="${esc(p.description)}">${esc(p.name)}${p.required ? '<span class="testlab-param-required">*</span>' : ''}</div>${field}</div>`;
+    }).join('');
+}
+
+function testlabOnInput() {
+  const val = document.getElementById('testlabInput').value.trim().replace(/^\//, '');
+  if (testlabSelected && val !== testlabSelected.name) {
+    testlabSelected = null;
+    document.getElementById('testlabParams').style.display = 'none';
+  }
+  testlabShowSuggestions();
 }
 
 function testlabKeydown(e) {
   if (e.key === 'Enter') testlabSend();
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    testlabAutocomplete();
-  }
-  setTimeout(testlabShowSuggestions, 10);
+  if (e.key === 'Tab') { e.preventDefault(); testlabAutocomplete(); }
 }
 
 function testlabAutocomplete() {
   const input = document.getElementById('testlabInput');
-  const val = input.value.trim().toLowerCase();
+  const val = input.value.trim().replace(/^\//, '').toLowerCase();
   const match = testlabCommands.find(c => c.name.startsWith(val));
-  if (match) input.value = match.name + ' ';
+  if (match) testlabSelectCmd(match.name);
 }
 
 function testlabShowSuggestions() {
-  const val = document.getElementById('testlabInput').value.trim().toLowerCase();
+  const val = document.getElementById('testlabInput').value.trim().replace(/^\//, '').toLowerCase();
   const sugEl = document.getElementById('testlabSuggestions');
-  if (!val) { sugEl.innerHTML = ''; return; }
+  if (!val || (testlabSelected && testlabSelected.name === val)) { sugEl.innerHTML = ''; return; }
   const matches = testlabCommands.filter(c => c.name.startsWith(val)).slice(0, 5);
   if (!matches.length) { sugEl.innerHTML = ''; return; }
-  sugEl.innerHTML = matches.map(c => `<div class="testlab-suggestion-item" onclick="testlabInsertCmd('${esc(c.name)}')">${esc('/' + c.name)} <span style="color:var(--muted)">${esc(c.description)}</span></div>`).join('');
+  sugEl.innerHTML = matches.map(c => `<div class="testlab-suggestion-item" onclick="testlabSelectCmd('${esc(c.name)}')">${esc('/' + c.name)} <span style="color:var(--muted)">${esc(c.description)}</span></div>`).join('');
+}
+
+function testlabParseInline(text) {
+  const params = {};
+  const re = /([\w-]+):("([^"]*)"|'([^']*)'|(\S+))/g;
+  let m;
+  while ((m = re.exec(text))) params[m[1]] = m[3] ?? m[4] ?? m[5];
+  return params;
 }
 
 async function testlabSend() {
   const input = document.getElementById('testlabInput');
-  let cmd = input.value.trim();
-  if (!cmd) return;
-  if (!cmd.startsWith('/')) cmd = '/' + cmd;
+  let raw = input.value.trim();
+  if (!raw) return;
+  if (raw.startsWith('/')) raw = raw.slice(1);
+  const spaceIdx = raw.indexOf(' ');
+  const name = spaceIdx === -1 ? raw : raw.slice(0, spaceIdx);
+  const rest = spaceIdx === -1 ? '' : raw.slice(spaceIdx + 1);
+  const cmd = testlabCommands.find(c => c.name === name);
+  if (!cmd) {
+    testlabMessages.push({ type: 'bot', error: `Commande /${esc(name)} introuvable. Choisis-la dans la liste a gauche.` });
+    renderTestlabChat();
+    return;
+  }
+
+  let params = {};
+  const formRendered = testlabSelected && testlabSelected.name === cmd.name && document.getElementById('testlabParams').innerHTML;
+  if (formRendered) {
+    for (const p of cmd.parameters) {
+      const el = document.getElementById(`tlp_${p.name}`);
+      if (!el) continue;
+      if (p.type === 'boolean') params[p.name] = el.checked;
+      else if (el.value.trim()) params[p.name] = el.value.trim();
+    }
+  } else if (rest) {
+    params = testlabParseInline(rest);
+  }
+
   input.value = '';
   document.getElementById('testlabSuggestions').innerHTML = '';
+  document.getElementById('testlabParams').style.display = 'none';
+  testlabSelected = null;
 
-  testlabMessages.push({ type: 'user', content: cmd });
+  const displayParts = Object.entries(params).map(([k, v]) => `${k}:${v}`).join(' ');
+  testlabMessages.push({ type: 'user', content: `/${cmd.name}${displayParts ? ' ' + displayParts : ''}` });
   renderTestlabChat();
 
   try {
-    const res = await fetch(`${BACKEND}/testlab/simulate`, {
+    const res = await fetch(`${BACKEND}/testlab/execute`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command: cmd, username: 'Tib' }),
+      body: JSON.stringify({ command: cmd.name, params, tester_id: OWNER_ID, tester_name: 'Tib' }),
     });
     const data = await res.json();
-    testlabMessages.push({ type: 'bot', content: data.content, embed: data.embed });
+    testlabMessages.push({ type: 'bot', content: data.content, embeds: data.embeds, followups: data.followups, ephemeral: data.ephemeral, error: data.error });
   } catch (e) {
-    testlabMessages.push({ type: 'bot', content: `Erreur: ${e.message}`, embed: null });
+    testlabMessages.push({ type: 'bot', error: `Erreur reseau: ${e.message}` });
   }
   renderTestlabChat();
 }
@@ -1367,8 +1437,13 @@ function renderTestlabChat() {
       </div>`;
     }
     let html = '';
-    if (m.content) html += `<div class="testlab-msg-content">${esc(m.content)}</div>`;
-    if (m.embed) html += renderDiscordEmbed(m.embed);
+    if (m.error) html += `<div class="testlab-error-msg">⚠ ${esc(m.error)}</div>`;
+    if (m.content) html += `<div class="testlab-msg-content">${esc(m.content)}${m.ephemeral ? '<span class="testlab-ephemeral-badge">ephemere</span>' : ''}</div>`;
+    (m.embeds || []).forEach(e => html += renderDiscordEmbed(e));
+    (m.followups || []).forEach(f => {
+      if (f.content) html += `<div class="testlab-msg-content">${esc(f.content)}</div>`;
+      (f.embeds || []).forEach(e => html += renderDiscordEmbed(e));
+    });
     return `<div class="testlab-msg testlab-msg-bot">
       <div class="testlab-msg-avatar bot-avatar">${botAv}</div>
       <div class="testlab-msg-body">
@@ -1381,8 +1456,9 @@ function renderTestlabChat() {
 }
 
 function renderDiscordEmbed(embed) {
-  const color = embed.color ? `#${embed.color.toString(16).padStart(6, '0')}` : '#5865F2';
+  const color = embed.color ? `#${Number(embed.color).toString(16).padStart(6, '0')}` : '#5865F2';
   let html = `<div class="discord-embed" style="border-left-color:${color}">`;
+  if (embed.author && embed.author.name) html += `<div class="discord-embed-field-name" style="margin-bottom:6px">${esc(embed.author.name)}</div>`;
   if (embed.title) html += `<div class="discord-embed-title">${esc(embed.title)}</div>`;
   if (embed.description) html += `<div class="discord-embed-desc">${formatDiscordText(embed.description)}</div>`;
   if (embed.fields && embed.fields.length) {
@@ -1395,6 +1471,7 @@ function renderDiscordEmbed(embed) {
     }
     html += '</div>';
   }
+  if (embed.footer && embed.footer.text) html += `<div class="discord-embed-field-name" style="margin-top:8px;opacity:.6">${esc(embed.footer.text)}</div>`;
   html += '</div>';
   return html;
 }
@@ -2588,7 +2665,7 @@ function bpStartPreview() {
     _bpPreviewIdx++;
     const el = document.getElementById('bpPreviewStatus');
     if (el) {
-      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.3.1');
+      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.3.2');
       const prefix = s.type === 'streaming' ? '🟣 Streaming' : s.type === 'playing' ? '🎮 Playing' : s.type === 'watching' ? '👀 Watching' : '🎵 Listening';
       el.textContent = `${prefix}: ${text}`;
       el.style.opacity = '0'; setTimeout(() => { if (el) el.style.opacity = '1'; }, 100);
@@ -3473,7 +3550,7 @@ async function loadServerList(el) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const APP_VERSION = '2.3.1';
+const APP_VERSION = '2.3.2';
 let _updateInfo = null;
 let _updateChecked = false;
 
@@ -3597,6 +3674,13 @@ function loadChangelog(el) { loadChangelogInto(el); }
 
 function loadChangelogInto(el) {
   const logs = [
+    { version: 'v2.3.2', date: '30/06/2026', tag: '🧪 Test Lab', color: 'var(--cyan)', items: [
+      '🤖 Test Lab refait entierement — execute les VRAIES commandes du bot (plus de simulation)',
+      '🔌 Connexion directe au bot en ligne (meme code, meme base de donnees)',
+      '📝 Formulaire de parametres genere depuis les vraies commandes Discord (utilisateur, role, salon, choix...)',
+      '💬 Reponses, embeds multiples et erreurs reels affiches comme sur Discord',
+      '🗑️ Suppression de l\'ancien simulateur bot_commands.py (obsolete et faux)',
+    ]},
     { version: 'v2.3.1', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
       '⬆️ Mise a jour in-app (telechargement + barre de progression + install auto)',
       '🔔 Detection auto des nouvelles versions via GitHub Releases',

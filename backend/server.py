@@ -128,110 +128,27 @@ async def discord_proxy_delete(path: str):
             except:
                 return {"ok": True} if r.status in (200, 201, 204) else {"error": r.status}
 
-# ── Test Lab: scan bot commands ──────────────────────────────────────────────
-import re as _re
-import sys as _sys
-
-_server_dir = Path(__file__).parent
-_bot_dir_local = Path(r"C:\Users\thiba.TIB\Desktop\discord_bot_all_in_one")
-_bot_dir_remote = _server_dir.parent
-BOT_MAIN = _bot_dir_local / "main.py" if (_bot_dir_local / "main.py").exists() else _bot_dir_remote / "main.py"
+# ── Test Lab: proxy to the production server, which runs the real live bot ──
+# (only that process has a connected `discord.Client` to execute real commands)
+_TESTLAB_REMOTE = "http://nh3r.now-heberg.com:27041"
 
 @app.get("/testlab/commands")
 async def testlab_commands():
-    if not BOT_MAIN.exists():
-        return []
-    content = BOT_MAIN.read_text(encoding="utf-8")
-    commands = []
-    seen = set()
-
-    # @app_commands.command / @xxx.command
-    for m in _re.finditer(r"@(?:\w+\.)?command\(name=['\"](\w[\w-]*)['\"],\s*description=['\"]([^'\"]+)['\"]", content):
-        name, desc = m.group(1), m.group(2)
-        if name not in seen:
-            seen.add(name)
-            commands.append({"name": name, "description": desc})
-
-    # Groups
-    groups = {}
-    for m in _re.finditer(r"(\w+)_group\s*=\s*app_commands\.Group\(name=['\"](\w[\w-]*)['\"]", content):
-        groups[m.group(1)] = m.group(2)
-    for m in _re.finditer(r"@(\w+)_group\.command\(name=['\"](\w[\w-]*)['\"],\s*description=['\"]([^'\"]+)['\"]", content):
-        prefix = groups.get(m.group(1), m.group(1))
-        full = f"{prefix} {m.group(2)}"
-        if full not in seen:
-            seen.add(full)
-            commands.append({"name": full, "description": m.group(3)})
-
-    # Also scan cogs
-    cogs_dir = BOT_MAIN.parent / "cogs"
-    if cogs_dir.exists():
-        for pyfile in cogs_dir.rglob("*.py"):
-            try:
-                cog_content = pyfile.read_text(encoding="utf-8")
-                for m2 in _re.finditer(r"@(?:\w+\.)?command\(name=['\"](\w[\w-]*)['\"],\s*description=['\"]([^'\"]+)['\"]", cog_content):
-                    n, d = m2.group(1), m2.group(2)
-                    if n not in seen:
-                        seen.add(n)
-                        commands.append({"name": n, "description": d})
-                # Group commands in cogs
-                cog_groups = {}
-                for mg in _re.finditer(r"(\w+)\s*=\s*app_commands\.Group\(name=['\"](\w[\w-]*)['\"]", cog_content):
-                    cog_groups[mg.group(1)] = mg.group(2)
-                for mg in _re.finditer(r"@(\w+)\.command\(name=['\"](\w[\w-]*)['\"],\s*description=['\"]([^'\"]+)['\"]", cog_content):
-                    prefix2 = cog_groups.get(mg.group(1), mg.group(1))
-                    full2 = f"{prefix2} {mg.group(2)}"
-                    if full2 not in seen:
-                        seen.add(full2)
-                        commands.append({"name": full2, "description": mg.group(3)})
-            except:
-                pass
-
-    return sorted(commands, key=lambda x: x["name"])
-
-
-class SimulateBody(BaseModel):
-    command: str
-    username: str = "Tib"
-
-@app.post("/testlab/simulate")
-async def testlab_simulate(body: SimulateBody):
-    """Import and run bot_commands.simulate_command."""
-    bot_commands_path = _bot_dir_local / "bot_commands.py" if (_bot_dir_local / "bot_commands.py").exists() else _bot_dir_remote / "bot_commands.py"
-    if not bot_commands_path.exists():
-        return {"content": "bot_commands.py introuvable", "embed": None}
-
-    if str(bot_commands_path.parent) not in _sys.path:
-        _sys.path.insert(0, str(bot_commands_path.parent))
-
     try:
-        import importlib
-        spec = importlib.util.spec_from_file_location("bot_commands", str(bot_commands_path))
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        async with _aio.ClientSession() as s:
+            async with s.get(f"{_TESTLAB_REMOTE}/testlab/commands", timeout=_aio.ClientTimeout(total=10)) as r:
+                return await r.json()
+    except Exception:
+        return []
 
-        def sync_query(query, params=[]):
-            try:
-                conn = pymysql.connect(**DB, cursorclass=pymysql.cursors.DictCursor)
-                with conn.cursor() as c:
-                    c.execute(query, params)
-                    rows = c.fetchall()
-                conn.close()
-                return rows
-            except:
-                return []
-
-        def sync_scalar(query, params=[]):
-            rows = sync_query(query, params)
-            if rows:
-                vals = list(rows[0].values())
-                return vals[0] if vals else 0
-            return 0
-
-        result = mod.simulate_command(body.command, body.username, sync_query, sync_scalar)
-        return result or {"content": None, "embed": None}
+@app.post("/testlab/execute")
+async def testlab_execute(body: dict):
+    try:
+        async with _aio.ClientSession() as s:
+            async with s.post(f"{_TESTLAB_REMOTE}/testlab/execute", json=body, timeout=_aio.ClientTimeout(total=30)) as r:
+                return await r.json()
     except Exception as e:
-        return {"content": f"Erreur simulation: {e}", "embed": None}
+        return {"error": f"Backend de test injoignable: {e}"}
 
 
 def ensure_columns():
