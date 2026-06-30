@@ -205,6 +205,12 @@ const pageLoaders = {
   heatmap: loadHeatmap,
   logs: loadLogs,
   uptime: loadUptime,
+  monitor: loadMonitor,
+  webhooks: loadWebhooks,
+  scheduler: loadScheduler,
+  audit: loadAudit,
+  rapport: loadRapport,
+  botlogs: loadBotLogs,
 };
 
 // ═══ HOME ═══════════════════════════════════════════════════════════════════
@@ -704,6 +710,8 @@ async function loadSettings(el) {
                 <div class="name">${esc(t.discord_username || 'Testeur')}</div>
                 <div class="id">${t.discord_id || '—'} · Code: <code>${esc(t.code)}</code></div>
               </div>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="showFicheTester('${esc(t.code)}','${esc(t.discord_id||'')}','${esc(t.discord_username||'Testeur')}')">📋 Fiche</button>
+              ${t.discord_id ? `<button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="dmTester('${esc(t.discord_id)}','${esc(t.discord_username||'Testeur')}')">📩 DM</button>` : ''}
               <button class="btn btn-secondary" style="padding:4px 10px;font-size:10px" onclick="settingsCopyInvite('${esc(t.code)}','${esc(t.discord_username || '')}')">Copier invite</button>
               <button class="btn btn-danger" style="padding:4px 10px;font-size:10px" onclick="settingsDeleteTester('${esc(t.code)}')">Suppr</button>
             </div>
@@ -2938,6 +2946,12 @@ async function loadEmbedBuilder(el) {
           <div class="control-section-title" style="margin-top:4px">Fields</div>
           <div id="ebFields"></div>
           <button class="btn btn-secondary" style="font-size:11px" onclick="ebAddField()">+ Ajouter un field</button>
+          <div style="margin-top:8px">
+            <div style="font-size:10px;color:var(--dim);margin-bottom:5px">${currentLang === 'fr' ? 'Presets' : 'Presets'}</div>
+            <button class="btn btn-secondary" style="font-size:11px" onclick="ebLoadHelp()">📖 /help</button>
+            <button class="btn btn-secondary" style="font-size:11px" onclick="ebLoadChangelog()">🔔 Changelog</button>
+            <button class="btn btn-secondary" style="font-size:11px" onclick="ebLoadReglement()">📋 Règlement</button>
+          </div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn btn-primary" style="flex:1" onclick="ebSend()">${t('sendEmbed')}</button>
             <button class="btn btn-secondary" onclick="ebSaveTemplate()">${t('saveTemplate')}</button>
@@ -3178,6 +3192,111 @@ function ebLoadTemplate(idx) {
   if (container) container.innerHTML = '';
   _ebFieldCount = 0;
   (t.fields || []).forEach(f => {
+    ebAddField();
+    const rows = container.querySelectorAll(':scope > div');
+    const last = rows[rows.length - 1];
+    if (last) { last.querySelector('.eb-field-name').value = f.name; last.querySelector('.eb-field-value').value = f.value; }
+  });
+  ebUpdatePreview();
+}
+
+function _clColorToHex(cssVar) {
+  const map = {
+    'var(--cyan)': '#1ABC9C', 'var(--purple)': '#9B59B6', 'var(--blue)': '#3498DB',
+    'var(--green)': '#2ECC71', 'var(--gold)': '#FFD700', 'var(--accent)': '#5865F2',
+    'var(--red)': '#E74C3C',
+  };
+  return map[cssVar] || '#5865F2';
+}
+
+function ebLoadChangelog() {
+  const log = SILVERAPP_CHANGELOGS[0];
+  if (!log) return;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  const hexColor = _clColorToHex(log.color);
+  set('ebTitle', `🔔 Mise à jour — ${log.version}`);
+  set('ebColor', hexColor);
+  set('ebAuthor', '');
+  set('ebFooter', log.date);
+  set('ebImage', '');
+  set('ebThumbnail', '');
+  set('ebVideo', '');
+  const container = document.getElementById('ebFields');
+  if (container) container.innerHTML = '';
+  _ebFieldCount = 0;
+  if (log.items) {
+    set('ebDesc', log.items.map(i => `• ${i}`).join('\n'));
+  } else {
+    set('ebDesc', '');
+    (log.sections || []).forEach(s => {
+      ebAddField();
+      const rows = container.querySelectorAll(':scope > div');
+      const last = rows[rows.length - 1];
+      if (last) {
+        last.querySelector('.eb-field-name').value = s.title;
+        last.querySelector('.eb-field-value').value = s.items.map(i => `• ${i}`).join('\n');
+      }
+    });
+  }
+  ebUpdatePreview();
+}
+
+function ebLoadReglement() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('ebTitle', '📋 Règlement du Serveur');
+  set('ebDesc', 'Merci de lire et respecter ces règles pour garantir une bonne ambiance sur le serveur.');
+  set('ebColor', '#E74C3C');
+  set('ebAuthor', '');
+  set('ebFooter', 'En restant sur ce serveur, vous acceptez ces règles.');
+  set('ebImage', '');
+  set('ebThumbnail', '');
+  set('ebVideo', '');
+  const container = document.getElementById('ebFields');
+  if (container) container.innerHTML = '';
+  _ebFieldCount = 0;
+  const rules = [
+    { name: '👋 Comportement', value: 'Sois respectueux envers tous les membres. Aucune insulte, discrimination ou harcèlement toléré.' },
+    { name: '💬 Spam & Flood', value: 'Evite le spam, les messages répétitifs et le flood. Reste dans le sujet du channel.' },
+    { name: '🔞 Contenu', value: 'Aucun contenu NSFW, choquant ou illégal. Tout contenu inapproprié sera supprimé.' },
+    { name: '📢 Publicité', value: 'Aucune pub, lien d\'invitation Discord ou promotion sans autorisation d\'un admin.' },
+    { name: '🤖 Bots', value: 'Utilise les commandes bot uniquement dans les channels prévus à cet effet.' },
+    { name: '⚖️ Sanctions', value: 'Avertissement → Mute → Kick → Ban selon la gravité et la récidive.' },
+  ];
+  rules.forEach(r => {
+    ebAddField();
+    const rows = container.querySelectorAll(':scope > div');
+    const last = rows[rows.length - 1];
+    if (last) { last.querySelector('.eb-field-name').value = r.name; last.querySelector('.eb-field-value').value = r.value; }
+  });
+  ebUpdatePreview();
+}
+
+function ebLoadHelp() {
+  const helpFields = [
+    { name: '🔨 Moderation', value: '`/ban` `/unban` `/kick` `/timeout` `/untimeout` `/warn` `/warnings` `/clearwarnings` `/purge` `/slowmode` `/lock` `/unlock` `/nick` `/setlogs`' },
+    { name: '📋 Logs', value: '`/setlogchannel`' },
+    { name: '🎫 Tickets', value: '`/ticket-setup` `/ticket-add` `/ticket-remove`' },
+    { name: '🎭 Roles', value: '`/roles-create` `/roles-add` `/autorole-add` `/autorole-remove` `/autorole-list`' },
+    { name: '👋 Welcome', value: '`/welcome setchannel` `/welcome setmessage` `/welcome setgoodbye` `/welcome test` `/welcome config`' },
+    { name: '🛡️ Anti-Spam', value: '`/antispam toggle` `/antispam config` `/antispam set` `/antispam whitelist-channel` `/antispam whitelist-role`' },
+    { name: '💡 Suggestions', value: '`/suggest-setup` `/suggest` — Submit and vote on suggestions' },
+    { name: '📊 Levels', value: '`/level` `/leaderboard` — XP and ranking system' },
+    { name: '😂 Fun', value: '`/meme` — Random Reddit meme' },
+    { name: '🔧 Utilities', value: '`/ping` `/serverinfo` `/userinfo` `/avatar` `/roleinfo` `/poll` `/remind` `/reminders` `/announce` `/botinfo` `/help` `/dashboard`' },
+  ];
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('ebTitle', '📖 Help — Available Commands');
+  set('ebDesc', '');
+  set('ebColor', '#3498DB');
+  set('ebAuthor', '');
+  set('ebFooter', 'All commands are slash commands (/)');
+  set('ebImage', '');
+  set('ebThumbnail', '');
+  set('ebVideo', '');
+  const container = document.getElementById('ebFields');
+  if (container) container.innerHTML = '';
+  _ebFieldCount = 0;
+  helpFields.forEach(f => {
     ebAddField();
     const rows = container.querySelectorAll(':scope > div');
     const last = rows[rows.length - 1];
@@ -3563,7 +3682,7 @@ async function loadServerList(el) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const APP_VERSION = '2.3.2';
+const APP_VERSION = '2.3.3';
 let _updateInfo = null;
 let _updateChecked = false;
 
@@ -3685,8 +3804,17 @@ async function startUpdate(url) {
 
 function loadChangelog(el) { loadChangelogInto(el); }
 
-function loadChangelogInto(el) {
-  const logs = [
+const SILVERAPP_CHANGELOGS = [
+    { version: 'v2.3.3', date: '01/07/2026', tag: '🚀 Features', color: 'var(--purple)', items: [
+      '🌡️ Monitoring temps réel — latence WS, RAM, CPU, uptime, guilds (auto-refresh 10s)',
+      '🔔 Webhook Manager — créer, lister, copier URL, supprimer et tester des webhooks Discord',
+      '📅 Planificateur d\'embeds — programmer l\'envoi d\'un embed à une date/heure précise',
+      '🔐 Audit Trail — historique de toutes les actions effectuées depuis l\'app (embeds, DMs, webhooks...)',
+      '📊 Rapport Hebdo — stats de la semaine auto-générées, exportables directement dans l\'Embed Builder',
+      '🔍 Logs Bot — recherche dans bot.log avec filtres par niveau (INFO/WARNING/ERROR)',
+      '📋 Fiche Testeur — profil complet par testeur (bugs, messages, DMs, suggestions) accessible depuis Paramètres',
+      '📩 DM Testeur — envoyer un message privé Discord à un testeur directement depuis l\'app',
+    ]},
     { version: 'v2.3.2', date: '30/06/2026', tag: '🧪 Test Lab', color: 'var(--cyan)', items: [
       '🤖 Test Lab refait entierement — execute les VRAIES commandes du bot (plus de simulation)',
       '🔌 Connexion directe au bot en ligne (meme code, meme base de donnees)',
@@ -3840,7 +3968,10 @@ function loadChangelogInto(el) {
         'Base de donnees MySQL',
       ]},
     ]},
-  ];
+];
+
+function loadChangelogInto(el) {
+  const logs = SILVERAPP_CHANGELOGS;
 
   const _clTexts = logs.map(log => {
     let txt = `${log.version} — ${log.date} (${log.tag})\n`;
@@ -4015,17 +4146,509 @@ function exportCurrentPage() {
   setTimeout(() => { win.print(); }, 500);
 }
 
+// ═══ AUDIT LOG HELPER ════════════════════════════════════════════════════════
+
+async function auditLog(type, description, target = '') {
+  try {
+    await dbQuery("INSERT INTO audit_log (action_type, description, actor, target) VALUES (%s, %s, %s, %s)", [type, description, 'Tib', target]);
+  } catch {}
+}
+
+// ═══ MONITORING TEMPS RÉEL ═══════════════════════════════════════════════════
+
+async function loadMonitor(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>🌡️ Monitoring</h2><p>Métriques temps réel du bot et du serveur</p></div><div id="monitorGrid"></div>`;
+  const myId = pageLoadId;
+  async function refresh() {
+    if (pageLoadId !== myId) return;
+    const data = await fetch(`${BACKEND}/monitor`).then(r => r.json()).catch(() => ({}));
+    const grid = document.getElementById('monitorGrid');
+    if (!grid || pageLoadId !== myId) return;
+    if (data.error) { grid.innerHTML = `<div class="card" style="padding:16px;color:var(--red)">${esc(data.error)}</div>`; return; }
+    const latColor = !data.bot_latency_ms ? 'var(--muted)' : data.bot_latency_ms < 100 ? 'var(--green)' : data.bot_latency_ms < 300 ? 'var(--gold)' : 'var(--red)';
+    const cpuColor = data.cpu_percent < 50 ? 'var(--green)' : data.cpu_percent < 80 ? 'var(--gold)' : 'var(--red)';
+    const memColor = data.memory_mb < 200 ? 'var(--green)' : data.memory_mb < 500 ? 'var(--gold)' : 'var(--red)';
+    grid.innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+        <div class="card stat-card"><div class="stat-bar" style="background:${data.bot_connected ? 'var(--green)' : 'var(--red)'}"></div><div class="stat-label">Bot</div><div class="stat-value" style="font-size:14px;color:${data.bot_connected ? 'var(--green)' : 'var(--red)'}">${data.bot_connected ? '🟢 En ligne' : '🔴 Hors ligne'}</div></div>
+        <div class="card stat-card"><div class="stat-bar" style="background:${latColor}"></div><div class="stat-label">Latence WS</div><div class="stat-value">${data.bot_latency_ms ?? '—'}<span style="font-size:12px">ms</span></div></div>
+        <div class="card stat-card"><div class="stat-bar" style="background:${memColor}"></div><div class="stat-label">RAM</div><div class="stat-value">${data.memory_mb ?? '—'}<span style="font-size:12px">MB</span></div></div>
+        <div class="card stat-card"><div class="stat-bar" style="background:${cpuColor}"></div><div class="stat-label">CPU</div><div class="stat-value">${data.cpu_percent ?? '—'}<span style="font-size:12px">%</span></div></div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">
+        <div class="card stat-card"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Uptime serveur</div><div class="stat-value" style="font-size:16px">${data.uptime_str ?? '—'}</div></div>
+        <div class="card stat-card"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">Serveurs</div><div class="stat-value">${data.guilds ?? '—'}</div></div>
+        <div class="card stat-card"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Membres totaux</div><div class="stat-value">${(data.users ?? 0).toLocaleString('fr-FR')}</div></div>
+      </div>
+      <div class="card" style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--dim)">🔄 Rafraîchi toutes les 10s</span>
+        <span style="font-size:11px;color:var(--dim)">${new Date().toLocaleTimeString('fr-FR')}</span>
+      </div>`;
+  }
+  await refresh();
+  const iv = setInterval(refresh, 10000);
+  const obs = new MutationObserver(() => { if (!document.getElementById('monitorGrid')) { clearInterval(iv); obs.disconnect(); } });
+  const content = document.getElementById('content');
+  if (content) obs.observe(content, { childList: true });
+}
+
+// ═══ WEBHOOK MANAGER ═════════════════════════════════════════════════════════
+
+async function loadWebhooks(el) {
+  const guilds = await getCachedGuilds();
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>🔔 Webhook Manager</h2><p>Créer, tester et gérer les webhooks Discord</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card fade-in" style="padding:18px">
+        <div class="control-section-title">Créer un webhook</div>
+        <div style="display:grid;gap:8px">
+          <select id="wbGuild" onchange="wbGuildChanged()" style="width:100%"><option value="">— Serveur —</option>${guilds.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>
+          <select id="wbChannel" style="width:100%"><option value="">— Channel —</option></select>
+          <input type="text" id="wbName" placeholder="Nom du webhook" maxlength="80">
+          <button class="btn btn-primary" onclick="wbCreate()">+ Créer</button>
+          <div id="wbStatus" class="control-status"></div>
+        </div>
+      </div>
+      <div class="card fade-in" style="padding:18px">
+        <div class="control-section-title">Webhooks du serveur</div>
+        <div id="wbList" style="display:grid;gap:6px"><span style="font-size:12px;color:var(--dim)">Sélectionne un serveur</span></div>
+      </div>
+    </div>
+    <div class="card fade-in" style="padding:18px">
+      <div class="control-section-title">Tester un webhook</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
+        <input type="text" id="wbTestUrl" placeholder="URL du webhook (https://discord.com/api/webhooks/...)">
+        <input type="text" id="wbTestMsg" placeholder="Message de test">
+        <button class="btn btn-secondary" onclick="wbTest()">Envoyer</button>
+      </div>
+      <div id="wbTestStatus" class="control-status" style="margin-top:6px"></div>
+    </div>`;
+}
+
+async function wbGuildChanged() {
+  const gId = document.getElementById('wbGuild')?.value;
+  const chSel = document.getElementById('wbChannel');
+  const wbList = document.getElementById('wbList');
+  if (!gId) return;
+  chSel.innerHTML = '<option value="">Chargement...</option>';
+  const [channels, webhooks] = await Promise.all([discordGet(`/guilds/${gId}/channels`), discordGet(`/guilds/${gId}/webhooks`)]);
+  const text = Array.isArray(channels) ? channels.filter(c => c.type === 0).sort((a, b) => a.position - b.position) : [];
+  chSel.innerHTML = '<option value="">— Channel —</option>' + text.map(c => `<option value="${c.id}">#${esc(c.name)}</option>`).join('');
+  if (Array.isArray(webhooks) && webhooks.length) {
+    wbList.innerHTML = webhooks.map(w => `
+      <div class="server-item">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🔗</div>
+        <div class="server-info" style="flex:1"><div class="name">${esc(w.name)}</div><div class="id">ch: ${w.channel_id}</div></div>
+        <button class="btn btn-secondary" style="font-size:10px;padding:3px 8px" onclick="navigator.clipboard.writeText('${esc(w.url||'')}');showNotif('Webhook','URL copiée !')">Copier URL</button>
+        <button class="btn btn-danger" style="font-size:10px;padding:3px 8px" onclick="wbDelete('${w.id}','${w.token||''}')">Suppr</button>
+      </div>`).join('');
+  } else {
+    wbList.innerHTML = '<span style="font-size:12px;color:var(--dim)">Aucun webhook sur ce serveur</span>';
+  }
+}
+
+async function wbCreate() {
+  const chId = document.getElementById('wbChannel')?.value;
+  const name = document.getElementById('wbName')?.value.trim() || 'Silver Bot';
+  const status = document.getElementById('wbStatus');
+  if (!chId) { if (status) { status.textContent = 'Sélectionne un channel'; status.style.color = 'var(--red)'; } return; }
+  if (status) { status.textContent = 'Création...'; status.style.color = 'var(--accent)'; }
+  const res = await discordPost(`/channels/${chId}/webhooks`, { name });
+  if (res.error || res.code) {
+    if (status) { status.textContent = `Erreur: ${res.message || res.error}`; status.style.color = 'var(--red)'; }
+  } else {
+    if (status) { status.textContent = `✓ Webhook "${res.name}" créé !`; status.style.color = 'var(--green)'; }
+    await auditLog('webhook_create', `Webhook créé: ${res.name} dans channel ${chId}`, res.id);
+    wbGuildChanged();
+  }
+}
+
+async function wbDelete(id, token) {
+  const path = token ? `/webhooks/${id}/${token}` : `/webhooks/${id}`;
+  const res = await discordDelete(path);
+  await auditLog('webhook_delete', `Webhook supprimé: ${id}`, id);
+  wbGuildChanged();
+  showNotif('Webhook', 'Webhook supprimé');
+}
+
+async function wbTest() {
+  const url = document.getElementById('wbTestUrl')?.value.trim();
+  const msg = document.getElementById('wbTestMsg')?.value.trim() || 'Test depuis Silver App 🤖';
+  const status = document.getElementById('wbTestStatus');
+  if (!url || !url.includes('discord.com/api/webhooks/')) { if (status) { status.textContent = 'URL de webhook invalide'; status.style.color = 'var(--red)'; } return; }
+  if (status) { status.textContent = 'Envoi...'; status.style.color = 'var(--accent)'; }
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: msg }) });
+    if (r.status === 204) { if (status) { status.textContent = '✓ Message envoyé !'; status.style.color = 'var(--green)'; } }
+    else { const err = await r.json().catch(() => ({})); if (status) { status.textContent = `Erreur ${r.status}: ${err.message || ''}`; status.style.color = 'var(--red)'; } }
+  } catch (e) { if (status) { status.textContent = `Erreur réseau: ${e.message}`; status.style.color = 'var(--red)'; } }
+}
+
+// ═══ PLANIFICATEUR D'EMBEDS ═══════════════════════════════════════════════════
+
+async function loadScheduler(el) {
+  const [guilds, scheduled] = await Promise.all([
+    getCachedGuilds(),
+    dbQuery("SELECT * FROM scheduled_embeds ORDER BY send_at ASC LIMIT 50"),
+  ]);
+  const rows = Array.isArray(scheduled) && !scheduled[0]?.error ? scheduled : [];
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>📅 Planificateur</h2><p>Programmer l'envoi d'embeds dans le futur</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card fade-in" style="padding:18px">
+        <div class="control-section-title">Planifier un embed</div>
+        <div style="display:grid;gap:8px">
+          <select id="schGuild" onchange="schGuildChanged()" style="width:100%"><option value="">— Serveur —</option>${guilds.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>
+          <select id="schChannel" style="width:100%"><option value="">— Channel —</option></select>
+          <input type="text" id="schLabel" placeholder="Libellé (ex: Annonce weekend)">
+          <input type="text" id="schTitle" placeholder="Titre de l'embed" oninput="schPreview()">
+          <textarea id="schDesc" placeholder="Description" rows="3" style="resize:vertical" oninput="schPreview()"></textarea>
+          <div style="display:flex;gap:8px">
+            <input type="color" id="schColor" value="#3b82f6" style="width:44px;height:34px;border:none;border-radius:6px;cursor:pointer" oninput="schPreview()">
+            <input type="text" id="schFooter" placeholder="Footer (optionnel)" style="flex:1" oninput="schPreview()">
+          </div>
+          <input type="datetime-local" id="schDate" style="width:100%">
+          <button class="btn btn-primary" onclick="schCreate()">📅 Planifier</button>
+          <div id="schStatus" class="control-status"></div>
+        </div>
+      </div>
+      <div class="card fade-in" style="padding:18px">
+        <div class="control-section-title">Aperçu</div>
+        <div id="schPreviewEl" style="background:#2f3136;border-radius:8px;min-height:80px;margin-bottom:16px"></div>
+        <div class="control-section-title">Embeds planifiés</div>
+        <div id="schList" style="display:grid;gap:6px;max-height:280px;overflow-y:auto">
+          ${!rows.length ? '<span style="font-size:12px;color:var(--dim)">Aucun embed planifié</span>' : rows.map(s => `
+            <div class="server-item">
+              <div class="server-info" style="flex:1"><div class="name">${esc(s.label||'Embed')}</div>
+                <div class="id">${(s.send_at||'').slice(0,16)} · <span style="color:${s.status==='sent'?'var(--green)':s.status==='failed'?'var(--red)':'var(--gold)'}">${s.status}</span></div>
+              </div>
+              ${s.status==='pending'?`<button class="btn btn-danger" style="font-size:10px;padding:3px 8px" onclick="schCancel(${s.id})">Annuler</button>`:''}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  schPreview();
+}
+
+async function schGuildChanged() {
+  const gId = document.getElementById('schGuild')?.value;
+  const sel = document.getElementById('schChannel');
+  if (!gId || !sel) return;
+  sel.innerHTML = '<option>Chargement...</option>';
+  const channels = await discordGet(`/guilds/${gId}/channels`);
+  const text = Array.isArray(channels) ? channels.filter(c => c.type === 0).sort((a, b) => a.position - b.position) : [];
+  sel.innerHTML = '<option value="">— Channel —</option>' + text.map(c => `<option value="${c.id}">#${esc(c.name)}</option>`).join('');
+}
+
+function schPreview() {
+  const el = document.getElementById('schPreviewEl');
+  if (!el) return;
+  const color = document.getElementById('schColor')?.value || '#3b82f6';
+  const title = document.getElementById('schTitle')?.value || '';
+  const desc = document.getElementById('schDesc')?.value || '';
+  const footer = document.getElementById('schFooter')?.value || '';
+  if (!title && !desc) { el.innerHTML = '<div style="padding:12px;font-size:12px;color:#72767d">Remplis le titre ou la description...</div>'; return; }
+  el.innerHTML = `<div style="display:flex"><div style="width:4px;background:${color};border-radius:4px 0 0 4px;flex-shrink:0"></div><div style="padding:12px 14px;flex:1">
+    ${title ? `<div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">${esc(title)}</div>` : ''}
+    ${desc ? `<div style="font-size:13px;color:#dcddde;line-height:1.5">${esc(desc).replace(/\n/g,'<br>')}</div>` : ''}
+    ${footer ? `<div style="font-size:10px;color:#72767d;margin-top:8px">${esc(footer)}</div>` : ''}
+  </div></div>`;
+}
+
+async function schCreate() {
+  const gId = document.getElementById('schGuild')?.value || '';
+  const chId = document.getElementById('schChannel')?.value;
+  const label = document.getElementById('schLabel')?.value.trim() || 'Embed planifié';
+  const title = document.getElementById('schTitle')?.value.trim();
+  const desc = document.getElementById('schDesc')?.value.trim();
+  const color = document.getElementById('schColor')?.value || '#3b82f6';
+  const footer = document.getElementById('schFooter')?.value.trim();
+  const dateVal = document.getElementById('schDate')?.value;
+  const status = document.getElementById('schStatus');
+  if (!chId) { if (status) { status.textContent = 'Sélectionne un channel'; status.style.color = 'var(--red)'; } return; }
+  if (!title && !desc) { if (status) { status.textContent = 'Ajoute un titre ou une description'; status.style.color = 'var(--red)'; } return; }
+  if (!dateVal) { if (status) { status.textContent = 'Sélectionne une date et heure'; status.style.color = 'var(--red)'; } return; }
+  if (new Date(dateVal) <= new Date()) { if (status) { status.textContent = 'La date doit être dans le futur'; status.style.color = 'var(--red)'; } return; }
+  const embed = { color: parseInt(color.replace('#',''), 16) };
+  if (title) embed.title = title;
+  if (desc) embed.description = desc;
+  if (footer) embed.footer = { text: footer };
+  const sendAt = new Date(dateVal).toISOString().slice(0,19).replace('T',' ');
+  if (status) { status.textContent = 'Planification...'; status.style.color = 'var(--accent)'; }
+  const res = await dbQuery("INSERT INTO scheduled_embeds (guild_id, channel_id, embed_json, label, send_at) VALUES (%s, %s, %s, %s, %s)", [gId, chId, JSON.stringify(embed), label, sendAt]);
+  if (res[0]?.error) { if (status) { status.textContent = `Erreur: ${res[0].error}`; status.style.color = 'var(--red)'; } return; }
+  await auditLog('schedule_embed', `Embed planifié: ${label} → channel ${chId} le ${sendAt}`, chId);
+  if (status) { status.textContent = `✓ "${label}" planifié !`; status.style.color = 'var(--green)'; }
+  setTimeout(() => showPage('scheduler'), 1000);
+}
+
+async function schCancel(id) {
+  await dbQuery("UPDATE scheduled_embeds SET status='cancelled' WHERE id=%s AND status='pending'", [id]);
+  await auditLog('schedule_cancel', `Embed planifié annulé: id=${id}`, String(id));
+  showPage('scheduler');
+}
+
+// ═══ AUDIT TRAIL ═════════════════════════════════════════════════════════════
+
+async function loadAudit(el) {
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>🔐 Audit Trail</h2><p>Historique de toutes les actions effectuées depuis l'app</p></div>
+    <div class="card fade-in" style="padding:14px;margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="auditSearch" placeholder="Rechercher..." style="flex:1;min-width:120px" oninput="auditFilter()">
+      <select id="auditType" onchange="auditFilter()" style="min-width:160px">
+        <option value="">Tous les types</option>
+        <option value="embed_send">📤 Embed envoyé</option>
+        <option value="webhook_create">🔗 Webhook créé</option>
+        <option value="webhook_delete">🗑 Webhook supprimé</option>
+        <option value="schedule_embed">📅 Embed planifié</option>
+        <option value="schedule_cancel">❌ Planif annulée</option>
+        <option value="dm_sent">📩 DM envoyé</option>
+        <option value="tester_create">👤 Testeur créé</option>
+        <option value="tester_delete">🗑 Testeur supprimé</option>
+        <option value="testlab_run">🧪 Test Lab</option>
+      </select>
+      <button class="btn btn-danger" style="font-size:11px" onclick="if(confirm('Effacer tout le trail ?'))auditClear()">Effacer tout</button>
+    </div>
+    <div class="card fade-in" style="padding:0;overflow:hidden"><div id="auditList"><div class="loading"><div class="spinner"></div></div></div></div>`;
+  await auditLoad();
+}
+
+let _auditRows = [];
+async function auditLoad() {
+  const rows = await dbQuery("SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200");
+  _auditRows = Array.isArray(rows) && !rows[0]?.error ? rows : [];
+  auditRender(_auditRows);
+}
+
+const _auditIcons = { embed_send:'📤', webhook_create:'🔗', webhook_delete:'🗑️', schedule_embed:'📅', schedule_cancel:'❌', dm_sent:'📩', tester_create:'👤', tester_delete:'🗑️', testlab_run:'🧪' };
+
+function auditRender(rows) {
+  const el = document.getElementById('auditList');
+  if (!el) return;
+  if (!rows.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--dim);font-size:12px">Aucune action enregistrée</div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th></th><th>Action</th><th>Description</th><th>Cible</th><th>Date</th></tr></thead><tbody>` +
+    rows.map(r => `<tr>
+      <td>${_auditIcons[r.action_type] || '📋'}</td>
+      <td><span class="badge" style="font-size:10px;background:var(--card2)">${esc(r.action_type||'')}</span></td>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.description||'')}">${esc(r.description||'')}</td>
+      <td style="color:var(--dim);font-size:11px">${esc(r.target||'—')}</td>
+      <td style="color:var(--muted);font-size:11px;white-space:nowrap">${r.created_at ? new Date(r.created_at).toLocaleString('fr-FR') : '—'}</td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+function auditFilter() {
+  const q = (document.getElementById('auditSearch')?.value||'').toLowerCase();
+  const type = document.getElementById('auditType')?.value||'';
+  auditRender(_auditRows.filter(r => (!type||r.action_type===type) && (!q||[r.description,r.action_type,r.target].some(v=>(v||'').toLowerCase().includes(q)))));
+}
+
+async function auditClear() {
+  await dbQuery("DELETE FROM audit_log WHERE 1=1");
+  _auditRows = []; auditRender([]);
+}
+
+// ═══ RAPPORT HEBDO ════════════════════════════════════════════════════════════
+
+async function loadRapport(el) {
+  el.innerHTML = `<div class="page-header fade-in"><h2>📊 Rapport Hebdo</h2><p>Résumé de la semaine — généré automatiquement</p></div><div id="rapportContent"><div class="loading"><div class="spinner"></div></div></div>`;
+  await rapportGenerate();
+}
+
+async function rapportGenerate() {
+  const [bugs, msgs, dms, suggestions, testers, tasks, testlab] = await Promise.all([
+    dbQuery("SELECT COUNT(*) AS c FROM tester_bugs WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_chat WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_dms WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_suggestions WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_codes"),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_tasks WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+    dbQuery("SELECT COUNT(*) AS c FROM testlab_messages WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+  ]);
+  const g = arr => (Array.isArray(arr) && arr[0] && !arr[0].error) ? (arr[0].c ?? 0) : '?';
+  const [nBugs, nMsgs, nDms, nSug, nTesters, nTasks, nTestlab] = [bugs,msgs,dms,suggestions,testers,tasks,testlab].map(g);
+  const weekStr = new Date(Date.now()-7*86400000).toLocaleDateString('fr-FR');
+  const todayStr = new Date().toLocaleDateString('fr-FR');
+  const el = document.getElementById('rapportContent');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Nouveaux bugs</div><div class="stat-value">${nBugs}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Messages chat</div><div class="stat-value">${nMsgs}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">Messages DM</div><div class="stat-value">${nDms}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Suggestions</div><div class="stat-value">${nSug}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--gold)"></div><div class="stat-label">Testeurs</div><div class="stat-value">${nTesters}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--cyan)"></div><div class="stat-label">Tâches créées</div><div class="stat-value">${nTasks}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--accent)"></div><div class="stat-label">Tests Lab</div><div class="stat-value">${nTestlab}</div></div>
+    </div>
+    <div class="card fade-in" style="padding:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="rapportToEmbed(${nBugs},${nMsgs},${nDms},${nSug},${nTesters},${nTasks},${nTestlab},'${weekStr}','${todayStr}')">📋 Charger dans l'Embed Builder</button>
+      <span style="font-size:11px;color:var(--dim)">Période : ${weekStr} → ${todayStr}</span>
+    </div>`;
+}
+
+function rapportToEmbed(nBugs, nMsgs, nDms, nSug, nTesters, nTasks, nTestlab, weekStr, todayStr) {
+  showPage('embedbuilder');
+  setTimeout(() => {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
+    set('ebTitle', '📊 Rapport Hebdomadaire — Silver Bot');
+    set('ebDesc', `Bilan de la semaine du **${weekStr}** au **${todayStr}**`);
+    set('ebColor', '#9B59B6'); set('ebFooter', `Généré le ${todayStr} · Silver App`);
+    set('ebImage',''); set('ebThumbnail',''); set('ebVideo',''); set('ebAuthor','');
+    const container = document.getElementById('ebFields');
+    if (container) container.innerHTML = '';
+    _ebFieldCount = 0;
+    [['🐛 Bugs reportés',String(nBugs)],['💬 Messages chat',String(nMsgs)],['📩 Messages DM',String(nDms)],
+     ['💡 Suggestions',String(nSug)],['👥 Testeurs',String(nTesters)],['✅ Tâches',String(nTasks)],['🧪 Tests Lab',String(nTestlab)]
+    ].forEach(([name,value]) => {
+      ebAddField();
+      const rows = container.querySelectorAll(':scope > div');
+      const last = rows[rows.length-1];
+      if (last) { last.querySelector('.eb-field-name').value = name; last.querySelector('.eb-field-value').value = value; }
+    });
+    ebUpdatePreview();
+  }, 300);
+}
+
+// ═══ RECHERCHE LOGS BOT ═══════════════════════════════════════════════════════
+
+async function loadBotLogs(el) {
+  el.innerHTML = `
+    <div class="page-header fade-in"><h2>🔍 Logs Bot</h2><p>Rechercher dans les logs du bot Discord</p></div>
+    <div class="card fade-in" style="padding:14px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="blogSearch" placeholder="Rechercher (mot-clé)..." style="flex:1;min-width:140px" oninput="blogLoad()">
+      <select id="blogLevel" onchange="blogLoad()" style="min-width:120px">
+        <option value="">Tous niveaux</option>
+        <option value="INFO">INFO</option>
+        <option value="WARNING">WARNING</option>
+        <option value="ERROR">ERROR</option>
+        <option value="DEBUG">DEBUG</option>
+      </select>
+      <button class="btn btn-secondary" style="font-size:11px" onclick="blogLoad()">🔄 Rafraîchir</button>
+    </div>
+    <div class="card fade-in" style="padding:0;overflow:hidden">
+      <div id="blogList" style="font-family:monospace;font-size:11px;max-height:600px;overflow-y:auto"><div class="loading"><div class="spinner"></div></div></div>
+    </div>`;
+  await blogLoad();
+}
+
+async function blogLoad() {
+  const q = document.getElementById('blogSearch')?.value||'';
+  const level = document.getElementById('blogLevel')?.value||'';
+  const el = document.getElementById('blogList');
+  if (!el) return;
+  const lines = await fetch(`${BACKEND}/logs/search?q=${encodeURIComponent(q)}&level=${encodeURIComponent(level)}&limit=300`).then(r=>r.json()).catch(()=>[]);
+  if (!lines.length) { el.innerHTML = '<div style="padding:16px;color:var(--dim)">Aucun résultat</div>'; return; }
+  el.innerHTML = lines.map(line => {
+    let color = 'var(--text)';
+    if (line.includes('[ERROR]')) color = 'var(--red)';
+    else if (line.includes('[WARNING]')) color = 'var(--gold)';
+    else if (line.includes('[INFO]')) color = 'var(--cyan)';
+    return `<div style="padding:4px 12px;border-bottom:1px solid var(--border);color:${color};white-space:pre;overflow:hidden;text-overflow:ellipsis" title="${esc(line)}">${esc(line)}</div>`;
+  }).join('');
+}
+
+// ═══ FICHE TESTEUR ════════════════════════════════════════════════════════════
+
+async function showFicheTester(code, discordId, name) {
+  const [bugs, msgs, dms, suggestions] = await Promise.all([
+    dbQuery("SELECT id, title, status, created_at FROM tester_bugs WHERE reporter_id=%s ORDER BY created_at DESC LIMIT 10", [discordId||code]),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_chat WHERE sender=%s AND sender_type='tester'", [name]),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_dms WHERE tester_code=%s AND sender_type='tester'", [code]),
+    dbQuery("SELECT COUNT(*) AS c FROM tester_suggestions WHERE reporter_id=%s", [discordId||code]),
+  ]);
+  const nMsgs = Array.isArray(msgs)&&msgs[0]&&!msgs[0].error ? msgs[0].c : '?';
+  const nDms = Array.isArray(dms)&&dms[0]&&!dms[0].error ? dms[0].c : '?';
+  const nSug = Array.isArray(suggestions)&&suggestions[0]&&!suggestions[0].error ? suggestions[0].c : '?';
+  const bugList = Array.isArray(bugs)&&!bugs[0]?.error ? bugs : [];
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.onclick = e => { if (e.target===modal) modal.remove(); };
+  modal.innerHTML = `<div class="modal" style="max-width:520px">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div id="ficheAv" style="width:56px;height:56px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${(name||'?')[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700">${esc(name)}</div>
+        <div style="font-size:11px;color:var(--dim)">Code: <code>${esc(code)}</code>${discordId ? ` · ID: ${discordId}` : ''}</div>
+      </div>
+      <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:20px;padding:4px">×</button>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--red)"></div><div class="stat-label">Bugs</div><div class="stat-value">${bugList.length}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--blue)"></div><div class="stat-label">Messages</div><div class="stat-value">${nMsgs}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--purple)"></div><div class="stat-label">DMs</div><div class="stat-value">${nDms}</div></div>
+      <div class="card stat-card"><div class="stat-bar" style="background:var(--green)"></div><div class="stat-label">Suggestions</div><div class="stat-value">${nSug}</div></div>
+    </div>
+    ${bugList.length ? `<div class="control-section-title">Bugs reportés</div>
+      <div style="display:grid;gap:4px;max-height:160px;overflow-y:auto;margin-bottom:12px">
+        ${bugList.map(b => `<div class="server-item"><div class="server-info" style="flex:1"><div class="name">${esc(b.title)}</div><div class="id">${(b.created_at||'').slice(0,10)}</div></div>
+          <span class="badge" style="font-size:10px;background:${b.status==='open'?'var(--red)22':b.status==='fixed'?'var(--green)22':'var(--card2)'};color:${b.status==='open'?'var(--red)':b.status==='fixed'?'var(--green)':'var(--dim)'}">${b.status}</span></div>`).join('')}
+      </div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      ${discordId ? `<button class="btn btn-primary" style="flex:1" onclick="this.closest('.modal-overlay').remove();dmTester('${discordId}','${esc(name).replace(/'/g,"\\'")}')">📩 Envoyer un DM</button>` : ''}
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Fermer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  if (discordId) {
+    const ud = await discordGet(`/users/${discordId}`).catch(()=>null);
+    const av = ud?.avatar ? getUserAvatar(discordId, ud.avatar, 80) : null;
+    const avEl = modal.querySelector('#ficheAv');
+    if (avEl && av) avEl.innerHTML = `<img src="${av}" style="width:56px;height:56px;border-radius:50%;object-fit:cover">`;
+  }
+}
+
+// ═══ DM TESTEUR ═══════════════════════════════════════════════════════════════
+
+function dmTester(discordId, name) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.onclick = e => { if (e.target===modal) modal.remove(); };
+  modal.innerHTML = `<div class="modal" style="max-width:440px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">📩 DM à ${esc(name)}</div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Message privé Discord directement depuis l'app</div>
+    <textarea id="dmText" placeholder="Votre message..." rows="4" style="width:100%;resize:vertical;margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Annuler</button>
+      <button class="btn btn-primary" id="dmSendBtn" onclick="dmSend('${discordId}','${esc(name).replace(/'/g,"\\'")}',this)">Envoyer</button>
+    </div>
+    <div id="dmStatus" class="control-status"></div>
+  </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => modal.querySelector('#dmText')?.focus(), 100);
+}
+
+async function dmSend(discordId, name, btn) {
+  const text = document.getElementById('dmText')?.value.trim();
+  const status = document.getElementById('dmStatus');
+  if (!text) { if (status) { status.textContent = 'Écris un message'; status.style.color = 'var(--red)'; } return; }
+  btn.disabled = true;
+  if (status) { status.textContent = 'Envoi...'; status.style.color = 'var(--accent)'; }
+  const dmCh = await discordPost('/users/@me/channels', { recipient_id: discordId });
+  if (!dmCh.id) { if (status) { status.textContent = `Erreur DM: ${dmCh.message||dmCh.error||'inconnu'}`; status.style.color = 'var(--red)'; } btn.disabled=false; return; }
+  const msg = await discordPost(`/channels/${dmCh.id}/messages`, { content: text });
+  if (msg.id) {
+    if (status) { status.textContent = '✓ Message envoyé !'; status.style.color = 'var(--green)'; }
+    await auditLog('dm_sent', `DM à ${name}: ${text.slice(0,80)}`, discordId);
+    setTimeout(() => document.querySelector('.modal-overlay')?.remove(), 1200);
+  } else {
+    if (status) { status.textContent = `Erreur: ${msg.message||msg.error}`; status.style.color = 'var(--red)'; }
+    btn.disabled = false;
+  }
+}
+
 // ═══ UI ENHANCEMENTS ════════════════════════════════════════════════════════
 
 const pageSections = {
   home: 'Silver Bot', overview: 'secPrincipal', leaderboard: 'secPrincipal', members: 'secPrincipal',
   compare: 'secPrincipal', stats: 'secPrincipal', channels: 'secPrincipal', serverlist: 'secPrincipal',
   analytics: 'secPrincipal', heatmap: 'secPrincipal', control: 'secControle',
-  botinfo: 'secControle', botprofile: 'secControle', embedbuilder: 'secControle', uptime: 'secControle', chat: 'secTesteurs',
-  bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
-  suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs',
+  botinfo: 'secControle', botprofile: 'secControle', embedbuilder: 'secControle', uptime: 'secControle',
+  webhooks: 'secControle', scheduler: 'secControle', monitor: 'secControle',
+  chat: 'secTesteurs', bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
+  suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs', rapport: 'secTesteurs',
   database: 'secSysteme', logs: 'secSysteme', history: 'secSysteme',
   changelog: 'secSysteme', console: 'secSysteme', update: 'secSysteme', settings: 'secSysteme',
+  audit: 'secSysteme', botlogs: 'secSysteme',
 };
 
 function updateBreadcrumbs(name) {

@@ -292,6 +292,28 @@ async def backup_restore(body: RestoreBody):
         await save_config(body.config)
     return {"ok": True}
 
+# ── Remote-only proxies (monitor, logs, scheduler) ───────────────────────────
+_REMOTE = "http://nh3r.now-heberg.com:27041"
+
+@app.get("/monitor")
+async def monitor_proxy():
+    try:
+        async with _aio.ClientSession() as s:
+            async with s.get(f"{_REMOTE}/monitor", timeout=_aio.ClientTimeout(total=5)) as r:
+                return await r.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/logs/search")
+async def logs_search_proxy(q: str = "", level: str = "", limit: int = 300):
+    try:
+        async with _aio.ClientSession() as s:
+            params = {"q": q, "level": level, "limit": limit}
+            async with s.get(f"{_REMOTE}/logs/search", params=params, timeout=_aio.ClientTimeout(total=10)) as r:
+                return await r.json()
+    except Exception as e:
+        return [f"Error: {e}"]
+
 if __name__ == "__main__":
     ensure_columns()
     import os

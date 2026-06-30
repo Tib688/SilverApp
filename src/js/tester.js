@@ -827,7 +827,7 @@ function tLoadChangelog(el, append) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const T_APP_VERSION = '2.3.2';
+const T_APP_VERSION = '2.3.3';
 let _tUpdateInfo = null;
 
 function _tIsNewerVersion(remote, local) {
