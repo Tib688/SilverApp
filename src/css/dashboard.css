@@ -719,17 +719,37 @@
   gap: 6px;
 }
 
-.chat-bubble {
+.chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
   max-width: 75%;
+  align-self: flex-start;
+}
+
+.chat-row-owner {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.chat-row-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--card);
+  object-fit: cover;
+}
+
+.chat-bubble {
+  min-width: 0;
   padding: 8px 12px;
   border-radius: 10px;
   background: var(--card);
   border: 1px solid var(--border);
-  align-self: flex-start;
 }
 
 .chat-bubble-owner {
-  align-self: flex-end;
   background: rgba(139,149,176,.1);
   border-color: rgba(139,149,176,.2);
 }

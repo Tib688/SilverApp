@@ -44,13 +44,13 @@ async def run_query(q: Query):
         return [{"error": str(e)}]
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(request: Request, file: UploadFile = File(...)):
     ext = Path(file.filename).suffix
     name = f"{uuid.uuid4().hex}{ext}"
     dest = UPLOADS_DIR / name
     content = await file.read()
     dest.write_bytes(content)
-    return {"url": f"http://127.0.0.1:8051/uploads/{name}", "name": file.filename}
+    return {"url": f"{request.base_url}uploads/{name}", "name": file.filename}
 
 @app.get("/health")
 async def health():

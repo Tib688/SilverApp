@@ -237,7 +237,7 @@ async function loadHome(el) {
       </div>
 
       <h1 style="font-size:28px;font-weight:800;color:var(--bright);letter-spacing:-.03em">${esc(b.username || 'Silver Bot')}</h1>
-      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.3.2</p>
+      <p style="font-size:12px;color:var(--dim);margin-top:2px">Made by <span style="color:var(--accent);font-weight:600">Tib</span> · v2.3.3</p>
 
       <div style="display:flex;gap:8px;margin-top:16px">
         <span class="badge badge-green" style="padding:5px 14px;font-size:11px">En ligne</span>
@@ -283,7 +283,7 @@ async function loadHome(el) {
       <div style="margin-top:20px;cursor:pointer;opacity:.5;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='.5'" onclick="silver.openExternal('https://discord.gg/SPfXUehuRK')" title="Rejoindre le serveur Discord">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--bright)"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
       </div>
-      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.2 · Electron · FastAPI · MySQL</p>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px">Silver App v2.3.3 · Electron · FastAPI · MySQL</p>
     </div>`;
 }
 
@@ -769,7 +769,7 @@ async function loadSettings(el) {
       <div class="card settings-section">
         <div class="control-section-title">Application</div>
         <div class="settings-info-grid">
-          <div><span class="settings-label">Version</span><span class="settings-value">v2.3.2</span></div>
+          <div><span class="settings-label">Version</span><span class="settings-value">v2.3.3</span></div>
           <div><span class="settings-label">Framework</span><span class="settings-value">Electron</span></div>
           <div><span class="settings-label">Backend</span><span class="settings-value">FastAPI</span></div>
           <div><span class="settings-label">GitHub</span><span class="settings-value">Tib688/SilverApp</span></div>
@@ -1613,25 +1613,31 @@ async function chatLoadMessages() {
 
   const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
   const ownerId = '1504594533521031219';
+  const senderIds = [...new Set(rows.map(r => r.sender_id).filter(Boolean))];
+  const userMap = await fetchUsersBatch(senderIds);
   container.innerHTML = rows.map(r => {
     const isOwner = String(r.sender_id) === ownerId;
     let content = esc(r.message || '');
     if (r.file_url) {
       const ext = (r.file_name || '').split('.').pop().toLowerCase();
       if (['png','jpg','jpeg','gif','webp'].includes(ext)) {
-        content += `<div class="chat-file-preview"><img src="${r.file_url}" onclick="window.open('${r.file_url}')"></div>`;
+        content += `<div class="chat-file-preview"><img src="${r.file_url}" onclick="window.open('${r.file_url}')" onerror="this.parentElement.innerHTML='📎 image indisponible'"></div>`;
       } else if (['mp4','webm','mov'].includes(ext)) {
         content += `<div class="chat-file-preview"><video src="${r.file_url}" controls style="max-width:300px;border-radius:8px"></video></div>`;
       } else {
         content += `<div class="chat-file-link"><a href="${r.file_url}" target="_blank">📎 ${esc(r.file_name || 'Fichier')}</a></div>`;
       }
     }
-    return `<div class="chat-bubble ${isOwner ? 'chat-bubble-owner' : ''}">
-      <div class="chat-bubble-header">
-        <span class="chat-bubble-name" style="color:${isOwner ? 'var(--accent)' : 'var(--cyan)'}">${esc(r.sender_name || r.sender_id)}</span>
-        <span class="chat-bubble-time">${fmtDateTime(r.created_at)}</span>
+    const avatarUrl = getUserAvatar(r.sender_id, userMap[r.sender_id]?.avatar, 64);
+    return `<div class="chat-row ${isOwner ? 'chat-row-owner' : ''}">
+      <img class="chat-row-avatar" src="${avatarUrl}" onerror="this.style.visibility='hidden'">
+      <div class="chat-bubble ${isOwner ? 'chat-bubble-owner' : ''}">
+        <div class="chat-bubble-header">
+          <span class="chat-bubble-name" style="color:${isOwner ? 'var(--accent)' : 'var(--cyan)'}">${esc(r.sender_name || r.sender_id)}</span>
+          <span class="chat-bubble-time">${fmtDateTime(r.created_at)}</span>
+        </div>
+        <div class="chat-bubble-content">${content}</div>
       </div>
-      <div class="chat-bubble-content">${content}</div>
     </div>`;
   }).join('');
   if (wasAtBottom) container.scrollTop = container.scrollHeight;
@@ -2665,7 +2671,7 @@ function bpStartPreview() {
     _bpPreviewIdx++;
     const el = document.getElementById('bpPreviewStatus');
     if (el) {
-      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.3.2');
+      const text = s.text.replace('{servers}', '?').replace('{version}', 'v2.3.3');
       const prefix = s.type === 'streaming' ? '🟣 Streaming' : s.type === 'playing' ? '🎮 Playing' : s.type === 'watching' ? '👀 Watching' : '🎵 Listening';
       el.textContent = `${prefix}: ${text}`;
       el.style.opacity = '0'; setTimeout(() => { if (el) el.style.opacity = '1'; }, 100);
@@ -3550,7 +3556,7 @@ async function loadServerList(el) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const APP_VERSION = '2.3.2';
+const APP_VERSION = '2.3.3';
 let _updateInfo = null;
 let _updateChecked = false;
 
@@ -3674,6 +3680,11 @@ function loadChangelog(el) { loadChangelogInto(el); }
 
 function loadChangelogInto(el) {
   const logs = [
+    { version: 'v2.3.3', date: '30/06/2026', tag: '🔧 Patch', color: 'var(--cyan)', items: [
+      '🖼️ Vraies photos de profil des testeurs dans le Chat (plus de cercle generique)',
+      '🐛 Fix images uploadees dans le chat (URL localhost cassee en remote)',
+      '💬 Avatars affiches sur chaque message comme sur Discord',
+    ]},
     { version: 'v2.3.2', date: '30/06/2026', tag: '🧪 Test Lab', color: 'var(--cyan)', items: [
       '🤖 Test Lab refait entierement — execute les VRAIES commandes du bot (plus de simulation)',
       '🔌 Connexion directe au bot en ligne (meme code, meme base de donnees)',
