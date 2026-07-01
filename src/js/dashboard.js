@@ -17,6 +17,8 @@ const i18n = {
     applyChanges: 'Appliquer', currentRotation: 'Rotation actuelle',
     autoRefresh: 'Auto-refresh', exportBackup: 'Exporter backup', importBackup: 'Importer backup',
     update: 'Mise a jour', upToDate: 'A jour', newUpdate: 'Nouvelle version disponible',
+    richpresence: 'Rich Presence',
+    membres: 'Membres', serveurs: 'Serveurs', bot: 'Bot', activite: 'Activite',
     embedBuilder: 'Embed Builder', heatmap: 'Heatmap', quickActions: 'Actions rapides',
     preview: 'Apercu', sendEmbed: 'Envoyer', saveTemplate: 'Sauver template', loadTemplate: 'Charger template',
     noActivity: 'Aucune activite', exportCsv: 'Exporter CSV', favorites: 'Favoris',
@@ -65,6 +67,8 @@ const i18n = {
     applyChanges: 'Apply', currentRotation: 'Current rotation',
     autoRefresh: 'Auto-refresh', exportBackup: 'Export backup', importBackup: 'Import backup',
     update: 'Update', upToDate: 'Up to date', newUpdate: 'New version available',
+    richpresence: 'Rich Presence',
+    membres: 'Members', serveurs: 'Servers', bot: 'Bot', activite: 'Activity',
     embedBuilder: 'Embed Builder', heatmap: 'Heatmap', quickActions: 'Quick actions',
     preview: 'Preview', sendEmbed: 'Send', saveTemplate: 'Save template', loadTemplate: 'Load template',
     noActivity: 'No activity', exportCsv: 'Export CSV', favorites: 'Favorites',
@@ -178,39 +182,53 @@ function showPage(name) {
 const pageLoaders = {
   home: loadHome,
   overview: loadOverview,
-  leaderboard: loadLeaderboard,
-  members: loadMembers,
-  suggestions: loadSuggestions,
-  database: loadDatabase,
-  control: loadControl,
-  botinfo: loadBotInfo,
-  chat: loadChat,
-  testlab: loadTestLab,
-  bugs: loadBugs,
-  tasks: loadTasks,
-  announcements: loadAnnouncements,
-  forgot: loadForgotCodes,
-  settings: loadSettings,
-  history: loadHistory,
-  compare: loadCompare,
-  stats: loadStats,
-  channels: loadChannels,
-  changelog: loadChangelog,
-  update: loadUpdate,
-  serverlist: loadServerList,
-  analytics: loadAnalytics,
-  botprofile: loadBotProfile,
-  console: loadConsole,
-  embedbuilder: loadEmbedBuilder,
-  heatmap: loadHeatmap,
-  logs: loadLogs,
-  uptime: loadUptime,
-  monitor: loadMonitor,
-  webhooks: loadWebhooks,
-  scheduler: loadScheduler,
-  audit: loadAudit,
-  rapport: loadRapport,
-  botlogs: loadBotLogs,
+
+  // Hub pages (tabs)
+  membres:    el => loadMembresHub(el, 1),
+  leaderboard:el => loadMembresHub(el, 0),
+  members:    el => loadMembresHub(el, 1),
+  compare:    el => loadMembresHub(el, 2),
+
+  stats:      el => loadStatsHub(el, 0),
+  analytics:  el => loadStatsHub(el, 1),
+  heatmap:    el => loadStatsHub(el, 2),
+
+  serveurs:   el => loadServeursHub(el, 0),
+  serverlist: el => loadServeursHub(el, 0),
+  channels:   el => loadServeursHub(el, 1),
+
+  bot:        el => loadBotHub(el, 0),
+  botinfo:    el => loadBotHub(el, 0),
+  control:    el => loadBotHub(el, 1),
+  botprofile: el => loadBotHub(el, 2),
+
+  logs:       el => loadLogsHub(el, 0),
+  botlogs:    el => loadLogsHub(el, 1),
+  console:    el => loadLogsHub(el, 2),
+
+  activite:     el => loadActiviteHub(el, 0),
+  bugs:         el => loadActiviteHub(el, 0),
+  tasks:        el => loadActiviteHub(el, 1),
+  announcements:el => loadActiviteHub(el, 2),
+  suggestions:  el => loadActiviteHub(el, 3),
+
+  // Solo pages (unchanged)
+  database:    loadDatabase,
+  chat:        loadChat,
+  testlab:     loadTestLab,
+  forgot:      loadForgotCodes,
+  settings:    loadSettings,
+  history:     loadHistory,
+  changelog:   loadChangelog,
+  update:      loadUpdate,
+  embedbuilder:loadEmbedBuilder,
+  uptime:      loadUptime,
+  monitor:     loadMonitor,
+  webhooks:    loadWebhooks,
+  scheduler:   loadScheduler,
+  audit:       loadAudit,
+  rapport:     loadRapport,
+  richpresence:loadRichPresence,
 };
 
 // ═══ HOME ═══════════════════════════════════════════════════════════════════
@@ -3682,7 +3700,7 @@ async function loadServerList(el) {
 
 // ═══ UPDATE SYSTEM ═════════════════════════════════════════════════════════
 
-const APP_VERSION = '2.3.3';
+const APP_VERSION = '2.3.4';
 let _updateInfo = null;
 let _updateChecked = false;
 
@@ -4636,19 +4654,421 @@ async function dmSend(discordId, name, btn) {
   }
 }
 
+// ═══ PAGE TABS ═══════════════════════════════════════════════════════════════
+
+let _pageTabs = [];
+
+function makeTabs(el, tabs, defaultIdx = 0) {
+  _pageTabs = tabs;
+  el.innerHTML = `
+    <div class="page-tabs fade-in">
+      ${tabs.map((t, i) => `<button class="page-tab${i === defaultIdx ? ' active' : ''}" onclick="switchPageTab(this, ${i})">${t.label}</button>`).join('')}
+    </div>
+    <div id="pageTabContent"></div>
+  `;
+  if (tabs[defaultIdx]) tabs[defaultIdx].load(document.getElementById('pageTabContent'));
+}
+
+async function switchPageTab(btn, idx) {
+  document.querySelectorAll('.page-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const content = document.getElementById('pageTabContent');
+  if (content && _pageTabs[idx]) {
+    content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    await _pageTabs[idx].load(content);
+  }
+}
+
+// ─── Hub loaders ─────────────────────────────────────────────────────────────
+
+function loadMembresHub(el, tab = 1) {
+  makeTabs(el, [
+    { label: '🏆 Leaderboard', load: loadLeaderboard },
+    { label: '👤 Membres',     load: loadMembers     },
+    { label: '⚖️ Comparateur', load: loadCompare     },
+  ], tab);
+}
+
+function loadStatsHub(el, tab = 0) {
+  makeTabs(el, [
+    { label: '📊 Statistiques', load: loadStats    },
+    { label: '📈 Analytics',    load: loadAnalytics },
+    { label: '🗓️ Heatmap',      load: loadHeatmap   },
+  ], tab);
+}
+
+function loadServeursHub(el, tab = 0) {
+  makeTabs(el, [
+    { label: '🌐 Serveurs',       load: loadServerList },
+    { label: '📊 Stats Channels', load: loadChannels   },
+  ], tab);
+}
+
+function loadBotHub(el, tab = 0) {
+  makeTabs(el, [
+    { label: 'ℹ️ Bot Info', load: loadBotInfo    },
+    { label: '⚡ Contrôle', load: loadControl    },
+    { label: '🎨 Profil',   load: loadBotProfile },
+  ], tab);
+}
+
+function loadLogsHub(el, tab = 0) {
+  makeTabs(el, [
+    { label: '📋 Logs App', load: loadLogs    },
+    { label: '🤖 Logs Bot', load: loadBotLogs },
+    { label: '🖥️ Console',  load: loadConsole },
+  ], tab);
+}
+
+function loadActiviteHub(el, tab = 0) {
+  makeTabs(el, [
+    { label: '🐛 Bugs',         load: loadBugs          },
+    { label: '✅ Tâches',       load: loadTasks         },
+    { label: '📢 Annonces',     load: loadAnnouncements },
+    { label: '💡 Suggestions',  load: loadSuggestions   },
+  ], tab);
+}
+
+// ═══ RICH PRESENCE ══════════════════════════════════════════════════════════
+
+async function loadRichPresence(el) {
+  el.innerHTML = `
+    <div class="page-header fade-in">
+      <h1 class="page-title">🎮 Rich Presence</h1>
+      <p class="page-sub">Personnalise ton statut d'activité Discord en temps réel</p>
+    </div>
+    <div class="fade-in" style="display:flex;gap:16px;align-items:flex-start">
+
+      <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+
+        <div class="card">
+          <div class="card-title">Connexion RPC</div>
+          <p style="font-size:12px;color:var(--dim);margin-bottom:10px">
+            Crée une app sur <b style="color:var(--text)">discord.com/developers</b>, copie l'Application ID et assure-toi que Discord est ouvert.
+          </p>
+          <div style="display:flex;gap:8px">
+            <input id="rpClientId" class="input" style="flex:1" placeholder="Application ID" value="${localStorage.getItem('rp_client_id')||''}">
+            <button class="btn btn-primary" onclick="rpConnect()">Connecter</button>
+            <button class="btn" onclick="rpDisconnect()">Déconnecter</button>
+          </div>
+          <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
+            <span id="rpDot" style="width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0;transition:background .3s"></span>
+            <span id="rpStatusText" style="font-size:12px;color:var(--dim)">Non connecté</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Activité</div>
+          <div style="display:grid;gap:11px">
+
+            <div>
+              <div class="label" style="margin-bottom:5px">Type</div>
+              <select id="rpType" class="input" onchange="rpOnTypeChange()">
+                <option value="0">🎮 Playing</option>
+                <option value="1">📺 Streaming</option>
+                <option value="2">🎵 Listening to</option>
+                <option value="3">👀 Watching</option>
+                <option value="5">🏆 Competing in</option>
+              </select>
+            </div>
+
+            <div id="rpStreamRow" style="display:none">
+              <div class="label" style="margin-bottom:5px">URL du stream (Twitch/YouTube)</div>
+              <input id="rpStreamUrl" class="input" placeholder="https://twitch.tv/..." oninput="rpUpdatePreview()">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <div class="label" style="margin-bottom:5px">Détails (ligne 1)</div>
+                <input id="rpDetails" class="input" placeholder="Ce que tu fais..." oninput="rpUpdatePreview()">
+              </div>
+              <div>
+                <div class="label" style="margin-bottom:5px">État (ligne 2)</div>
+                <input id="rpState" class="input" placeholder="Infos supplémentaires..." oninput="rpUpdatePreview()">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <div class="label" style="margin-bottom:5px">Grande image (clé)</div>
+                <input id="rpLargeImage" class="input" placeholder="large_image_key" oninput="rpUpdatePreview()">
+              </div>
+              <div>
+                <div class="label" style="margin-bottom:5px">Texte (survol)</div>
+                <input id="rpLargeText" class="input" placeholder="Texte au survol..." oninput="rpUpdatePreview()">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <div class="label" style="margin-bottom:5px">Petite image (clé)</div>
+                <input id="rpSmallImage" class="input" placeholder="small_image_key" oninput="rpUpdatePreview()">
+              </div>
+              <div>
+                <div class="label" style="margin-bottom:5px">Texte (survol)</div>
+                <input id="rpSmallText" class="input" placeholder="Texte au survol..." oninput="rpUpdatePreview()">
+              </div>
+            </div>
+
+            <div>
+              <div class="label" style="margin-bottom:5px">Timestamp</div>
+              <select id="rpTimestamp" class="input" onchange="rpUpdatePreview()">
+                <option value="">Aucun</option>
+                <option value="start">Depuis maintenant (temps écoulé)</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="label" style="margin-bottom:5px">Bouton 1</div>
+              <div style="display:flex;gap:8px">
+                <input id="rpBtn1Label" class="input" style="width:140px;flex-shrink:0" placeholder="Label" maxlength="32" oninput="rpUpdatePreview()">
+                <input id="rpBtn1Url" class="input" style="flex:1" placeholder="https://..." oninput="rpUpdatePreview()">
+              </div>
+            </div>
+
+            <div>
+              <div class="label" style="margin-bottom:5px">Bouton 2</div>
+              <div style="display:flex;gap:8px">
+                <input id="rpBtn2Label" class="input" style="width:140px;flex-shrink:0" placeholder="Label" maxlength="32" oninput="rpUpdatePreview()">
+                <input id="rpBtn2Url" class="input" style="flex:1" placeholder="https://..." oninput="rpUpdatePreview()">
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="rpApply()">✓ Appliquer</button>
+            <button class="btn" onclick="rpClear()">✕ Effacer</button>
+            <div style="flex:1"></div>
+            <button class="btn" onclick="rpSavePreset()">💾 Sauver preset</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:14px">
+
+        <div class="card">
+          <div class="card-title">Aperçu Discord</div>
+          <div id="rpPreview" style="background:#1e1f22;border-radius:8px;padding:12px;min-height:80px"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Presets</div>
+          <div id="rpPresetList"></div>
+          <div id="rpNoPresets" style="font-size:12px;color:var(--dim)">Aucun preset sauvegardé</div>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  const saved = localStorage.getItem('rp_activity');
+  if (saved) {
+    try {
+      const d = JSON.parse(saved);
+      if (d.type != null) document.getElementById('rpType').value = d.type;
+      ['rpDetails','rpState','rpLargeImage','rpLargeText','rpSmallImage','rpSmallText','rpStreamUrl','rpBtn1Label','rpBtn1Url','rpBtn2Label','rpBtn2Url'].forEach(id => {
+        const key = id.replace('rp','').replace(/^./, c => c.toLowerCase());
+        if (d[key] != null) document.getElementById(id).value = d[key];
+      });
+      if (d.timestamp) document.getElementById('rpTimestamp').value = d.timestamp;
+      if (parseInt(d.type) === 1) document.getElementById('rpStreamRow').style.display = '';
+    } catch {}
+  }
+
+  if (window.silver?.rpcStatus) {
+    const st = await silver.rpcStatus();
+    rpSetStatusUI(st.connected);
+  }
+  if (window.silver?.onRpcStatus) silver.onRpcStatus(d => rpSetStatusUI(d.connected));
+
+  rpUpdatePreview();
+  rpRenderPresets();
+}
+
+function rpSetStatusUI(connected) {
+  const dot = document.getElementById('rpDot');
+  const txt = document.getElementById('rpStatusText');
+  if (!dot) return;
+  dot.style.background = connected ? '#3ba55c' : '#ed4245';
+  if (txt) txt.textContent = connected ? 'Connecté à Discord ✓' : 'Non connecté';
+}
+
+function rpOnTypeChange() {
+  const type = parseInt(document.getElementById('rpType')?.value || '0');
+  document.getElementById('rpStreamRow').style.display = type === 1 ? '' : 'none';
+  rpUpdatePreview();
+}
+
+async function rpConnect() {
+  const clientId = document.getElementById('rpClientId')?.value?.trim();
+  if (!clientId) { toast('Entre un Application ID'); return; }
+  localStorage.setItem('rp_client_id', clientId);
+  const txt = document.getElementById('rpStatusText');
+  if (txt) { txt.textContent = 'Connexion...'; txt.style.color = 'var(--accent)'; }
+  const res = await silver.rpcConnect(clientId);
+  if (res.ok) {
+    toast('Connecté à Discord !', 'success');
+  } else {
+    toast('Erreur: ' + (res.error || 'Discord non disponible'), 'error');
+    rpSetStatusUI(false);
+  }
+}
+
+async function rpDisconnect() {
+  await silver.rpcDisconnect();
+  rpSetStatusUI(false);
+  toast('RPC déconnecté');
+}
+
+function rpCollectData() {
+  return {
+    type: document.getElementById('rpType')?.value || '0',
+    details: document.getElementById('rpDetails')?.value?.trim() || '',
+    state: document.getElementById('rpState')?.value?.trim() || '',
+    largeImage: document.getElementById('rpLargeImage')?.value?.trim() || '',
+    largeText: document.getElementById('rpLargeText')?.value?.trim() || '',
+    smallImage: document.getElementById('rpSmallImage')?.value?.trim() || '',
+    smallText: document.getElementById('rpSmallText')?.value?.trim() || '',
+    streamUrl: document.getElementById('rpStreamUrl')?.value?.trim() || '',
+    btn1Label: document.getElementById('rpBtn1Label')?.value?.trim() || '',
+    btn1Url: document.getElementById('rpBtn1Url')?.value?.trim() || '',
+    btn2Label: document.getElementById('rpBtn2Label')?.value?.trim() || '',
+    btn2Url: document.getElementById('rpBtn2Url')?.value?.trim() || '',
+    timestamp: document.getElementById('rpTimestamp')?.value || '',
+  };
+}
+
+function rpBuildActivity(d) {
+  const activity = { type: parseInt(d.type) };
+  if (d.details) activity.details = d.details;
+  if (d.state) activity.state = d.state;
+  if (d.largeImage) { activity.largeImageKey = d.largeImage; if (d.largeText) activity.largeImageText = d.largeText; }
+  if (d.smallImage) { activity.smallImageKey = d.smallImage; if (d.smallText) activity.smallImageText = d.smallText; }
+  if (parseInt(d.type) === 1 && d.streamUrl) activity.url = d.streamUrl;
+  if (d.timestamp === 'start') activity.startTimestamp = new Date();
+  const buttons = [];
+  if (d.btn1Label && d.btn1Url) buttons.push({ label: d.btn1Label, url: d.btn1Url });
+  if (d.btn2Label && d.btn2Url) buttons.push({ label: d.btn2Label, url: d.btn2Url });
+  if (buttons.length) activity.buttons = buttons;
+  return activity;
+}
+
+async function rpApply() {
+  const d = rpCollectData();
+  localStorage.setItem('rp_activity', JSON.stringify(d));
+  const activity = rpBuildActivity(d);
+  const res = await silver.rpcSetActivity(activity);
+  if (res.ok) toast('Présence appliquée ! ✓', 'success');
+  else if (res.reason === 'not_connected') toast('Non connecté — connecte-toi d\'abord', 'warn');
+  else toast('Erreur: ' + (res.error || 'inconnu'), 'error');
+}
+
+async function rpClear() {
+  localStorage.removeItem('rp_activity');
+  await silver.rpcClear();
+  toast('Présence effacée');
+}
+
+function rpUpdatePreview() {
+  const p = document.getElementById('rpPreview');
+  if (!p) return;
+  const type = parseInt(document.getElementById('rpType')?.value || '0');
+  const details = document.getElementById('rpDetails')?.value || '';
+  const state = document.getElementById('rpState')?.value || '';
+  const largeImg = document.getElementById('rpLargeImage')?.value || '';
+  const btn1 = document.getElementById('rpBtn1Label')?.value || '';
+  const btn2 = document.getElementById('rpBtn2Label')?.value || '';
+  const ts = document.getElementById('rpTimestamp')?.value || '';
+  const verbs = ['Playing', 'Streaming', 'Listening to', 'Watching', '', 'Competing in'];
+  const verb = verbs[type] || 'Playing';
+  const emojis = ['🎮', '📺', '🎵', '👀', '', '🏆'];
+  const emoji = emojis[type] || '🎮';
+  p.innerHTML = `
+    <div style="font-size:10px;color:#b5bac1;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">${verb}</div>
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <div style="width:60px;height:60px;border-radius:8px;background:#2b2d31;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:${largeImg ? '9px' : '26px'};color:${largeImg ? '#4e5058' : '#fff'};text-align:center;overflow:hidden;padding:${largeImg ? '3px' : '0'};word-break:break-all">
+        ${largeImg ? largeImg : emoji}
+      </div>
+      <div style="min-width:0;flex:1">
+        <div style="color:#f2f3f5;font-weight:700;font-size:14px;line-height:1.2">Silver App</div>
+        ${details ? `<div style="color:#b5bac1;font-size:12px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(details)}</div>` : ''}
+        ${state ? `<div style="color:#b5bac1;font-size:12px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(state)}</div>` : ''}
+        ${ts ? `<div style="color:#b5bac1;font-size:12px;margin-top:1px">00:00 elapsed</div>` : ''}
+      </div>
+    </div>
+    ${(btn1 || btn2) ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+      ${btn1 ? `<div style="background:#4e5058;border-radius:4px;padding:5px 10px;font-size:12px;color:#f2f3f5;text-align:center;cursor:pointer">${esc(btn1)}</div>` : ''}
+      ${btn2 ? `<div style="background:#4e5058;border-radius:4px;padding:5px 10px;font-size:12px;color:#f2f3f5;text-align:center;cursor:pointer">${esc(btn2)}</div>` : ''}
+    </div>` : ''}
+  `;
+}
+
+function rpSavePreset() {
+  const name = prompt('Nom du preset :');
+  if (!name?.trim()) return;
+  const presets = JSON.parse(localStorage.getItem('rp_presets') || '{}');
+  presets[name.trim()] = rpCollectData();
+  localStorage.setItem('rp_presets', JSON.stringify(presets));
+  toast('Preset sauvegardé !', 'success');
+  rpRenderPresets();
+}
+
+function rpLoadPreset(name) {
+  const presets = JSON.parse(localStorage.getItem('rp_presets') || '{}');
+  const d = presets[name];
+  if (!d) return;
+  if (d.type != null) document.getElementById('rpType').value = d.type;
+  ['Details','State','LargeImage','LargeText','SmallImage','SmallText','StreamUrl','Btn1Label','Btn1Url','Btn2Label','Btn2Url'].forEach(f => {
+    const key = f.charAt(0).toLowerCase() + f.slice(1);
+    document.getElementById('rp' + f).value = d[key] || '';
+  });
+  if (d.timestamp != null) document.getElementById('rpTimestamp').value = d.timestamp;
+  document.getElementById('rpStreamRow').style.display = parseInt(d.type) === 1 ? '' : 'none';
+  rpUpdatePreview();
+  toast('Preset chargé');
+}
+
+function rpDeletePreset(name) {
+  const presets = JSON.parse(localStorage.getItem('rp_presets') || '{}');
+  delete presets[name];
+  localStorage.setItem('rp_presets', JSON.stringify(presets));
+  rpRenderPresets();
+}
+
+function rpRenderPresets() {
+  const list = document.getElementById('rpPresetList');
+  const none = document.getElementById('rpNoPresets');
+  if (!list) return;
+  const presets = JSON.parse(localStorage.getItem('rp_presets') || '{}');
+  const names = Object.keys(presets);
+  if (none) none.style.display = names.length ? 'none' : '';
+  list.innerHTML = names.map(n => `
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n)}</span>
+      <button class="btn btn-xs" onclick="rpLoadPreset(${JSON.stringify(n)})">Charger</button>
+      <button class="btn btn-xs" style="color:var(--red)" onclick="rpDeletePreset(${JSON.stringify(n)})">✕</button>
+    </div>
+  `).join('');
+}
+
 // ═══ UI ENHANCEMENTS ════════════════════════════════════════════════════════
 
 const pageSections = {
-  home: 'Silver Bot', overview: 'secPrincipal', leaderboard: 'secPrincipal', members: 'secPrincipal',
-  compare: 'secPrincipal', stats: 'secPrincipal', channels: 'secPrincipal', serverlist: 'secPrincipal',
-  analytics: 'secPrincipal', heatmap: 'secPrincipal', control: 'secControle',
-  botinfo: 'secControle', botprofile: 'secControle', embedbuilder: 'secControle', uptime: 'secControle',
-  webhooks: 'secControle', scheduler: 'secControle', monitor: 'secControle',
-  chat: 'secTesteurs', bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs',
-  suggestions: 'secTesteurs', testlab: 'secTesteurs', forgot: 'secTesteurs', rapport: 'secTesteurs',
-  database: 'secSysteme', logs: 'secSysteme', history: 'secSysteme',
-  changelog: 'secSysteme', console: 'secSysteme', update: 'secSysteme', settings: 'secSysteme',
-  audit: 'secSysteme', botlogs: 'secSysteme',
+  home: 'Silver Bot',
+  overview: 'secPrincipal',
+  membres: 'secPrincipal', leaderboard: 'secPrincipal', members: 'secPrincipal', compare: 'secPrincipal',
+  stats: 'secPrincipal', analytics: 'secPrincipal', heatmap: 'secPrincipal',
+  serveurs: 'secPrincipal', serverlist: 'secPrincipal', channels: 'secPrincipal',
+  bot: 'secControle', botinfo: 'secControle', control: 'secControle', botprofile: 'secControle',
+  embedbuilder: 'secControle', uptime: 'secControle',
+  webhooks: 'secControle', scheduler: 'secControle', monitor: 'secControle', richpresence: 'secControle',
+  chat: 'secTesteurs',
+  activite: 'secTesteurs', bugs: 'secTesteurs', tasks: 'secTesteurs', announcements: 'secTesteurs', suggestions: 'secTesteurs',
+  testlab: 'secTesteurs', forgot: 'secTesteurs', rapport: 'secTesteurs',
+  logs: 'secSysteme', botlogs: 'secSysteme', console: 'secSysteme',
+  database: 'secSysteme', history: 'secSysteme',
+  changelog: 'secSysteme', update: 'secSysteme', settings: 'secSysteme', audit: 'secSysteme',
 };
 
 function updateBreadcrumbs(name) {

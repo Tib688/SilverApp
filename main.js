@@ -132,7 +132,82 @@ app.whenReady().then(() => {
   });
 });
 
+// ── Rich Presence ─────────────────────────────────────────────────────────
+let _rpc = null;
+let _rpcConnected = false;
+let _rpcActivity = null;
+let _rpcClientId = null;
+let _rpcReconnectTimer = null;
+
+async function _rpcConnect(clientId) {
+  if (_rpcReconnectTimer) { clearTimeout(_rpcReconnectTimer); _rpcReconnectTimer = null; }
+  if (_rpc) { try { _rpc.destroy(); } catch {} _rpc = null; _rpcConnected = false; }
+
+  let DiscordRPC;
+  try { DiscordRPC = require('discord-rpc'); } catch { return { error: 'discord-rpc non disponible' }; }
+
+  DiscordRPC.register(clientId);
+  _rpc = new DiscordRPC.Client({ transport: 'ipc' });
+  _rpcClientId = clientId;
+
+  return new Promise(resolve => {
+    const timeout = setTimeout(() => {
+      resolve({ error: 'Timeout — Discord est bien ouvert ?' });
+    }, 10000);
+
+    _rpc.on('ready', () => {
+      clearTimeout(timeout);
+      _rpcConnected = true;
+      if (mainWindow) mainWindow.webContents.send('rpc-status', { connected: true });
+      if (_rpcActivity) _rpc.setActivity(_rpcActivity).catch(() => {});
+      resolve({ ok: true });
+    });
+
+    _rpc.on('disconnected', () => {
+      _rpcConnected = false;
+      if (mainWindow) mainWindow.webContents.send('rpc-status', { connected: false });
+      _rpcReconnectTimer = setTimeout(() => {
+        if (_rpcClientId) _rpcConnect(_rpcClientId);
+      }, 30000);
+    });
+
+    _rpc.login({ clientId }).catch(err => {
+      clearTimeout(timeout);
+      resolve({ error: err.message });
+    });
+  });
+}
+
+ipcMain.handle('rpc-connect', (e, clientId) => _rpcConnect(clientId));
+
+ipcMain.handle('rpc-set-activity', async (e, activity) => {
+  _rpcActivity = activity;
+  if (_rpcConnected && _rpc) {
+    try { await _rpc.setActivity(activity); return { ok: true }; }
+    catch (err) { return { error: err.message }; }
+  }
+  return { ok: false, reason: 'not_connected' };
+});
+
+ipcMain.handle('rpc-clear', async () => {
+  _rpcActivity = null;
+  if (_rpcConnected && _rpc) { try { await _rpc.clearActivity(); } catch {} }
+  return { ok: true };
+});
+
+ipcMain.handle('rpc-disconnect', async () => {
+  if (_rpcReconnectTimer) { clearTimeout(_rpcReconnectTimer); _rpcReconnectTimer = null; }
+  _rpcActivity = null;
+  _rpcClientId = null;
+  if (_rpc) { try { _rpc.destroy(); } catch {} _rpc = null; }
+  _rpcConnected = false;
+  return { ok: true };
+});
+
+ipcMain.handle('rpc-status', () => ({ connected: _rpcConnected }));
+
 app.on('window-all-closed', () => {
   if (backendProcess) backendProcess.kill();
+  if (_rpc) { try { _rpc.destroy(); } catch {} }
   if (process.platform !== 'darwin') app.quit();
 });

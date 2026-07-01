@@ -1,6 +1,6 @@
 {
   "name": "silverapp",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "Silver Bot Dashboard",
   "main": "main.js",
   "scripts": {
@@ -41,5 +41,8 @@
       "src/**/*",
       "backend/**/*"
     ]
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1"
   }
 }
